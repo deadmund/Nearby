@@ -72,10 +72,19 @@ public class displayMessageAct extends Activity {
         	System.out.println("");
         }
         
+        System.out.println("Generating Poly Coefficients (method one)");
+        BigInteger[] coefficients = p.makeCoefficientsOne(repSet);
         
+        System.out.println("Printing the encrypted coefficients");
+        for(int i = 0; i < coefficients.length; i++){
+        	System.out.println(coefficients[i]);
+        }
+        
+        
+        /*
         // Testing Paillier Encryption!
 		Paillier paillier = new Paillier();
-		/* instantiating two plaintext msgs*/
+		// instantiating two plaintext msgs
 		
 		BigInteger[] tmp = new BigInteger[repSet.length];
 		for (int i = 0; i < repSet.length; i++){
@@ -90,8 +99,6 @@ public class displayMessageAct extends Activity {
 		for (int i = 0; i < tmp.length; i++){
 			System.out.println(paillier.Decryption(tmp[i]).toString());
 		}
-        
-        
-        
+		*/
     }
 }

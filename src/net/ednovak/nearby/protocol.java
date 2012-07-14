@@ -1,5 +1,6 @@
 package net.ednovak.nearby;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 
 import android.annotation.SuppressLint;
@@ -151,5 +152,21 @@ public class protocol {
 		
 		return root.value + "\n" + treeToStringDown(root.left)+ treeToStringDown(root.right) ;
 	}
-
+	
+	
+	// Returns an array of coefficients that each form a poly that 
+	// is rooted at a node from the given repSet
+	public BigInteger[] makeCoefficientsOne(treeQueue repSet){
+		BigInteger[] answer = new BigInteger[repSet.length];
+		// 8-bit encryption with 4-bit certainty
+		Paillier paillier = new Paillier(8, 4); 
+		
+		for (int i = 0; i < repSet.length; i++){
+			String s = String.valueOf(repSet.peek(i).value * -1);
+			BigInteger tmp = new BigInteger(s);
+			answer[i] = paillier.Encryption(tmp);
+		}
+		
+		return answer;
+	}
 }

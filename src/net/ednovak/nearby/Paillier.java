@@ -124,6 +124,17 @@ public class Paillier {
 		return c.modPow(lambda, nsquare).subtract(BigInteger.ONE).divide(n).multiply(u).mod(n);
 	}
 	
+	// I made both of the following functions
+	public BigInteger[] privateKey(){
+		BigInteger[] k = {g, lambda, n};
+		return k;
+	}
+	
+	public BigInteger[] publicKey(){
+		BigInteger[] k = {g, n};
+		return k;
+	}
+	
 	/**
 	* main function
 	* @param str intput string
