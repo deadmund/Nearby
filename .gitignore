@@ -8,3 +8,5 @@
 .project
 project.properties
 
+# Binaries
+bin/*

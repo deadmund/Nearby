@@ -1,9 +1,9 @@
 package net.ednovak.nearby;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.TextView;
 
 import java.lang.Math;
@@ -47,58 +47,76 @@ public class displayMessageAct extends Activity {
 		return policy / 10;
 	}
 	
-	/*
-	private tree buildUp(tree[] leaves){
-		tree[] outQueue = leaves;  // Nodes that we're iterating through
-		tree[] inQueue; // Array that we're placing new parents into
-		
-		while (outQueue.length != 1)
-		{
-			System.out.println("Length of outQueue is still > 1.  Creating empty inQueue array");
-			// Even for even nodes it might be this many because the section I'm creating might not be  
-			// perfect binary tree.  (far left node has a left parent and far right has a right parent)
-			inQueue = new tree[(outQueue.length/2) + 1];
-		
-				
-			System.out.println("Filling inQueue with new parents");
-			// Now to make some parents
-			for(int i = 0; i < outQueue.length - 1; i = i + 2){
-				char[] path = outQueue[i].path;
-				// In case the path has been exhausted, this means all the remaining branches
-				// will go right (or 0)
-				if (path.length == '0') { 
-					path = new char[1];
-					path[0] = '0';
-				}
-					
-				if (path[0] == '0'){
-					double value = outQueue[i].value + 2117648;
-					char[] nMap = Arrays.copyOfRange(outQueue[i].path, 1, outQueue[i].path.length - 1);
-					inQueue[i/2] = new tree(i/2, value, nMap, outQueue[i], outQueue[i+1]);
+	@SuppressLint("NewApi")
+	private treeQueue buildLevel(treeQueue bottom, int height){
+		treeQueue top = new treeQueue(); // Level above ours
+	
+		for (int i = 0; i < bottom.length; i++){
+			tree cur = bottom.peek(i);
+			
+			if (cur.path.length == 0){
+				cur.path = new char[1];
+				cur.path[0] = '0';
+			}
+			
+			char[] nPath; // Slice the new path
+			System.out.println("cur.path.length" + cur.path.length);
+			System.out.println("cur.path: " + cur.path[0] + "  cur.path.length-1: " + (cur.path.length-1));
+			nPath = Arrays.copyOfRange(cur.path, 0, cur.path.length-1); // Drop the last bit
+			
+			//System.out.println("Checking the path letter" + old);
+			
+			if (cur.path[cur.path.length-1] == '0'){ // This is a branch that goes right
+				int nValue = cur.value + 2117648; // Max num of leaf nodes
+				System.out.println("Putting " + nValue + " in top row @ end");
+				top.push(new tree(nValue, nPath, cur, null));
+				cur.parent = top.peek(-1); // Thing at end
+				if (i + 1 <= bottom.length -1){ // True if this node is not on the right end
+					System.out.println(bottom.peek(i).value + " is not the right hand edge");
+					top.peek(-1).right = bottom.peek(i+1);
+					System.out.println("bottom length:" + bottom.length + " i+1:" + (i+1) + " top length:" + top.length);
+					bottom.peek(i+1).parent = top.peek(-1);
+					System.out.println("The problem was not above me!");
 				}
 				else{
-					double value = outQueue[i+1].value + 2117641;
-					char[] nMap = Arrays.copyOfRange(path, )
-					
+					System.out.println(bottom.peek(i).value + " RIGHT END");
+				}
+				i = i + 1; // I just took care of the node next to me with outQueue[i+1] above
+			}
+			
+			else { // This is a branch that goes left	
+				int nValue = cur.value + (2117648 - ((height -1) * (height - 1)));
+				System.out.println("Putting " + nValue + " in top row @ end");
+				top.push(new tree(nValue, nPath, null, cur));
+				cur.parent = top.peek(-1);
+				if (i > 0){ // True if this node is not on the left end
+					System.out.println(bottom.peek(i) + " is not the left hand edge");
+					top.peek(-1).right = bottom.peek(i-1);
+					bottom.peek(i-1).parent = top.peek(-1);
+				}
+				else{
+					System.out.println(bottom.peek(i).value + " LEFT END");
 				}
 			}
-			
-			//System.out.println("Checking if outQueue is odd length => we need one more parent");
-			if (outQueue.length % 2 == 1){
-				tree lastNode = outQueue[outQueue.length - 1];
-				lastNode.parent = new tree((outQueue.length/2)+1, lastNode.value+361, "tmp", lastNode, null);
-				inQueue[inQueue.length -1] = lastNode.parent;
-			}
-			
-			//System.out.println("About to make outQueue the new inQueue (pulling from outQueue next iteration");
-			outQueue = inQueue; // Swap them for next iteration! :)
-			//System.out.println("The outQueue is now length: " + outQueue.length);
 		}
-		return outQueue[0];
+		return top;
 	}
-	*/
+	
+	private tree buildUp(treeQueue leaves){
+		treeQueue row = leaves;  //Nodes that we're iterating through	
+		int height = 1; // Currently building height 1
+		
+		while (row.length != 1){ // This isn't the root node yet	
+			//System.out.println("Length of top > 1 so this isn't the root yet");
+			row = buildLevel(row, height);
+			height++;
+		}
+		return row.peek(0);
+	}
 	
 	public String treeToStringDown(tree root){
+		if (root == null) { return ""; }
+		
 		return root.toString() + treeToStringDown(root.left)+ treeToStringDown(root.right) ;
 	}
 
@@ -118,8 +136,8 @@ public class displayMessageAct extends Activity {
         setContentView(textView);
         
         // Alice's policy width and x location (longitude)
-        int width = this.policyToWidth(20);
-        int x = this.longitudeToInt(-179.9989);
+        int width = this.policyToWidth(30);
+        int x = this.longitudeToInt(-179.9988);
         
         System.out.println("Alice's x: " + x);
         
@@ -131,15 +149,14 @@ public class displayMessageAct extends Activity {
         
         // Create the leaves
         System.out.println("Creating the leaves");
-        tree[] leaves = new tree[(right - left) + 1];
+        treeQueue leaves = new treeQueue();
         int cur = left;
-        for (int i = 0; i < leaves.length; i++){
-        	// R is 0, L is 1
-        	String mapString = new StringBuffer(Integer.toBinaryString(cur)).toString();
+        while ( cur <= right){
+        	String mapString = new StringBuffer(Integer.toBinaryString(cur)).toString(); // R is 0, L is 1;
         	//System.out.println(cur + " => " + mapString); // char of binary string from this int ()
-        	leaves[i] = new tree(i, cur, mapString.toCharArray(), null, null);
+        	leaves.push(new tree(cur, mapString.toCharArray(), null, null));
         	if (cur == x){
-        		leaves[i].special = "Alice!";
+        		leaves.peek(-1).special = "Alice!";
         	}
         	cur += 1;
         }
@@ -150,19 +167,17 @@ public class displayMessageAct extends Activity {
         
         System.out.println("Here are the leaves in Alice's span:");
         for (int i = 0; i < leaves.length; i++){
-        	System.out.println("" + leaves[i]);
+        	System.out.println("" + leaves.peek(i));
         	System.out.println(" ");
         }
         
+        System.out.println("Building the tree upwards!");
+        tree root = buildUp(leaves);
+        System.out.println("The root of these leaves is: " + root.toString());
         
-        //tree root = buildUp(leaves);
-        
-        //System.out.println("The root node: " + root.toString());
-        
-        /*
         System.out.println("The entire tree:");
         System.out.println(treeToStringDown(root));
-        */
+        
         
         
     }
