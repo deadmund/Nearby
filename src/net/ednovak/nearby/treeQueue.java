@@ -6,6 +6,17 @@ public class treeQueue {
 	private int end = 0;
 	public int length = end;
 	
+	public treeQueue union(treeQueue other){
+		treeQueue tmp = new treeQueue();
+		for (int i=0; i < arr.length; i++){
+			tmp.push(arr[i]);
+		}
+		for (int i=0; i < other.length; i++){
+			tmp.push(other.peek(i));
+		}
+		return tmp;
+	}
+	
 	public void push(tree newTree){
 		if (end == arr.length-1){
 			tree[] tmp = new tree[arr.length*2];
