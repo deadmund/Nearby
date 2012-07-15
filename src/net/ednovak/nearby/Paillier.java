@@ -69,6 +69,14 @@ public class Paillier {
 		KeyGeneration(512, 64);
 	}
 	
+	
+	// To load a new public key yay!
+	public void loadPublicKey(BigInteger newG, BigInteger newN){
+		g = newG;
+		n = newN;
+		nsquare = newN.multiply(newN);
+	}
+	
 	/**
 	* Sets up the public key and private key.
 	* @param bitLengthVal number of bits of modulus.

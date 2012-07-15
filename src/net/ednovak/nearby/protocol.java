@@ -4,10 +4,13 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 import android.annotation.SuppressLint;
+import android.telephony.SmsManager;
+import android.util.Log;
 
 public class protocol {
 	
 	treeQueue leaves; // The span
+	tree user; // Location of the user (leaf node)
 	
 	// Constructor does nothing!  This is probably a design flaw :P
 	public protocol(){
@@ -26,7 +29,8 @@ public class protocol {
         	//System.out.println(cur + " => " + mapString); // char of binary string from this int ()
         	leaves.push(new tree(cur, mapString.toCharArray(), null, null));
         	if (cur == x){
-        		leaves.peek(-1).special = "Alice!";
+        		leaves.peek(-1).special = "User!";
+        		user = leaves.peek(-1);
         	}
         	cur++;
         }
@@ -77,6 +81,7 @@ public class protocol {
 	// Builds 1 level of the tree.  Starting at leaves, builds the row above the leaves
 	// The following method 'buildUp' feeds this the leaves, and repeats the process up the tree
 	//	@SuppressLint("NewApi")
+	@SuppressLint("NewApi")
 	private treeQueue buildLevel(treeQueue bottom, int height){
 		treeQueue top = new treeQueue(); // Level above ours
 	
@@ -114,7 +119,7 @@ public class protocol {
 			}
 			
 			else { // This is a branch that goes left	
-				int nValue = cur.value + (2117648 - ((height -1) * (height - 1)));
+				int nValue = cur.value + (2117648 - (int)(Math.pow(2.0, (double)(height -1))));
 				//System.out.println("Putting " + nValue + " in top row @ end");
 				top.push(new tree(nValue, nPath, null, cur));
 				cur.parent = top.peek(-1);
@@ -156,17 +161,24 @@ public class protocol {
 	
 	// Returns an array of coefficients that each form a poly that 
 	// is rooted at a node from the given repSet
-	public BigInteger[] makeCoefficientsOne(treeQueue repSet){
-		BigInteger[] answer = new BigInteger[repSet.length];
-		// 8-bit encryption with 4-bit certainty
-		Paillier paillier = new Paillier(8, 4); 
-		
+	public int[] makeCoefficientsOne(treeQueue repSet){
+		int[] answer = new int[repSet.length];
 		for (int i = 0; i < repSet.length; i++){
-			String s = String.valueOf(repSet.peek(i).value * -1);
-			BigInteger tmp = new BigInteger(s);
-			answer[i] = paillier.Encryption(tmp);
+			answer[i] = repSet.peek(i).value * -1;
 		}
 		
 		return answer;
+	}
+	
+	
+	
+	// Sends all the messages in a message Queue
+	public void sendTXTS(String rec, messageQueue messages){
+    	SmsManager sms = SmsManager.getDefault();
+    	// Sending txts to...
+    	Log.d("receive", "sending txts too " + rec + "...");
+    	for (int i = 0; i < messages.length; i++){
+    		sms.sendTextMessage(rec, null, messages.peek(i), null, null);
+    	}
 	}
 }

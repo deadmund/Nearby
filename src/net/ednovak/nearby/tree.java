@@ -68,6 +68,16 @@ public class tree{
 		return answer;
 	}
 	
+	public treeQueue findCoverSet(tree leaf){
+		treeQueue answer = new treeQueue();
+		tree cur = leaf;
+		while (cur != null){
+			answer.push(cur);
+			cur = cur.parent;
+		}
+		return answer;
+	}
+	
 	@Override
 	public String toString(){
 		String s = "--Node--\nvalue: " + value + "\nmap: " + new String(path);

@@ -33,9 +33,6 @@ public class MainActivity extends Activity {
         Intent intent = new Intent(this, displayMessageAct.class);
         EditText editText = (EditText) findViewById(R.id.other_user);
         String message = editText.getText().toString();
-        Editable text = editText.getText();
-        System.out.println("text: " + text);
-        System.out.println("message: " + message);
         if (message.length() != 0 && message != null){
         	intent.putExtra(EXTRA_MESSAGE, message);
         	startActivity(intent);

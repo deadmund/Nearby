@@ -1,16 +1,13 @@
 package net.ednovak.nearby;
 
-import android.annotation.SuppressLint;
+import java.math.BigInteger;
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.telephony.SmsManager;
-import android.widget.EditText;
-import android.widget.TextView;
-
-import java.lang.Math;
-import java.math.BigInteger;
-import java.util.Arrays;
+import android.util.Log;
 
 @SuppressWarnings("serial")
 class longitudeException extends Exception{
@@ -45,8 +42,8 @@ public class displayMessageAct extends Activity {
         protocol p = new protocol();
         
 		// Alice's policy width and x location (longitude)
-        int width = p.policyToWidth(50); // These are user configurable
-        int x = p.longitudeToInt(-179.9988); // just long for now
+        int width = p.policyToWidth(10); // These are user configurable
+        int x = p.longitudeToInt(-179.9989); // just long for now
         
         System.out.println("Alice's x: " + x);
         
@@ -80,43 +77,49 @@ public class displayMessageAct extends Activity {
         }
         
         System.out.println("Generating Poly Coefficients (method one)");
-        BigInteger[] coefficients = p.makeCoefficientsOne(repSet);
-        
-        System.out.println("Printing the encrypted coefficients");
-        for(int i = 0; i < coefficients.length; i++){
+        int[] coefficients = p.makeCoefficientsOne(repSet);
+
+        System.out.println("Printing the coefficients");
+        for (int i = 0; i < coefficients.length; i++){
         	System.out.println(coefficients[i]);
         }
         
-    	String message = "@@1";
-    	for (int i = 0; i < coefficients.length; i++){
-    		message += ":" + coefficients[i];
+        // Encrypting Coefficients
+		// 8-bit encryption with 4-bit certainty
+		Paillier paillier = new Paillier(8, 4);
+		BigInteger[] encCoe = new BigInteger[coefficients.length];
+		for (int i = 0; i < coefficients.length; i++){
+			encCoe[i] = paillier.Encryption(new BigInteger(String.valueOf(coefficients[i])));
+		}
+        
+        System.out.println("Printing the encrypted coefficients");
+        for(int i = 0; i < encCoe.length; i++){
+        	System.out.println(encCoe[i]);
+        }
+        
+        // Things I want in the message
+    	String[] values = new String[coefficients.length + 3];
+    	
+    	// The format of a code 1 message:
+    	// "@@1:encrypted coefficients:width:g:n"
+    	
+    	String txt = "@@1";
+    	for(int i = 0; i < coefficients.length; i++){ // The coefficients encrypted
+    		txt += ":" + String.valueOf(coefficients[i]);
     	}
+    	
+    	BigInteger[] key = paillier.publicKey();	// Alice's public key
+    	txt += ":" + String.valueOf(width) + ":" + key[0].toString() + ":" + key[1].toString();
+    	//Log.d("sending", "the txt: " + txt);
+    	
+    	ArrayList<String> list = new ArrayList<String>();
+    	SmsManager sms = SmsManager.getDefault();
+    	list = sms.divideMessage(txt);
     	
     	Intent intent = getIntent();
         String number = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
-    	System.out.println("number: " + number);
-    	SmsManager sms = SmsManager.getDefault();
-    	sms.sendTextMessage(number, null, message, null, null);
+    	
+    	sms.sendMultipartTextMessage(number, null, list, null, null);
         
-        
-        /*
-        // Testing Paillier Encryption!
-		Paillier paillier = new Paillier();
-		// instantiating two plaintext msgs
-		
-		BigInteger[] tmp = new BigInteger[repSet.length];
-		for (int i = 0; i < repSet.length; i++){
-			tmp[i] = new BigInteger(String.valueOf(repSet.peek(i).value));
-		}
-		
-		for (int i = 0; i < tmp.length; i++){
-			tmp[i] = paillier.Encryption(tmp[i]);
-		}
-
-		System.out.println("the encrypted and then decrypted output from the rep set values");
-		for (int i = 0; i < tmp.length; i++){
-			System.out.println(paillier.Decryption(tmp[i]).toString());
-		}
-		*/
     }
 }
