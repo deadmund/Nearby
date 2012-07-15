@@ -5,12 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.telephony.SmsMessage;
+import android.util.Log;
 import android.widget.Toast;
 
 public class smsReceive extends BroadcastReceiver {
 	
 	@Override
 	public void onReceive(Context context, Intent intent){
+		abortBroadcast(); // Stops the broadcast throughout the rest of the OS.
 		Bundle bundle = intent.getExtras();
 		SmsMessage[] msgs = null;
 		String s = "";
@@ -19,15 +21,23 @@ public class smsReceive extends BroadcastReceiver {
 			// Get the SMS 
 			Object[] pdus = (Object[]) bundle.get("pdus");
 			msgs = new SmsMessage[pdus.length];
-			for (int i = 0; i < msgs.length; i++){
+			for (int i = 0; i < msgs.length; i++){// Goes through multiple messages
 				msgs[i] = SmsMessage.createFromPdu((byte[])pdus[i]);
-				s = "SMS from " + msgs[i].getOriginatingAddress();
-				s += " :";
+				s = msgs[i].getOriginatingAddress() + ":";
 				s += msgs[i].getMessageBody().toString();
-				s += "\n";
 			}
 		}
-		Toast.makeText(context, s, Toast.LENGTH_SHORT).show();
+		String[] tokens = s.split(":");
+		for (int i = 0; i < tokens.length; i++){
+			Log.d("receive", "tokens[" + i + "]:" + tokens[i]);
+			Toast.makeText(context, tokens[i], Toast.LENGTH_SHORT).show();
+		}
+		Toast.makeText(context, s, Toast.LENGTH_LONG).show();
+		
+		if( !tokens[1].equals("@@1") ){
+			Log.d("receive", "clearing abort broadcast");
+			clearAbortBroadcast();
+		}
 	}
 
 }
