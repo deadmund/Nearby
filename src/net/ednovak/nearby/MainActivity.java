@@ -1,11 +1,13 @@
 package net.ednovak.nearby;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
 import android.view.View;
 import android.widget.EditText;
-import android.telephony.SmsManager;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 	
@@ -31,16 +33,27 @@ public class MainActivity extends Activity {
         Intent intent = new Intent(this, displayMessageAct.class);
         EditText editText = (EditText) findViewById(R.id.other_user);
         String message = editText.getText().toString();
-        intent.putExtra(EXTRA_MESSAGE, message);
-        startActivity(intent);
+        Editable text = editText.getText();
+        System.out.println("text: " + text);
+        System.out.println("message: " + message);
+        if (message.length() != 0 && message != null){
+        	intent.putExtra(EXTRA_MESSAGE, message);
+        	startActivity(intent);
+        }
+        else {
+        	Context context = getApplicationContext();
+        	Toast.makeText(context, "You need to provide a phone number", Toast.LENGTH_SHORT).show();
+        }
     }
     
+    /*
     public void sendSMS(View view){
     	SmsManager sms = SmsManager.getDefault();
     	EditText editText = (EditText) findViewById(R.id.other_user);
     	String message = editText.getText().toString();
     	sms.sendTextMessage("5556", null, message, null, null);
     }
+    */
     
     
 }

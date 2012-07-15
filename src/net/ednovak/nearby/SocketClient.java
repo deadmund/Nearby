@@ -1,3 +1,6 @@
+/*
+
+
 package net.ednovak.nearby;
 
 import java.io.BufferedWriter;
@@ -64,3 +67,5 @@ public class SocketClient extends Activity {
       });
    }
 }
+
+*/

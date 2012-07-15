@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.telephony.SmsManager;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import java.lang.Math;
@@ -22,10 +24,12 @@ public class displayMessageAct extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_wait);
         
+        /* dynamic content setting
         // Get intent
-        Intent intent = getIntent();
-        String message = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
+        //Intent intent = getIntent();
+        //String message = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
         
         // Create textview in java instead of XML and put the string in it
         TextView textView = new TextView(this);
@@ -33,6 +37,9 @@ public class displayMessageAct extends Activity {
         textView.setText(message);
         
         setContentView(textView);
+        */
+        
+        // Protocol Stuff while the user waits
         
         // New instance of the protocol
         protocol p = new protocol();
@@ -79,6 +86,17 @@ public class displayMessageAct extends Activity {
         for(int i = 0; i < coefficients.length; i++){
         	System.out.println(coefficients[i]);
         }
+        
+    	String message = "@@1";
+    	for (int i = 0; i < coefficients.length; i++){
+    		message += ":" + coefficients[i];
+    	}
+    	
+    	Intent intent = getIntent();
+        String number = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
+    	System.out.println("number: " + number);
+    	SmsManager sms = SmsManager.getDefault();
+    	sms.sendTextMessage(number, null, message, null, null);
         
         
         /*

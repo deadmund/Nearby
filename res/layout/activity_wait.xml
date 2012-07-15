@@ -9,21 +9,13 @@
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:padding="@dimen/padding_medium"
-        android:text="@string/hello_world"
-        tools:context=".MainActivity" />    
+        android:text="@string/wait"
+        tools:context=".MainActivity" />
     
-    <EditText android:id="@+id/other_user"
+    <ImageView android:id="@+id/waiting"
         android:layout_weight="1"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:hint="@string/other_user" />
+        android:src="@drawable/waiting" />
     
-	<Button android:id="@+id/bt_query"
-        android:layout_weight="1"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:text="@string/butt_query"
-        android:onClick="query" />
-	
-
 </LinearLayout>
