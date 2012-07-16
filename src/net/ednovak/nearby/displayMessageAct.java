@@ -4,7 +4,12 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.util.Log;
@@ -36,7 +41,34 @@ public class displayMessageAct extends Activity {
         setContentView(textView);
         */
         
-        // Protocol Stuff while the user waits
+        
+        LocationManager lManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        
+        LocationListener lListener = new LocationListener(){
+        	public void onLocationChanged(Location location) { // The callback
+        		Log.d("location", "The location I got: " + location);
+        		if (location.hasAccuracy()){
+        			if (location.getAccuracy() < 1.0){
+        				Log.d("location", "This location is good enough");
+        			}
+        		}
+        	}
+        	
+        	public void onStatusChanged(String provider, int status, Bundle extra){
+        		Log.d("location", "status changed");
+        	}
+        	
+        	public void onProviderEnabled(String provider) {
+        		Log.d("location", "providerEnabled");
+        	}
+        	
+        	public void onProviderDisabled(String provider){
+        		Log.d("location", "providerDisabled");
+        	}
+        };
+        
+        lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10000, lListener);
+        //lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, lListener);
         
         // New instance of the protocol
         protocol p = new protocol();
