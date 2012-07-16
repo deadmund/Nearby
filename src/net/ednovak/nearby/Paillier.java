@@ -35,7 +35,8 @@ public class Paillier {
 	* p and q are two large primes.
 	* lambda = lcm(p-1, q-1) = (p-1)*(q-1)/gcd(p-1, q-1).
 	*/
-	private BigInteger p, q, lambda;
+	// I made this public for a second
+	public BigInteger p, q, lambda;
 	/**
 	* n = p*q, where p and q are two large primes.
 	*/
@@ -47,7 +48,8 @@ public class Paillier {
 	/**
 	* a random integer in Z*_{n^2} where gcd (L(g^lambda mod n^2), n) = 1.
 	*/
-	private BigInteger g;
+	// I made this public for a second
+	public BigInteger g;
 	/**
 	* number of bits of modulus
 	*/
@@ -73,6 +75,14 @@ public class Paillier {
 	// To load a new public key yay!
 	public void loadPublicKey(BigInteger newG, BigInteger newN){
 		g = newG;
+		n = newN;
+		nsquare = newN.multiply(newN);
+	}
+	
+	// To load a new private key yay!
+	public void loadPrivateKey(BigInteger newG, BigInteger newLambda, BigInteger newN){
+		g = newG;
+		lambda = newLambda;
 		n = newN;
 		nsquare = newN.multiply(newN);
 	}

@@ -85,27 +85,31 @@ public class displayMessageAct extends Activity {
         }
         
         // Encrypting Coefficients
-		// 8-bit encryption with 4-bit certainty
-		Paillier paillier = new Paillier(8, 4);
+		// 128-bit encryption with 64-bit certainty (dat's a lot)
+		Paillier paillier = new Paillier(32, 16);
 		BigInteger[] encCoe = new BigInteger[coefficients.length];
 		for (int i = 0; i < coefficients.length; i++){
 			encCoe[i] = paillier.Encryption(new BigInteger(String.valueOf(coefficients[i])));
 		}
+		
+		// Make this key globally available through a singleton
+		BigInteger[] tmp = paillier.privateKey();
+		shareSingleton share = shareSingleton.getInstance(); 
+        share.g = tmp[0];
+        share.lambda = tmp[1];
+        share.n = tmp[2];        
         
         System.out.println("Printing the encrypted coefficients");
         for(int i = 0; i < encCoe.length; i++){
         	System.out.println(encCoe[i]);
         }
         
-        // Things I want in the message
-    	String[] values = new String[coefficients.length + 3];
     	
     	// The format of a code 1 message:
     	// "@@1:encrypted coefficients:width:g:n"
-    	
     	String txt = "@@1";
-    	for(int i = 0; i < coefficients.length; i++){ // The coefficients encrypted
-    		txt += ":" + String.valueOf(coefficients[i]);
+    	for(int i = 0; i < encCoe.length; i++){ // The coefficients encrypted
+    		txt += ":" + String.valueOf(encCoe[i]);
     	}
     	
     	BigInteger[] key = paillier.publicKey();	// Alice's public key
@@ -120,6 +124,48 @@ public class displayMessageAct extends Activity {
         String number = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
     	
     	sms.sendMultipartTextMessage(number, null, list, null, null);
+    	
+    	// Simple TEST //
+    	Log.d("test", "beginning");
+    	
+    	/*
+    	paillier = new Paillier(32, 16);
+    	
+    	//paillier.loadPublicKey(paillier.g, paillier.n);
+    	Log.d("test", "paillier.g: " + paillier.g);
+    	Log.d("test", "paillier.lambda: " + paillier.lambda);
+    	Log.d("test", "paillier.n: " + paillier.n);
+    	Log.d("test", "paillier.nsquare: " + paillier.nsquare);
+    	
+    	BigInteger neg = paillier.Encryption(new BigInteger("-5"));
+    	Log.d("test", "encryption of -5: " + neg);
+    	BigInteger pos = paillier.Encryption(new BigInteger("5"));
+    	Log.d("test", "encryption of 5: " + pos);
+    	
+    	BigInteger result = pos.multiply(neg).mod(paillier.nsquare);
+    	Log.d("test", "multiplied: " + result);
+    	
+    	//paillier.loadPrivateKey(paillier.g, paillier.lambda, paillier.n);
+    	Log.d("test", "paillier.g: " + paillier.g);
+    	Log.d("test", "paillier.lambda: " + paillier.lambda);
+    	Log.d("test", "paillier.n: " + paillier.n);
+    	Log.d("test", "paillier.nsquare: " + paillier.nsquare);
+    	
+    	BigInteger clear_result = paillier.Decryption(result);
+    	Log.d("test", "decrypted mult: " + clear_result);
+    	
+    	BigInteger clear_neg = paillier.Decryption(neg);
+    	BigInteger clear_pos = paillier.Decryption(pos);
+    	Log.d("test", "decrypted -5: " + clear_neg);
+    	Log.d("test", "decrypted 5: " + clear_pos);
+    	*/
+    	
+    	
+    	
+    	
+    	
+    	
+    	
         
     }
 }

@@ -37,12 +37,12 @@ public class smsReceive extends BroadcastReceiver {
 		// Splits them up assuming my ':' marker
 		String[] tokens = s.split(":");
 		
-		Log.d("receive", "I just got this: ");
-		for (int i = 0; i < tokens.length; i++){
-			Log.d("receive", "token:" + tokens[i]);
-		}
+		//Log.d("receive", "just got this: ");
+		//for (int i = 0; i < tokens.length; i++){
+			//Log.d("receive", "token:" + tokens[i]);
+		//}
 		
-		Log.d("receive", "substring:" + tokens[1].substring(0, 2));
+		//Log.d("receive", "substring:" + tokens[1].substring(0, 2));
 		
 		// Stop it if this is not my protocol thus, not a text for me.
 		if ( !tokens[1].substring(0, 2).equals("@@") ){
@@ -56,10 +56,11 @@ public class smsReceive extends BroadcastReceiver {
 			Toast.makeText(context, s, Toast.LENGTH_LONG).show();	
 			
 			int swtch = Integer.parseInt(tokens[1].substring(2));
-			Log.d("receive", "the code after the @@: " + swtch);
+			//Log.d("BOB", "the code after the @@: " + swtch);
 			switch (swtch){
-				case 1:	
-					// process the encrypted coefficients!
+				case 1:
+					Log.d("1", "Receiving from Alice!");
+					Log.d("receive", s);
 			        
 			        // New instance of the protocol
 			        protocol p = new protocol();
@@ -86,7 +87,7 @@ public class smsReceive extends BroadcastReceiver {
 			        
 			        //System.out.println("Building the tree upwards!");
 			        tree root = p.buildUp(leaves);
-			        System.out.println("The root of these leaves is: " + root.toString());
+			        System.out.println("The root of Bob's leaves: " + root.toString());
 			        
 			        //System.out.println("The entire tree:");
 			        //System.out.println(p.treeToStringDown(root));
@@ -100,10 +101,12 @@ public class smsReceive extends BroadcastReceiver {
 			        }
 			        
 			        // Find the c's
-			        Paillier paillier = new Paillier(8, 4);
+			        Paillier paillierE = new Paillier(32, 16);
 			        BigInteger g = new BigInteger(tokens[tokens.length - 2]);
 			        BigInteger n = new BigInteger(tokens[tokens.length - 1]);
-			        paillier.loadPublicKey(g, n);
+			        paillierE.loadPublicKey(g, n); 
+			        Log.d("receive", "BOB paillierE.g: " + paillierE.g);
+			        Log.d("receive", "BOB paillierE.n: " + paillierE.n);
 			        
 			        BigInteger[] results = new BigInteger[(tokens.length -5) * coveringSet.length];
 			        Random randomGen = new Random();
@@ -112,10 +115,11 @@ public class smsReceive extends BroadcastReceiver {
 			        // Evaluate the polys
 		        	for (int j = 0; j < coveringSet.length; j++){
 		        		int tmp = coveringSet.peek(j).value;
-		        		BigInteger cur = new BigInteger(String.valueOf(tmp));
-		        		cur = paillier.Encryption(cur);
+		        		BigInteger bob = new BigInteger(String.valueOf(tmp));
+		        		bob = paillierE.Encryption(bob);
 		        		for (int i = 2; i < tokens.length - 3; i++){ // The last token is the width
-		        			BigInteger c = cur.multiply(new BigInteger(tokens[i])).mod(paillier.nsquare);
+		        			BigInteger alice = new BigInteger(tokens[i]);
+		        			BigInteger c = bob.multiply(alice).mod(paillierE.nsquare);
 		        			
 		        			// Pack them randomly to send back
 		        			boolean unplaced = true;
@@ -142,19 +146,19 @@ public class smsReceive extends BroadcastReceiver {
 			    		txt += ":" + results[i].toString();
 			    	}
 			    	
-			    	Log.d("receive", "the txt we're sending back: " + txt);
+			    	Log.d("receive", "the txt we're sending to Alice: " + txt);
 			    	
 			    	// Dividing the message into txt message size parts 
 			    	ArrayList<String> list = new ArrayList<String>();
 			    	SmsManager sms = SmsManager.getDefault();
 			    	list = sms.divideMessage(txt);
-			    	for(String tmp : list){
-			    		Log.d("receive", "the items in the list: "+ tmp);
-			    	}	    	
+			    	//for(String tmp : list){
+			    	//	Log.d("receive", "the items in the list: "+ tmp);
+			    	//}	    	
 			    	
 			    	// Sending a mult-part txt (which solves so much for me!)
 			    	String number = tokens[0].substring(7);
-			    	Log.d("receive", "the number: " + number);
+			    	//Log.d("receive", "the number: " + number);
 			    	sms.sendMultipartTextMessage(number, null, list, null, null);	        
 	
 			    	break;
@@ -162,6 +166,29 @@ public class smsReceive extends BroadcastReceiver {
 				case 2:
 					Log.d("2", "Receiving from Bob!");
 					Log.d("receive", s);
+					
+					shareSingleton share = shareSingleton.getInstance();
+					Log.d("ALICE", "share.g: " + share.g);
+					Log.d("ALICE", "share.lambda: " + share.lambda);
+					Log.d("ALICE", "share.n: " + share.n);
+					
+					Paillier paillierD = new Paillier(32, 16);
+					paillierD.loadPrivateKey(share.g, share.lambda, share.n);
+					
+					for(int i = 2; i < tokens.length; i++){
+						BigInteger val = new BigInteger(tokens[i]);
+						String clear = paillierD.Decryption(val).toString();
+						Log.d("ALICE", "unenc: " + clear);
+						if (clear.equals("0")){
+							Log.d("hooray!", "It was 0");
+						}
+						
+					}
+					
+					
+					//for(int i = 2; i < tokens.length; i++){
+					//	Log.d("receive:", "the output: " + piallier.Decryption(BigInteger(tokens[i])));						
+					//}
 					
 					break;
 					
