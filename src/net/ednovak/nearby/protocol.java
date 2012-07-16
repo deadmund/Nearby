@@ -1,11 +1,9 @@
 package net.ednovak.nearby;
 
-import java.math.BigInteger;
+
 import java.util.Arrays;
 
 import android.annotation.SuppressLint;
-import android.telephony.SmsManager;
-import android.util.Log;
 
 public class protocol {
 	
@@ -50,12 +48,6 @@ public class protocol {
 		longitude = longitude + 180;
 		// .00017 means the nodes are 10m apart and we're talking about long near the equator
 		return (int)Math.round((longitude / 0.00017));   
-	}
-	
-	
-	// No longer used! :(
-	private boolean isPowerOfTwo(int n){
-		return (n&(n-1)) == 0; // Checks that there is only 1 bit set to 1 
 	}
 	
 	

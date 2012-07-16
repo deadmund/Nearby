@@ -4,9 +4,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
@@ -17,7 +19,21 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main);    
+        
+        SeekBar sb = (SeekBar)findViewById(R.id.seekbar);
+        sb.setOnSeekBarChangeListener(new OnSeekBarChangeListener(){
+        	
+        	public void onStopTrackingTouch(SeekBar arg0){}
+        	
+        	public void onStartTrackingTouch(SeekBar arg0){}
+    
+        	public void onProgressChanged(SeekBar sb, int progress, boolean isUser){
+        		TextView tv = (TextView)findViewById(R.id.seekbar_text);
+        		int value = (int)((progress - 10) / 29.9);
+        		tv.setText(Integer.toString(value)+ "m");
+        	}
+        });
     }
 
     /*
@@ -28,8 +44,7 @@ public class MainActivity extends Activity {
     }
     */
     
-    public void query(View view)
-    {
+    public void query(View view) {
         Intent intent = new Intent(this, displayMessageAct.class);
         EditText editText = (EditText) findViewById(R.id.other_user);
         String message = editText.getText().toString();

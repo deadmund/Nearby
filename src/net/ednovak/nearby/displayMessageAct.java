@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.location.LocationProvider;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.util.Log;
@@ -50,8 +49,10 @@ public class displayMessageAct extends Activity {
         		if (location.hasAccuracy()){
         			if (location.getAccuracy() < 1.0){
         				Log.d("location", "This location is good enough");
+        				// do it all really goes here
         			}
         		}
+        		doItAll(location);
         	}
         	
         	public void onStatusChanged(String provider, int status, Bundle extra){
@@ -69,13 +70,15 @@ public class displayMessageAct extends Activity {
         
         lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10000, lListener);
         //lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, lListener);
-        
+    } // End of onCreate
+    
+    private void doItAll(Location loc){
         // New instance of the protocol
         protocol p = new protocol();
         
 		// Alice's policy width and x location (longitude)
         int width = p.policyToWidth(10); // These are user configurable
-        int x = p.longitudeToInt(-179.9989); // just long for now
+        int x = p.longitudeToInt(loc.getLongitude()); // just long for now
         
         System.out.println("Alice's x: " + x);
         
@@ -118,7 +121,7 @@ public class displayMessageAct extends Activity {
         
         // Encrypting Coefficients
 		// 128-bit encryption with 64-bit certainty (dat's a lot)
-		Paillier paillier = new Paillier(32, 16);
+		Paillier paillier = new Paillier();
 		BigInteger[] encCoe = new BigInteger[coefficients.length];
 		for (int i = 0; i < coefficients.length; i++){
 			encCoe[i] = paillier.Encryption(new BigInteger(String.valueOf(coefficients[i])));
@@ -192,7 +195,6 @@ public class displayMessageAct extends Activity {
     	Log.d("test", "decrypted -5: " + clear_neg);
     	Log.d("test", "decrypted 5: " + clear_pos);
     	*/
+    } // End of doItAll()
+} // End of activity / class;
     	
-        
-    }
-}

@@ -35,8 +35,7 @@ public class Paillier {
 	* p and q are two large primes.
 	* lambda = lcm(p-1, q-1) = (p-1)*(q-1)/gcd(p-1, q-1).
 	*/
-	// I made this public for a second
-	public BigInteger p, q, lambda;
+	private BigInteger p, q, lambda;
 	/**
 	* n = p*q, where p and q are two large primes.
 	*/
@@ -48,7 +47,7 @@ public class Paillier {
 	/**
 	* a random integer in Z*_{n^2} where gcd (L(g^lambda mod n^2), n) = 1.
 	*/
-	// I made this public for a second
+	// I made this public for a second (why not!  g is the public part of the key!)
 	public BigInteger g;
 	/**
 	* number of bits of modulus
@@ -68,7 +67,7 @@ public class Paillier {
 	* Constructs an instance of the Paillier cryptosystem with 512 bits of modulus and at least 1-2^(-64) certainty of primes generation.
 	*/
 	public Paillier() {
-		KeyGeneration(512, 64);
+		KeyGeneration(32, 16); // Have to use such weak encryption because of the stupid txt message problem
 	}
 	
 	

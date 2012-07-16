@@ -6,6 +6,7 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="butt_query">Query</string>
     <string name="other_user">phone number</string>
-    <string name="wait">Just a moment please...</string>
+    <string name="wait">Just a moment please&#8230;</string>
+    <string name="waiting">waiting</string>
 
 </resources>

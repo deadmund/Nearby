@@ -37,10 +37,10 @@ public class smsReceive extends BroadcastReceiver {
 		// Splits them up assuming my ':' marker
 		String[] tokens = s.split(":");
 		
-		//Log.d("receive", "just got this: ");
-		//for (int i = 0; i < tokens.length; i++){
-			//Log.d("receive", "token:" + tokens[i]);
-		//}
+		Log.d("receive", "just got this: ");
+		for (int i = 0; i < tokens.length; i++){
+			Log.d("receive", "token:" + tokens[i]);
+		}
 		
 		//Log.d("receive", "substring:" + tokens[1].substring(0, 2));
 		
@@ -109,7 +109,7 @@ public class smsReceive extends BroadcastReceiver {
 			        }
 			        
 			        // Find the c's
-			        Paillier paillierE = new Paillier(32, 16);
+			        Paillier paillierE = new Paillier();
 			        BigInteger g = new BigInteger(tokens[tokens.length - 2]);
 			        BigInteger n = new BigInteger(tokens[tokens.length - 1]);
 			        paillierE.loadPublicKey(g, n); 
@@ -189,7 +189,7 @@ public class smsReceive extends BroadcastReceiver {
 					Log.d("ALICE", "share.lambda: " + share.lambda);
 					Log.d("ALICE", "share.n: " + share.n);
 					
-					Paillier paillierD = new Paillier(32, 16);
+					Paillier paillierD = new Paillier();
 					paillierD.loadPrivateKey(share.g, share.lambda, share.n);
 					
 					for(int i = 2; i < tokens.length; i++){

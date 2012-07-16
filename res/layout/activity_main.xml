@@ -6,11 +6,21 @@
     
     <TextView android:id="@+id/text_view"
        	android:layout_weight="1"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:padding="@dimen/padding_medium"
         android:text="@string/hello_world"
-        tools:context=".MainActivity" />    
+        tools:context=".MainActivity" />
+    
+	<Seekbar android:id="@+id/seekbar" 
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+   </Seekbar>
+    
+    <TextView android:id="@+id/seekbar_text"
+        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp" />
     
     <EditText android:id="@+id/other_user"
         android:layout_weight="1"
