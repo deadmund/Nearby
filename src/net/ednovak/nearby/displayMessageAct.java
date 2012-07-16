@@ -101,7 +101,7 @@ public class displayMessageAct extends Activity {
         
         System.out.println("Printing the encrypted coefficients");
         for(int i = 0; i < encCoe.length; i++){
-        	System.out.println(encCoe[i]);
+        	System.out.println(encCoe[i]); // These are BigIntegers
         }
         
     	
@@ -109,11 +109,12 @@ public class displayMessageAct extends Activity {
     	// "@@1:encrypted coefficients:width:g:n"
     	String txt = "@@1";
     	for(int i = 0; i < encCoe.length; i++){ // The coefficients encrypted
-    		txt += ":" + String.valueOf(encCoe[i]);
+    		txt += ":" + encCoe[i].toString(16);
     	}
     	
+    	
     	BigInteger[] key = paillier.publicKey();	// Alice's public key
-    	txt += ":" + String.valueOf(width) + ":" + key[0].toString() + ":" + key[1].toString();
+    	txt += ":" + String.valueOf(width) + ":" + key[0].toString(16) + ":" + key[1].toString(16);
     	//Log.d("sending", "the txt: " + txt);
     	
     	ArrayList<String> list = new ArrayList<String>();
@@ -125,10 +126,10 @@ public class displayMessageAct extends Activity {
     	
     	sms.sendMultipartTextMessage(number, null, list, null, null);
     	
+    	/*
     	// Simple TEST //
     	Log.d("test", "beginning");
     	
-    	/*
     	paillier = new Paillier(32, 16);
     	
     	//paillier.loadPublicKey(paillier.g, paillier.n);
@@ -159,12 +160,6 @@ public class displayMessageAct extends Activity {
     	Log.d("test", "decrypted -5: " + clear_neg);
     	Log.d("test", "decrypted 5: " + clear_pos);
     	*/
-    	
-    	
-    	
-    	
-    	
-    	
     	
         
     }

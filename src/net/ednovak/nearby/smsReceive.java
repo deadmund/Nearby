@@ -61,9 +61,17 @@ public class smsReceive extends BroadcastReceiver {
 				case 1:
 					Log.d("1", "Receiving from Alice!");
 					Log.d("receive", s);
-			        
+					
 			        // New instance of the protocol
-			        protocol p = new protocol();
+					protocol p = new protocol();
+					
+					// Convert back to ascii
+					for(int i = 2; i < tokens.length; i++){
+						tokens[i] = new BigInteger(tokens[i], 16).toString();
+					}
+					
+					Log.d("recieve", "Just checking the hexToAscii tokens[3]: " + tokens[3]);			        
+
 			        
 					// Alice's policy width and Bob's location x (longitude)
 			        int width = Integer.parseInt( tokens[tokens.length - 3] );
@@ -143,7 +151,7 @@ public class smsReceive extends BroadcastReceiver {
 			        // Making the string
 			    	String txt = "@@2";
 			    	for (int i = 0; i < results.length; i++){
-			    		txt += ":" + results[i].toString();
+			    		txt += ":" + results[i].toString(16);
 			    	}
 			    	
 			    	Log.d("receive", "the txt we're sending to Alice: " + txt);
@@ -166,6 +174,15 @@ public class smsReceive extends BroadcastReceiver {
 				case 2:
 					Log.d("2", "Receiving from Bob!");
 					Log.d("receive", s);
+					
+					p = new protocol();
+					
+					// Convert back to ascii
+					for(int i = 2; i < tokens.length; i++){
+						tokens[i] = new BigInteger(tokens[i], 16).toString();
+					}
+					
+					Log.d("recieve", "Just checking the hexToAscii tokens[3]: " + tokens[3]);
 					
 					shareSingleton share = shareSingleton.getInstance();
 					Log.d("ALICE", "share.g: " + share.g);

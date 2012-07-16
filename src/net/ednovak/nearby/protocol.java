@@ -171,14 +171,37 @@ public class protocol {
 	}
 	
 	
+	// Convert from a hex string to regular ascii
+	public String toAscii(String hex){
+		if(hex.length()%2 != 0){
+            System.err.println("requires EVEN number of chars");
+            return null;
+         }
+         StringBuilder sb = new StringBuilder();               
+         //Convert Hex 0232343536AB into two characters stream.
+         for( int i=0; i < hex.length()-1; i+=2 ){
+              /*
+               * Grab the hex in pairs
+               */
+             String output = hex.substring(i, (i + 2));
+             /*
+              * Convert Hex to Decimal
+              */
+             int decimal = Integer.parseInt(output, 16);                 
+             sb.append((char)decimal);             
+         }           
+         return sb.toString();
+	}
 	
-	// Sends all the messages in a message Queue
-	public void sendTXTS(String rec, messageQueue messages){
-    	SmsManager sms = SmsManager.getDefault();
-    	// Sending txts to...
-    	Log.d("receive", "sending txts too " + rec + "...");
-    	for (int i = 0; i < messages.length; i++){
-    		sms.sendTextMessage(rec, null, messages.peek(i), null, null);
-    	}
+	
+	// Convert from an ascii string to hex
+	public String toHex(String ascii){
+		StringBuilder hex = new StringBuilder();
+	       
+        for (int i=0; i < ascii.length(); i++) {
+            hex.append(Integer.toHexString(ascii.charAt(i)));
+        }
+        
+        return hex.toString();
 	}
 }
