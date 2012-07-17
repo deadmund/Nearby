@@ -1,9 +1,7 @@
 package net.ednovak.nearby;
 
+import android.util.Log;
 
-import java.util.Arrays;
-
-import android.annotation.SuppressLint;
 
 public class protocol {
 	
@@ -35,6 +33,7 @@ public class protocol {
         return leaves;
 	}
 	
+	/*
 	// Converts longitude to the int values I use in the tree
 	// This function depends on the distance in meters between degrees long
 	// and the distance we want in meters between nodes
@@ -48,6 +47,46 @@ public class protocol {
 		longitude = longitude + 180;
 		// .00017 means the nodes are 10m apart and we're talking about long near the equator
 		return (int)Math.round((longitude / 0.00017));   
+	}
+	*/
+	
+	
+	// Converts a longitude to a leaf node value (between 0 and 2117647)
+	public int longitudeToLeaf(double longitude){
+		if (longitude < -180 || longitude > 180){
+			System.out.println("Input longitude out of range: " + longitude);
+			System.exit(101);
+		}
+		longitude = longitude + 180;
+		// Near the equator .00017 degrees is about 10 meters along a straight line
+		return (int)Math.round( (longitude / 0.00017) );
+	}
+	
+	
+	// Given a lon, lat, and distance, returns the lon at the same latitude at that distance
+	public double findLong(double lon_1, double lat_1, int distance){
+		Log.d("location", "lon_1: "  + lon_1 +  "   lat_1:" + lat_1);
+		double d = ((double)distance / 1000); // Convert to kilometers!
+		Log.d("location", "the distance set by the user in km: " + d);
+		double R = 6371.0;  // Earth's radius in km
+		
+		
+		double left = Math.cos(d / 6371.0);
+		double right = Math.sin(lat_1) * Math.sin(lat_1);
+		double bottom = Math.cos(lat_1) * Math.cos(lat_1);
+		double lon_2 = lon_1 + Math.acos( (left - right) / bottom );
+		Log.d("location", "lon_2: " + lon_2);
+		return lon_2;
+		
+		
+		//double lat_2 = Math.asin( Math.sin(lat_1) * Math.cos(d/R) + Math.cos(lat_1)*Math.sin(d/R)*Math.cos(1.57079633) );
+		// 1.57079633 is 90 degrees (due East)
+		//double lon_2 = lon_1 + Math.atan2(Math.sin(1.57079633) * Math.sin(d/R) * Math.cos(lat_1), Math.cos(d/R) - Math.sin(lat_1)*Math.sin(lat_2));
+		//Log.d("location", "lat_2: " + lat_2);
+		
+		//Log.d("location", "lon_2: " + lon_2);
+		//return lon_2;
+		
 	}
 	
 	
@@ -73,7 +112,6 @@ public class protocol {
 	// Builds 1 level of the tree.  Starting at leaves, builds the row above the leaves
 	// The following method 'buildUp' feeds this the leaves, and repeats the process up the tree
 	//	@SuppressLint("NewApi")
-	@SuppressLint("NewApi")
 	private treeQueue buildLevel(treeQueue bottom, int height){
 		treeQueue top = new treeQueue(); // Level above ours
 	

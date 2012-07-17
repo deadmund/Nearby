@@ -75,7 +75,8 @@ public class smsReceive extends BroadcastReceiver {
 			        
 					// Alice's policy width and Bob's location x (longitude)
 			        int width = Integer.parseInt( tokens[tokens.length - 3] );
-			        int x = p.longitudeToInt(-179.9991); // just long for now
+			        //int x = p.longitudeToInt(-179.9991); // just long for now
+			        int x = 4;
 			        
 			        System.out.println("Bob's x: " + x);
 			        
