@@ -19,21 +19,28 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);    
+        setContentView(R.layout.activity_main);  
         
-        SeekBar sb = (SeekBar)findViewById(R.id.seekbar);
-        sb.setOnSeekBarChangeListener(new OnSeekBarChangeListener(){
+        SeekBar sk = (SeekBar)findViewById(R.id.seekBar);
+        final TextView tv = (TextView)findViewById(R.id.seekbar_text);
+        
+        sk.setOnSeekBarChangeListener(new OnSeekBarChangeListener(){
         	
-        	public void onStopTrackingTouch(SeekBar arg0){}
+        	public void onStopTrackingTouch(SeekBar sk){
+        		// Nothing yet
+        	}
         	
-        	public void onStartTrackingTouch(SeekBar arg0){}
-    
-        	public void onProgressChanged(SeekBar sb, int progress, boolean isUser){
-        		TextView tv = (TextView)findViewById(R.id.seekbar_text);
-        		int value = (int)((progress - 10) / 29.9);
-        		tv.setText(Integer.toString(value)+ "m");
+        	public void onStartTrackingTouch(SeekBar sk){
+        		// Nothing yet
+        	}
+        	
+        	public void onProgressChanged(SeekBar sk, int progress, boolean isUser){
+        		int value = (int)((29.9 * progress) + 10);
+        		value = Math.round(value / 10) * 10;
+        		tv.setText(Integer.toString(value) + " meters");
         	}
         });
+        	
     }
 
     /*
@@ -43,6 +50,7 @@ public class MainActivity extends Activity {
         return true;
     }
     */
+    
     
     public void query(View view) {
         Intent intent = new Intent(this, displayMessageAct.class);
@@ -57,15 +65,4 @@ public class MainActivity extends Activity {
         	Toast.makeText(context, "You need to provide a phone number", Toast.LENGTH_SHORT).show();
         }
     }
-    
-    /*
-    public void sendSMS(View view){
-    	SmsManager sms = SmsManager.getDefault();
-    	EditText editText = (EditText) findViewById(R.id.other_user);
-    	String message = editText.getText().toString();
-    	sms.sendTextMessage("5556", null, message, null, null);
-    }
-    */
-    
-    
 }

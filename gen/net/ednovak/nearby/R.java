@@ -24,7 +24,7 @@ public final class R {
         public static final int bt_query=0x7f080004;
         public static final int menu_settings=0x7f080006;
         public static final int other_user=0x7f080003;
-        public static final int seekbar=0x7f080001;
+        public static final int seekBar=0x7f080001;
         public static final int seekbar_text=0x7f080002;
         public static final int text_view=0x7f080000;
         public static final int waiting=0x7f080005;
@@ -42,6 +42,7 @@ public final class R {
         public static final int hello_world=0x7f050001;
         public static final int menu_settings=0x7f050002;
         public static final int other_user=0x7f050005;
+        public static final int s10=0x7f050008;
         public static final int title_activity_main=0x7f050003;
         public static final int wait=0x7f050006;
         public static final int waiting=0x7f050007;
