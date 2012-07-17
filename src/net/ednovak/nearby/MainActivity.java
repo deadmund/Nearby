@@ -54,10 +54,17 @@ public class MainActivity extends Activity {
     
     public void query(View view) {
         Intent intent = new Intent(this, displayMessageAct.class);
+        
+        SeekBar sk = (SeekBar)findViewById(R.id.seekBar);
+        int distance = sk.getProgress();
+        distance = (int)((29.9 * distance) + 10);
+        distance = Math.round(distance / 10) * 10;
         EditText editText = (EditText) findViewById(R.id.other_user);
-        String message = editText.getText().toString();
-        if (message.length() != 0 && message != null){
-        	intent.putExtra(EXTRA_MESSAGE, message);
+        String number = editText.getText().toString();
+        
+        if (number.length() != 0 && number != null){
+        	intent.putExtra("number", number);
+        	intent.putExtra("policy", distance);
         	startActivity(intent);
         }
         else {

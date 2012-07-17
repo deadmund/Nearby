@@ -16,13 +16,16 @@
 	<SeekBar
         android:id="@+id/seekBar"       
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+		android:layout_marginRight="20dp"/>
     
     <TextView android:id="@+id/seekbar_text"
         android:layout_weight="1"
         android:layout_width="match_parent"
         android:layout_height="0dp" 
-        android:text="@string/s10"/>
+        android:text="@string/s10"
+        android:gravity="center" />
     
     <EditText android:id="@+id/other_user"
         android:layout_weight="1"

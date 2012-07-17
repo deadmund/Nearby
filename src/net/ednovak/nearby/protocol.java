@@ -85,10 +85,12 @@ public class protocol {
 				cur.path[0] = '0';
 			}
 			
-			char[] nPath; // Slice the new path
 			//System.out.println("cur.path.length" + cur.path.length);
 			//System.out.println("cur.path: " + cur.path[0] + "  cur.path.length-1: " + (cur.path.length-1));
-			nPath = Arrays.copyOfRange(cur.path, 0, cur.path.length-1); // Drop the last bit
+			char[] nPath = new char[cur.path.length-1]; // Drop the last bit (manual copy :(
+			for(int j=0; j < nPath.length; j++){
+				nPath[j] = cur.path[i];
+			}
 			
 			//System.out.println("Checking the path letter" + old);
 			

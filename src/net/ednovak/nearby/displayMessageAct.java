@@ -69,15 +69,17 @@ public class displayMessageAct extends Activity {
         };
         
         lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10000, lListener);
-        //lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, lListener);
+        lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, lListener);
     } // End of onCreate
     
     private void doItAll(Location loc){
         // New instance of the protocol
         protocol p = new protocol();
         
+    	Intent intent = getIntent();
+        int pol = intent.getIntExtra("policy", 10);
 		// Alice's policy width and x location (longitude)
-        int width = p.policyToWidth(10); // These are user configurable
+        int width = p.policyToWidth(pol); // These are user configurable
         int x = p.longitudeToInt(loc.getLongitude()); // just long for now
         
         System.out.println("Alice's x: " + x);
@@ -156,9 +158,7 @@ public class displayMessageAct extends Activity {
     	SmsManager sms = SmsManager.getDefault();
     	list = sms.divideMessage(txt);
     	
-    	Intent intent = getIntent();
-        String number = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
-    	
+        String number = intent.getStringExtra("number");
     	sms.sendMultipartTextMessage(number, null, list, null, null);
     	
     	/*
