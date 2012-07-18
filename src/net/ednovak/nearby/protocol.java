@@ -1,5 +1,9 @@
 package net.ednovak.nearby;
 
+import java.math.*;
+import org.apfloat.Apfloat;
+import org.apfloat.ApfloatMath;
+
 import android.util.Log;
 
 
@@ -62,31 +66,46 @@ public class protocol {
 		return (int)Math.round( (longitude / 0.00017) );
 	}
 	
+	public double findLat(double lon_1, double lat_1, int distance){
+		double d = (double)distance / 1000;
+		double R = 6378.1;
+		
+		double theta = 0 * ((Math.PI) / 180.0);
+		
+		double lat_2 = Math.asin( Math.sin(lat_1) * Math.cos(d/R) + Math.cos(lat_1)*Math.sin(d/R)*Math.cos(theta) );
+		return lat_2;		
+	}
+	
 	
 	// Given a lon, lat, and distance, returns the lon at the same latitude at that distance
-	public double findLong(double lon_1, double lat_1, int distance){
-		Log.d("location", "lon_1: "  + lon_1 +  "   lat_1:" + lat_1);
-		double d = ((double)distance / 1000); // Convert to kilometers!
-		Log.d("location", "the distance set by the user in km: " + d);
-		double R = 6371.0;  // Earth's radius in km
+	public double findLong(double orig_lon_1, double orig_lat_1, int distance){
+		//Log.d("location", "coming in");
+		//Log.d("location", "orig_lon_1: " + orig_lon_1);
+		//Log.d("location", "orig_lat_1: " + orig_lat_1);
+		//Log.d("location", "distance: " + distance);
 		
+		double d = (double)distance / 1000;
+		double dist = d / 6371.0;
+		double brng = 90 * (Math.PI/180);
+		double lat1 = orig_lat_1 * (Math.PI/180);
+		double lon1 = orig_lon_1 * (Math.PI/180);
 		
-		double left = Math.cos(d / 6371.0);
-		double right = Math.sin(lat_1) * Math.sin(lat_1);
-		double bottom = Math.cos(lat_1) * Math.cos(lat_1);
-		double lon_2 = lon_1 + Math.acos( (left - right) / bottom );
-		Log.d("location", "lon_2: " + lon_2);
-		return lon_2;
+		double lat2 = Math.asin( Math.sin(lat1)*Math.cos(dist) + Math.cos(lat1)*Math.sin(dist)*Math.cos(brng) );
+		//Log.d("location", "lat2: " + lat2);
 		
+		//double lat2deg = lat2 * (180 / Math.PI);
+		//Log.d("location", "lat2 in degrees: " + lat2deg);
 		
-		//double lat_2 = Math.asin( Math.sin(lat_1) * Math.cos(d/R) + Math.cos(lat_1)*Math.sin(d/R)*Math.cos(1.57079633) );
-		// 1.57079633 is 90 degrees (due East)
-		//double lon_2 = lon_1 + Math.atan2(Math.sin(1.57079633) * Math.sin(d/R) * Math.cos(lat_1), Math.cos(d/R) - Math.sin(lat_1)*Math.sin(lat_2));
-		//Log.d("location", "lat_2: " + lat_2);
+		double lon2 = lon1 + Math.atan2( Math.sin(brng)*Math.sin(dist)*Math.cos(lat1), Math.cos(dist)-Math.sin(lat1)*Math.sin(lat2) );
 		
-		//Log.d("location", "lon_2: " + lon_2);
-		//return lon_2;
+		//Log.d("location", "lon2 before normalizing: " + lon2);
+		lon2 = (lon2+3*Math.PI) % (2*Math.PI) - Math.PI; // Apparently normalizes it to with [-180,180] ?
 		
+		//Log.d("location", "lon2 before radians->degrees: " + lon2);
+		lon2 = lon2 * (180 / Math.PI); // Convert from radians to degrees
+		
+		Log.d("location", "lon2: " + lon2);
+		return lon2;
 	}
 	
 	
@@ -127,7 +146,7 @@ public class protocol {
 			//System.out.println("cur.path: " + cur.path[0] + "  cur.path.length-1: " + (cur.path.length-1));
 			char[] nPath = new char[cur.path.length-1]; // Drop the last bit (manual copy :(
 			for(int j=0; j < nPath.length; j++){
-				nPath[j] = cur.path[i];
+				nPath[j] = cur.path[j];
 			}
 			
 			//System.out.println("Checking the path letter" + old);
