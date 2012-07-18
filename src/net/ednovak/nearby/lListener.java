@@ -34,6 +34,7 @@ public class lListener implements LocationListener {
 	private void updateCurrent(Location loc){
 		lon = loc.getLongitude();
 		lat = loc.getLatitude();
+		
 	}
 	
 	public boolean listening(){

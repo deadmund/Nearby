@@ -1,9 +1,5 @@
 package net.ednovak.nearby;
 
-import java.math.*;
-import org.apfloat.Apfloat;
-import org.apfloat.ApfloatMath;
-
 import android.util.Log;
 
 

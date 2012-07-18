@@ -7,6 +7,8 @@ import java.util.Random;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
@@ -15,6 +17,9 @@ import android.widget.Toast;
 
 
 public class smsReceive extends BroadcastReceiver {
+	
+	private LocationManager lManager;
+	private final static lListener myListener = new lListener();
 	
 	@Override
 	public void onReceive(Context context, Intent intent){
@@ -62,6 +67,12 @@ public class smsReceive extends BroadcastReceiver {
 					Log.d("1", "Receiving from Alice!");
 					Log.d("receive", s);
 					
+					// Turn on the listener immediately
+			        lManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+			        lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10000, myListener);
+			        // Turn on the following for a physical phone, turn it off for emulated device
+			        //lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, lListener);
+					
 			        // New instance of the protocol
 					protocol p = new protocol();
 					
@@ -76,17 +87,39 @@ public class smsReceive extends BroadcastReceiver {
 					// Alice's policy width and Bob's location x (longitude)
 			        int width = Integer.parseInt( tokens[tokens.length - 3] );
 			        //int x = p.longitudeToInt(-179.9991); // just long for now
-			        int x = 4;
 			        
-			        System.out.println("Bob's x: " + x);
+			        Location lastKnownLocation = lManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+			        if ( lastKnownLocation == null ){
+			        	lastKnownLocation = lManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+			        }
+			        if ( lastKnownLocation == null ) {
+			        	Log.d("recieve" , "Bob's location is null!");
+			        }
 			        
-			        int left = x - width;
-			        int right = x + width;
-			        System.out.println("Bob's leaf nodes go from " + left + " to " + right + ".  His node is: " + x);
-			        //System.out.println("Lowest possible node on the tree at long=-180: " + this.longitudeToInt(-180.0));
-			        //System.out.println("Highest possible node on the tree at long=180: " + this.longitudeToInt(180.0));
 			        
-			        treeQueue leaves = p.genLeaves(left, right, x);
+			        //double edge = p.findLong(lon, lat, pol);
+			        //int edgeLeafNumber = p.longitudeToLeaf(edge);
+			        //int aliceLeafNumber = p.longitudeToLeaf(lon);
+			        
+			        //Log.d("stage 1", "Alice's leaf value: " + aliceLeafNumber);
+			        //Log.d("stage 1", "Edge gps lon value: " + edge);
+			        //Log.d("stage 1", "edge leaf value: " + edgeLeafNumber);
+			        
+			        //int spanLength = ( Math.abs(edgeLeafNumber - aliceLeafNumber) * 2 ) + 1;
+			        //int left = aliceLeafNumber - (spanLength / 2);
+			        //int right = aliceLeafNumber + (spanLength / 2);
+			        
+			        //Log.d("stage 1", "Alice's leaf nodes go from " + left + " to " + right + ".  Her node is: " + aliceLeafNumber);
+			        
+			        
+			        int bobLeafNumber = p.longitudeToLeaf(lastKnownLocation.getLongitude());			        
+			        Log.d("stage 2", "Bob's leaf number: " + bobLeafNumber);
+			        
+			        int left = bobLeafNumber - width;
+			        int right = bobLeafNumber + width;
+			        System.out.println("Bob's leaf nodes go from " + left + " to " + right + ".  His node is: " + bobLeafNumber);
+			        
+			        treeQueue leaves = p.genLeaves(left, right, bobLeafNumber);
 			        
 			        //System.out.println("Here are the leaves in Bob's span:");
 			        //for (int i = 0; i < leaves.length; i++){
@@ -114,8 +147,8 @@ public class smsReceive extends BroadcastReceiver {
 			        BigInteger g = new BigInteger(tokens[tokens.length - 2]);
 			        BigInteger n = new BigInteger(tokens[tokens.length - 1]);
 			        paillierE.loadPublicKey(g, n); 
-			        Log.d("receive", "BOB paillierE.g: " + paillierE.g);
-			        Log.d("receive", "BOB paillierE.n: " + paillierE.n);
+			        //Log.d("receive", "BOB paillierE.g: " + paillierE.g);
+			        //Log.d("receive", "BOB paillierE.n: " + paillierE.n);
 			        
 			        BigInteger[] results = new BigInteger[(tokens.length -5) * coveringSet.length];
 			        Random randomGen = new Random();
@@ -208,10 +241,6 @@ public class smsReceive extends BroadcastReceiver {
 						}						
 					}
 					context.startActivity(intent2);
-					
-					//for(int i = 2; i < tokens.length; i++){
-					//	Log.d("receive:", "the output: " + piallier.Decryption(BigInteger(tokens[i])));						
-					//}
 					
 					break;
 					
