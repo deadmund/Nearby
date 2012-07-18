@@ -36,8 +36,16 @@ public class displayMessageAct extends Activity {
     } // End of onCreate
     
     private void doItAll(double lon, double lat, int pol, String number, int stage){
+    	Log.d("stage 1", "Alice finding / sending lon");
     	
-    	Log.d("stage 1", "beginning stage 1");
+    	// Store the policy, latitude, and longitude
+    	// This shareSingleton is also used to store the private key 
+    	// until the end of the protocol.
+		shareSingleton share = shareSingleton.getInstance();
+		share.pol = pol;
+		share.lon = lon;
+		share.lat = lat;
+		share.number = number;
     	
         // New instance of the protocol
         protocol p = new protocol();
@@ -59,8 +67,8 @@ public class displayMessageAct extends Activity {
         int right = aliceLeafNumber + (spanLength / 2);
         
         Log.d("stage 1", "Alice's leaf nodes go from " + left + " to " + right + ".  Her node is: " + aliceLeafNumber);
-        //System.out.println("Lowest possible node on the tree at long=-180: " + this.longitudeToInt(-180.0));
-        //System.out.println("Highest possible node on the tree at long=180: " + this.longitudeToInt(180.0));
+        Log.d("stage 1", "Lowest possible node on the tree at long=-180: " + p.longitudeToLeaf(-180.0));
+        Log.d("stage 1", "Highest possible node on the tree at long=180: " + p.longitudeToLeaf(180.0));
         
         treeQueue leaves = p.genLeaves(left, right, aliceLeafNumber);
         
@@ -74,10 +82,10 @@ public class displayMessageAct extends Activity {
         tree root = p.buildUp(leaves);
         System.out.println("The root of these leaves is: " + root.toString());
         
-        //System.out.println("The entire tree:");
-        //System.out.println(treeToStringDown(root));
+        Log.d("stage 1", "The entire tree:");
+        Log.d("stage 1", "" + p.treeToStringDown(root));
         
-        System.out.println("Finding alice's rep set");
+        Log.d("stage 1", "Finding alice's rep set");
         treeQueue repSet = root.findRepSet(leaves.peek(0), leaves.peek(-1), root);
         // Printing alice's rep set
         for (int i = 0; i < repSet.length; i++){
@@ -94,16 +102,14 @@ public class displayMessageAct extends Activity {
         }
         
         // Encrypting Coefficients
-		// 128-bit encryption with 64-bit certainty (dat's a lot)
 		Paillier paillier = new Paillier();
 		BigInteger[] encCoe = new BigInteger[coefficients.length];
 		for (int i = 0; i < coefficients.length; i++){
 			encCoe[i] = paillier.Encryption(new BigInteger(String.valueOf(coefficients[i])));
 		}
 		
-		// Make this key globally available through a singleton
+		// Make this key globally available through the shareSingleton 'share'
 		BigInteger[] tmp = paillier.privateKey();
-		shareSingleton share = shareSingleton.getInstance(); 
         share.g = tmp[0];
         share.lambda = tmp[1];
         share.n = tmp[2];        
@@ -114,6 +120,7 @@ public class displayMessageAct extends Activity {
         }
         
     	
+        // Generate the message to send to Bob for stage 2
     	// The format of a code 1 message:
     	// "@@1:encrypted coefficients:width:g:n"
     	String txt = "@@1";
@@ -129,7 +136,7 @@ public class displayMessageAct extends Activity {
     	ArrayList<String> list = new ArrayList<String>();
     	SmsManager sms = SmsManager.getDefault();
     	list = sms.divideMessage(txt);
-    	
+    	Log.d("stage 1", "sending the encrypted coefficients (and other stuff) to Bob");
     	sms.sendMultipartTextMessage(number, null, list, null, null);
     	
     } // End of doItAll()

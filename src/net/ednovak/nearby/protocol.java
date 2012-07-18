@@ -1,5 +1,8 @@
 package net.ednovak.nearby;
 
+import java.math.BigInteger;
+import java.util.Random;
+
 import android.util.Log;
 
 
@@ -50,6 +53,20 @@ public class protocol {
 	}
 	*/
 	
+	public int latitudeToLeaf(double latitude){
+		if (latitude < -90 || latitude > 90){
+			System.out.println("Input latitude out of range: "  + latitude);
+			System.exit(102);
+		}
+		
+		latitude = latitude + 90;
+		// On a line that goes through the poles .00000899 degrees is about 10 meters.
+		// This (like the longitude) means the protocol granularity is at best 10 meters
+		// I am assuming the Earth is a perfect sphere with radius 6371.  Even though
+		// it is not.
+		return (int)Math.round( (latitude / 0.0000893261774) );		
+	}
+	
 	
 	// Converts a longitude to a leaf node value (between 0 and 2117647)
 	public int longitudeToLeaf(double longitude){
@@ -58,18 +75,29 @@ public class protocol {
 			System.exit(101);
 		}
 		longitude = longitude + 180;
-		// Near the equator .00017 degrees is about 10 meters along a straight line
-		return (int)Math.round( (longitude / 0.00017) );
+		// Along the equator 10 meters is about .00000899 degrees.  This
+		// (like latitude) means that the protocol granularity is at best 10 meters
+		// I am assuming the Earth is a perfect sphere with radius 6371.  Even though
+		// it is not.
+		return (int)Math.round( (longitude / 0.0000893261774) );
 	}
 	
-	public double findLat(double lon_1, double lat_1, int distance){
+	public double findLat(double orig_lon_1, double orig_lat_1, int distance){
+		//Log.d("location", "coming in");
+		//Log.d("location", "orig_lon_1: " + orig_lon_1);
+		//Log.d("location", "orig_lat_1: " + orig_lat_1);
+		//Log.d("location", "distance: " + distance);
+		
 		double d = (double)distance / 1000;
-		double R = 6378.1;
+		double dist = d / 6371.0;
+		double brng = 0 * (Math.PI/180);
+		double lat1 = orig_lat_1 * (Math.PI/180);
+		//double lon1 = orig_lon_1 * (Math.PI/180);
 		
-		double theta = 0 * ((Math.PI) / 180.0);
-		
-		double lat_2 = Math.asin( Math.sin(lat_1) * Math.cos(d/R) + Math.cos(lat_1)*Math.sin(d/R)*Math.cos(theta) );
-		return lat_2;		
+		double lat2 = Math.asin( Math.sin(lat1)*Math.cos(dist) + Math.cos(lat1)*Math.sin(dist)*Math.cos(brng) );
+		lat2 = lat2 * (180 / Math.PI);
+		//Log.d("location", "lat2degrees: " + lat2);
+		return lat2;
 	}
 	
 	
@@ -105,17 +133,6 @@ public class protocol {
 	}
 	
 	
-	// This function takes a tree index number (leaf) and converts it back to long value
-	public double intToLongitude(int leafIndex){
-		if (leafIndex < 0 || leafIndex > 2117647){
-			System.out.println("Input leaf index out of range: " + leafIndex);
-			System.exit(201);
-		}
-		// .00017 assuming the nodes are 10m apart and we're near the equator
-		return ((leafIndex * .00017) + 180) - 360;
-	}
-	
-	
 	// Takes their policy and converts it to leaf node distance to create a span
 	// In this case the nodes are 10m apart (because of longitudeToInt)
 	public int policyToWidth(int policy){
@@ -148,7 +165,7 @@ public class protocol {
 			//System.out.println("Checking the path letter" + old);
 			
 			if (cur.path[cur.path.length-1] == '0'){ // This is a branch that goes right
-				int nValue = cur.value + 2117648; // Max num of leaf nodes
+				int nValue = cur.value + 4030175; // Max num of leaf nodes
 				//System.out.println("Putting " + nValue + " in top row @ end");
 				top.push(new tree(nValue, nPath, cur, null));
 				cur.parent = top.peek(-1); // Thing at end
@@ -166,7 +183,7 @@ public class protocol {
 			}
 			
 			else { // This is a branch that goes left	
-				int nValue = cur.value + (2117648 - (int)(Math.pow(2.0, (double)(height -1))));
+				int nValue = cur.value + (4030175 - (int)(Math.pow(2.0, (double)(height -1))));
 				//System.out.println("Putting " + nValue + " in top row @ end");
 				top.push(new tree(nValue, nPath, null, cur));
 				cur.parent = top.peek(-1);
@@ -216,39 +233,38 @@ public class protocol {
 		
 		return answer;
 	}
-	
-	
-	// Convert from a hex string to regular ascii
-	public String toAscii(String hex){
-		if(hex.length()%2 != 0){
-            System.err.println("requires EVEN number of chars");
-            return null;
-         }
-         StringBuilder sb = new StringBuilder();               
-         //Convert Hex 0232343536AB into two characters stream.
-         for( int i=0; i < hex.length()-1; i+=2 ){
-              /*
-               * Grab the hex in pairs
-               */
-             String output = hex.substring(i, (i + 2));
-             /*
-              * Convert Hex to Decimal
-              */
-             int decimal = Integer.parseInt(output, 16);                 
-             sb.append((char)decimal);             
-         }           
-         return sb.toString();
-	}
-	
-	
-	// Convert from an ascii string to hex
-	public String toHex(String ascii){
-		StringBuilder hex = new StringBuilder();
-	       
-        for (int i=0; i < ascii.length(); i++) {
-            hex.append(Integer.toHexString(ascii.charAt(i)));
-        }
+
+
+	public BigInteger[] bobCalc(treeQueue coveringSet, String[] encCoe){
+		BigInteger[] results = new BigInteger[(encCoe.length - 5) * coveringSet.length];
+        Random randomGen = new Random();
         
-        return hex.toString();
+        Paillier paillierE = new Paillier();
+        paillierE.loadPublicKey(new BigInteger(encCoe[encCoe.length - 2]), new BigInteger(encCoe[encCoe.length-1]));
+        
+        // This should probs be a protocol function
+        // Evaluate the polys
+    	for (int j = 0; j < coveringSet.length; j++){
+    		int tmp = coveringSet.peek(j).value;
+    		BigInteger bob = new BigInteger(String.valueOf(tmp));
+    		bob = paillierE.Encryption(bob);
+    		for (int i = 2; i < encCoe.length - 3; i++){ // The last token is the width
+    			BigInteger alice = new BigInteger(encCoe[i]);
+    			BigInteger c = bob.multiply(alice).mod(paillierE.nsquare);
+    			
+    			// Pack them randomly to send back
+    			boolean unplaced = true;
+    			while (unplaced){
+    				int randInt = randomGen.nextInt(results.length);
+    				//Log.d("receive", "trying spot: " + randInt);
+    				if ( results[randInt] == null){
+    					results[randInt] = c;
+    					unplaced = false;
+    				}
+    			}	
+    		}
+        }
+    	return results;
 	}
 }
+

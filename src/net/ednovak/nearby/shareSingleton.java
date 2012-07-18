@@ -7,6 +7,10 @@ public class shareSingleton {
 	public BigInteger g;
 	public BigInteger lambda;
 	public BigInteger n;
+	public int pol;
+	public double lon;
+	public double lat;
+	public String number;
 	
 	protected shareSingleton(){
 		// Only to defeat instantiation

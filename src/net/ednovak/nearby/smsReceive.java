@@ -2,7 +2,6 @@ package net.ednovak.nearby;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Random;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -63,8 +62,8 @@ public class smsReceive extends BroadcastReceiver {
 			int swtch = Integer.parseInt(tokens[1].substring(2));
 			//Log.d("BOB", "the code after the @@: " + swtch);
 			switch (swtch){
-				case 1:
-					Log.d("1", "Receiving from Alice!");
+				case 1: // stage 2 (Bob does his part for Alice, longitude)
+					Log.d("stage 2", "Receiving from Alice!");
 					Log.d("receive", s);
 					
 					// Turn on the listener immediately
@@ -95,7 +94,7 @@ public class smsReceive extends BroadcastReceiver {
 			        if ( lastKnownLocation == null ) {
 			        	Log.d("recieve" , "Bob's location is null!");
 			        }
-			        
+			        lManager.removeUpdates(myListener);
 			        
 			        //double edge = p.findLong(lon, lat, pol);
 			        //int edgeLeafNumber = p.longitudeToLeaf(edge);
@@ -142,39 +141,8 @@ public class smsReceive extends BroadcastReceiver {
 			        	System.out.println("");
 			        }
 			        
-			        // Find the c's
-			        Paillier paillierE = new Paillier();
-			        BigInteger g = new BigInteger(tokens[tokens.length - 2]);
-			        BigInteger n = new BigInteger(tokens[tokens.length - 1]);
-			        paillierE.loadPublicKey(g, n); 
-			        //Log.d("receive", "BOB paillierE.g: " + paillierE.g);
-			        //Log.d("receive", "BOB paillierE.n: " + paillierE.n);
-			        
-			        BigInteger[] results = new BigInteger[(tokens.length -5) * coveringSet.length];
-			        Random randomGen = new Random();
-			        
-			        // This should probs be a protocol function
-			        // Evaluate the polys
-		        	for (int j = 0; j < coveringSet.length; j++){
-		        		int tmp = coveringSet.peek(j).value;
-		        		BigInteger bob = new BigInteger(String.valueOf(tmp));
-		        		bob = paillierE.Encryption(bob);
-		        		for (int i = 2; i < tokens.length - 3; i++){ // The last token is the width
-		        			BigInteger alice = new BigInteger(tokens[i]);
-		        			BigInteger c = bob.multiply(alice).mod(paillierE.nsquare);
-		        			
-		        			// Pack them randomly to send back
-		        			boolean unplaced = true;
-		        			while (unplaced){
-		        				int randInt = randomGen.nextInt(results.length);
-		        				//Log.d("receive", "trying spot: " + randInt);
-		        				if ( results[randInt] == null){
-		        					results[randInt] = c;
-		        					unplaced = false;
-		        				}
-		        			}	
-		        		}
-			        }
+			        // Do Bob's calculations (homomorphic sneaky-ness
+			        BigInteger[] results = p.bobCalc(coveringSet, tokens);
 			        
 		        	// Printing Bob's values
 			        Log.d("receive", "Printing Bob Generated values (in random order, encrypted):");
@@ -205,8 +173,8 @@ public class smsReceive extends BroadcastReceiver {
 	
 			    	break;
 			        
-				case 2:
-					Log.d("2", "Receiving from Bob!");
+				case 2: //stage 3 (alice finds latitude if she's near Bob in longitude)
+					Log.d("stage 3", "Receiving from Bob! Check his long and generate lat");
 					Log.d("receive", s);
 					
 					p = new protocol();
@@ -218,17 +186,18 @@ public class smsReceive extends BroadcastReceiver {
 					
 					Log.d("recieve", "Just checking the hexToAscii tokens[3]: " + tokens[3]);
 					
-					shareSingleton share = shareSingleton.getInstance();
-					Log.d("ALICE", "share.g: " + share.g);
-					Log.d("ALICE", "share.lambda: " + share.lambda);
-					Log.d("ALICE", "share.n: " + share.n);
+					
+					//Log.d("ALICE", "share.g: " + share.g);
+					//Log.d("ALICE", "share.lambda: " + share.lambda);
+					//Log.d("ALICE", "share.n: " + share.n);
 					
 					Paillier paillierD = new Paillier();
+					shareSingleton share = shareSingleton.getInstance();
 					paillierD.loadPrivateKey(share.g, share.lambda, share.n);
 					
 					Intent intent2 = new Intent(context, answerAct.class);
 					intent2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-					intent2.putExtra("answer", "Bob is not near you"); //Assume Bob is not near us
+					boolean found = false;
 					
 					for(int i = 2; i < tokens.length; i++){
 						BigInteger val = new BigInteger(tokens[i]);
@@ -236,13 +205,156 @@ public class smsReceive extends BroadcastReceiver {
 						Log.d("ALICE", "unenc: " + clear);
 						if (clear.equals("0")){
 							Log.d("hooray!", "It was 0");
-							intent2.putExtra("answer", "Bob is located near you!");
-							intent2.putExtra("found", true);
+							found = true;
 						}						
 					}
-					context.startActivity(intent2);
+					
+					if ( !found ){
+						intent2.putExtra("answer", "Bob is not located near you!");
+						intent2.putExtra("found", found);
+						context.startActivity(intent2);
+					}
+					
+					else { // Stage 3 stuff
+						Log.d("stage 3", "He's close in long, now to check latitude");
+						
+						
+						p = new protocol();
+						share = shareSingleton.getInstance();
+						
+						double edgeDeg = p.findLat(share.lon, share.lat, share.pol);
+						int edgeLeafNumber = p.latitudeToLeaf(edgeDeg);
+						int aliceLeafNumber = p.latitudeToLeaf(share.lat);
+						
+						int spanLength = ( Math.abs(edgeLeafNumber - aliceLeafNumber) * 2 ) + 1;
+						left = aliceLeafNumber - (spanLength / 2); // int
+						right = aliceLeafNumber + (spanLength / 2); // int
+						
+						Log.d("stage 3", "Alice's leaf nodes go from " + left + " to " + right + ".  Her node is: " + aliceLeafNumber);
+						
+						// Making leaves
+						leaves = p.genLeaves(left,  right, aliceLeafNumber); // treeQueue
+						// Making tree
+						root = p.buildUp(leaves); // tree
+						Log.d("stage 3", "the root of these leaves is: " + root.toString());
+						// Finding rep set
+						treeQueue repSet = root.findRepSet(leaves.peek(0), leaves.peek(-1), root);
+						// Printing rep set
+						Log.d("stage 3", "Finding Alice's latitude rep set");
+				        for (int i = 0; i < repSet.length; i++){
+				        	Log.d("stage 3", ""+repSet.peek(i).value);
+				        }
+				        
+				        // Generating coefficients (method 1, several polys)
+				        int[] coefficients = p.makeCoefficientsOne(repSet);
+				        
+				        // Encrypting the coefficients
+				        // Encrypting Coefficients
+						Paillier paillier = new Paillier();
+						paillier.loadPublicKey(share.g, share.n);
+						BigInteger[] encCoe = new BigInteger[coefficients.length];
+						for (int i = 0; i < coefficients.length; i++){
+							encCoe[i] = paillier.Encryption(new BigInteger(String.valueOf(coefficients[i])));
+						}
+						
+				        // Generate the message to send to Bob for stage 4
+				    	// The format of a code 4 message:
+				    	// "@@4:encrypted coefficients:width:g:n"
+				    	txt = "@@4"; //String
+				    	for(int i = 0; i < encCoe.length; i++){ // The coefficients encrypted
+				    		txt += ":" + encCoe[i].toString(16);
+				    	}
+				    	// Throwing the key in their too
+						txt += ":" + share.pol + ":" + share.g.toString(16) + ":" + share.n.toString(16);
+						
+						// Send txts
+				    	list = new ArrayList<String>(); //ArrayList<String>
+				    	sms = SmsManager.getDefault(); // SmsManager
+				    	list = sms.divideMessage(txt);
+				    	
+				    	sms.sendMultipartTextMessage(share.number, null, list, null, null);
+
+					}
 					
 					break;
+					
+				case 3: // Stage 4 (bob does his part, latitude)
+					Log.d("stage 4", "Recieving latitude from Alice! (our longitude was probs close");
+					Log.d("recieve", s);
+					
+					// Turn on the listener immediately
+			        lManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+			        lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10000, myListener);
+			        // Turn on the following for a physical phone, turn it off for emulated device
+			        //lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, lListener);
+					
+			        // New instance of the protocol
+					p = new protocol(); // protocol
+					
+					// Convert back to ascii
+					for(int i = 2; i < tokens.length; i++){
+						tokens[i] = new BigInteger(tokens[i], 16).toString();
+					}		        
+
+			        
+					// Alice's policy width and Bob's location x (latitude)
+			        width = Integer.parseInt( tokens[tokens.length - 3] ); // int
+			        //int x = p.longitudeToInt(-179.9991); // just long for now
+			        
+			        
+			        lastKnownLocation = lManager.getLastKnownLocation(LocationManager.GPS_PROVIDER); // Location
+			        if ( lastKnownLocation == null ){
+			        	lastKnownLocation = lManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+			        }
+			        if ( lastKnownLocation == null ) {
+			        	Log.d("Stage 4" , "Bob's location is null!");
+			        }
+			        lManager.removeUpdates(myListener);
+					
+			        bobLeafNumber = p.latitudeToLeaf(lastKnownLocation.getLatitude()); // int	        
+			        Log.d("stage 4", "Bob's leaf number: " + bobLeafNumber);
+			        
+			        left = bobLeafNumber - width; //int
+			        right = bobLeafNumber + width; //int
+			        Log.d("stage 4", "Bob's leaf nodes go from " + left + " to " + right + ".  His node is: " + bobLeafNumber);
+			        
+			        leaves = p.genLeaves(left, right, bobLeafNumber); // treeQueue
+			        root = p.buildUp(leaves); // tree
+			        Log.d("stage 4", "the root of Bob's leaves: " + root);
+			        
+			        coveringSet = root.findCoverSet(p.user);
+			        // Printing Bob's cover set
+			        for (int i = 0; i < coveringSet.length; i++){
+			        	Log.d("stage 4", "covering set: " +coveringSet.peek(i).value);
+			        }
+			        
+			        results = p.bobCalc(coveringSet, tokens); // BigInteger[]
+			        
+			        // Making the string
+			    	txt = "@@5"; //String
+			    	for (int i = 0; i < results.length; i++){
+			    		txt += ":" + results[i].toString(16);
+			    	}
+			    	
+			    	Log.d("stage 4", "the txt we're sending to Alice: " + txt);
+			    	
+			    	// Dividing the message into txt message size parts 
+			    	list = new ArrayList<String>(); // ArrayList<String>
+			    	sms = SmsManager.getDefault(); // SmsManager
+			    	list = sms.divideMessage(txt);
+			    	//for(String tmp : list){
+			    	//	Log.d("receive", "the items in the list: "+ tmp);
+			    	//}	    	
+			    	
+			    	// Sending a mult-part txt (which solves so much for me!)
+			    	number = tokens[0].substring(7); // number
+			    	//Log.d("receive", "the number: " + number);
+			    	sms.sendMultipartTextMessage(number, null, list, null, null);	    
+					
+					break;
+					
+				case 4: // Stage 5 (Alice sees if she's near Bob in latitude as well! 
+					
 					
 				default:
 					Log.d("receive", "clearing abort broadcast because this is not my protocol text number!");
