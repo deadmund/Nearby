@@ -10,6 +10,7 @@
         android:layout_height="0dp"
         android:padding="@dimen/padding_medium"
         android:text="@string/wait"
+        android:gravity="center_horizontal"        
         tools:context=".MainActivity" />
     
     <ImageView android:id="@+id/waiting"

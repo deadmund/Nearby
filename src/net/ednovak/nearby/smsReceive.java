@@ -193,16 +193,21 @@ public class smsReceive extends BroadcastReceiver {
 					Paillier paillierD = new Paillier();
 					paillierD.loadPrivateKey(share.g, share.lambda, share.n);
 					
+					Intent intent2 = new Intent(context, answerAct.class);
+					intent2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					intent2.putExtra("answer", "Bob is not near you"); //Assume Bob is not near us
+					
 					for(int i = 2; i < tokens.length; i++){
 						BigInteger val = new BigInteger(tokens[i]);
 						String clear = paillierD.Decryption(val).toString();
 						Log.d("ALICE", "unenc: " + clear);
 						if (clear.equals("0")){
 							Log.d("hooray!", "It was 0");
-						}
-						
+							intent2.putExtra("answer", "Bob is located near you!");
+							intent2.putExtra("found", true);
+						}						
 					}
-					
+					context.startActivity(intent2);
 					
 					//for(int i = 2; i < tokens.length; i++){
 					//	Log.d("receive:", "the output: " + piallier.Decryption(BigInteger(tokens[i])));						
