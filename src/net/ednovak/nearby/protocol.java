@@ -64,7 +64,7 @@ public class protocol {
 		// This (like the longitude) means the protocol granularity is at best 10 meters
 		// I am assuming the Earth is a perfect sphere with radius 6371.  Even though
 		// it is not.
-		return (int)Math.round( (latitude / 0.0000893261774) );		
+		return (int)Math.round( (latitude / 0.000044966242717) );		
 	}
 	
 	
@@ -79,7 +79,7 @@ public class protocol {
 		// (like latitude) means that the protocol granularity is at best 10 meters
 		// I am assuming the Earth is a perfect sphere with radius 6371.  Even though
 		// it is not.
-		return (int)Math.round( (longitude / 0.0000893261774) );
+		return (int)Math.round( (longitude / 0.000089932161921) );
 	}
 	
 	public double findLat(double orig_lon_1, double orig_lat_1, int distance){

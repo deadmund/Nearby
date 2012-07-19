@@ -26,6 +26,7 @@ public class smsReceive extends BroadcastReceiver {
 		Bundle bundle = intent.getExtras();
 		SmsMessage[] msgs = null;
 		String s = "";
+		protocol p = new protocol();
 		
 		if (bundle != null){
 			// Get the SMS 
@@ -64,7 +65,7 @@ public class smsReceive extends BroadcastReceiver {
 			switch (swtch){
 				case 1: // stage 2 (Bob does his part for Alice, longitude)
 					Log.d("stage 2", "Receiving from Alice!");
-					Log.d("receive", s);
+					Log.d("stage 2", s);
 					
 					// Turn on the listener immediately
 			        lManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
@@ -72,15 +73,13 @@ public class smsReceive extends BroadcastReceiver {
 			        // Turn on the following for a physical phone, turn it off for emulated device
 			        //lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, lListener);
 					
-			        // New instance of the protocol
-					protocol p = new protocol();
 					
 					// Convert back to ascii
 					for(int i = 2; i < tokens.length; i++){
 						tokens[i] = new BigInteger(tokens[i], 16).toString();
 					}
 					
-					Log.d("recieve", "Just checking the hexToAscii tokens[3]: " + tokens[3]);			        
+					//Log.d("recieve", "Just checking the hexToAscii tokens[3]: " + tokens[3]);			        
 
 			        
 					// Alice's policy width and Bob's location x (longitude)
@@ -175,16 +174,15 @@ public class smsReceive extends BroadcastReceiver {
 			        
 				case 2: //stage 3 (alice finds latitude if she's near Bob in longitude)
 					Log.d("stage 3", "Receiving from Bob! Check his long and generate lat");
-					Log.d("receive", s);
+					Log.d("stage 3", s);
 					
-					p = new protocol();
 					
 					// Convert back to ascii
 					for(int i = 2; i < tokens.length; i++){
 						tokens[i] = new BigInteger(tokens[i], 16).toString();
 					}
 					
-					Log.d("recieve", "Just checking the hexToAscii tokens[3]: " + tokens[3]);
+					//Log.d("recieve", "Just checking the hexToAscii tokens[3]: " + tokens[3]);
 					
 					
 					//Log.d("ALICE", "share.g: " + share.g);
@@ -219,7 +217,6 @@ public class smsReceive extends BroadcastReceiver {
 						Log.d("stage 3", "He's close in long, now to check latitude");
 						
 						
-						p = new protocol();
 						share = shareSingleton.getInstance();
 						
 						double edgeDeg = p.findLat(share.lon, share.lat, share.pol);
@@ -258,9 +255,9 @@ public class smsReceive extends BroadcastReceiver {
 						}
 						
 				        // Generate the message to send to Bob for stage 4
-				    	// The format of a code 4 message:
+				    	// The format of a stage 4 message:
 				    	// "@@4:encrypted coefficients:width:g:n"
-				    	txt = "@@4"; //String
+				    	txt = "@@3"; //String
 				    	for(int i = 0; i < encCoe.length; i++){ // The coefficients encrypted
 				    		txt += ":" + encCoe[i].toString(16);
 				    	}
@@ -287,9 +284,6 @@ public class smsReceive extends BroadcastReceiver {
 			        lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10000, myListener);
 			        // Turn on the following for a physical phone, turn it off for emulated device
 			        //lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, lListener);
-					
-			        // New instance of the protocol
-					p = new protocol(); // protocol
 					
 					// Convert back to ascii
 					for(int i = 2; i < tokens.length; i++){
@@ -331,7 +325,7 @@ public class smsReceive extends BroadcastReceiver {
 			        results = p.bobCalc(coveringSet, tokens); // BigInteger[]
 			        
 			        // Making the string
-			    	txt = "@@5"; //String
+			    	txt = "@@4"; //String
 			    	for (int i = 0; i < results.length; i++){
 			    		txt += ":" + results[i].toString(16);
 			    	}
@@ -354,6 +348,42 @@ public class smsReceive extends BroadcastReceiver {
 					break;
 					
 				case 4: // Stage 5 (Alice sees if she's near Bob in latitude as well! 
+					Log.d("stage 5", "Alice is checking bob's latitude C's"); // just like stage 3
+					Log.d("receive", s);
+					
+					// Convert back to ascii
+					for(int i = 2; i < tokens.length; i++){
+						tokens[i] = new BigInteger(tokens[i], 16).toString();
+					}
+					
+					paillierD = new Paillier();
+					share = shareSingleton.getInstance();
+					paillierD.loadPrivateKey(share.g, share.lambda, share.n);
+					
+					Intent intent3 = new Intent(context, answerAct.class);
+					intent3.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					found = false; // boolean
+					
+					for(int i = 2; i < tokens.length; i++){
+						BigInteger val = new BigInteger(tokens[i]);
+						String clear = paillierD.Decryption(val).toString();
+						Log.d("ALICE", "unenc: " + clear);
+						if (clear.equals("0")){
+							Log.d("hooray!", "It was 0");
+							found = true;
+						}						
+					}
+					
+					if ( found ) {
+						intent3.putExtra("answer", "Bob is near you!");
+					}
+					
+					else {
+						intent3.putExtra("answer", "Bob is not near you");
+					}
+					intent3.putExtra("found", found);
+					context.startActivity(intent3);
+					break;
 					
 					
 				default:
