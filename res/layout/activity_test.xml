@@ -1,0 +1,42 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >   
+    
+    <EditText
+        android:id="@+id/bit_strength"
+        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:hint="@string/bit_strength" />
+    
+    <EditText
+        android:id="@+id/certainty"
+        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:hint="@string/certainty" />
+    
+	<EditText
+        android:id="@+id/message"
+        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:hint="@string/message" />
+	
+	<Button android:id="@+id/enc_test"
+        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:text="@string/test"
+        android:onClick="encryptionTest" />
+    
+    <TextView android:id="@+id/output"
+       	android:layout_weight="4"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:text="@string/test_waiting"
+        android:gravity="left" />
+    
+</LinearLayout>

@@ -126,4 +126,9 @@ public class MainActivity extends Activity {
         	Toast.makeText(context, "You need to provide a phone number", Toast.LENGTH_SHORT).show();
         }
     }
+    
+    public void goToEncryptionTest(View view){
+    	Intent intent = new Intent(this, paillierTest.class);
+    	startActivity(intent);    	
+    }
 }

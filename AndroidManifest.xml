@@ -30,10 +30,12 @@
       
         <activity android:name=".displayMessageAct" />
         <activity android:name=".answerAct" />
+        <activity android:name=".paillierTest" />
             
     </application>
     <uses-permission android:name="android.permission.SEND_SMS"></uses-permission>
 	<uses-permission android:name="android.permission.RECEIVE_SMS"></uses-permission>
 	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+	<uses-permission android:name="android.permission.INTERNET" />
 
 </manifest>

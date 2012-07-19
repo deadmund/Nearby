@@ -9,5 +9,10 @@
     <string name="wait">Just a moment please&#8230;</string>
     <string name="waiting">waiting</string>
 	<string name="s10">10 meters</string>
+	<string name="bit_strength">Bit Strength (power of 2)</string>
+	<string name="certainty">Random Prime Certainty</string>
+	<string name="message">Integer to Encrypt</string>
+	<string name="test">Test Encryption Speed</string>
+	<string name="test_waiting">Enter parameters and test encryption speed!</string>
 	    
 </resources>

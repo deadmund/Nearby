@@ -233,6 +233,13 @@ public class protocol {
 		
 		return answer;
 	}
+	
+	
+	// Generates one large polynomial rooted at all the points in the rep set
+	//public int[] makeCoefficientsTwo(treeQueue repSet){
+	//	
+	//	
+	//}
 
 
 	public BigInteger[] bobCalc(treeQueue coveringSet, String[] encCoe){
