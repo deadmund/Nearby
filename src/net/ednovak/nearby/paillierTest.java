@@ -33,21 +33,35 @@ public class paillierTest extends Activity{
 		
 		tv.append("Generating " + et1.getText().toString() + " bit key...\n");
 		
+		long keyStart = System.currentTimeMillis();
 		Paillier paillier = new Paillier(bitStrength, certainty);
+		long keyEnd = System.currentTimeMillis();
 		
 		tv.append("Encrypting '" + message.toString() + "'...\n");
+		long encStart = System.currentTimeMillis();
 		BigInteger enc = paillier.Encryption(message);
+		long encEnd = System.currentTimeMillis();
 		
 		tv.append("Encrypted: " + enc.toString(16), 0, 30);
 		tv.append("...\n");
 		
 		tv.append("Decrypting...\n");
+		long decStart = System.currentTimeMillis();
 		BigInteger clear = paillier.Decryption(enc);
+		long decEnd = System.currentTimeMillis();
 		tv.append("Clear: " + clear + "\n");
 		
 		long end = System.currentTimeMillis();
+		long totalKey = keyEnd - keyStart;
+		long totalEnc = encEnd - encStart;
+		long totalDec = decEnd - decStart;
 		long totalTime = end - start;
-		tv.append("Test Done, total time: " + totalTime + "ms\n");	
+		
+		tv.append("Test Done\n");
+		tv.append("Time to generate key: " + totalKey + "ms\n");
+		tv.append("Time to Encrypt: " + totalEnc + "ms\n");
+		tv.append("Time to Decrypt: " + totalDec + "ms\n");
+		tv.append("Total Time: " + totalTime + "ms\n");	
 	}
 }
 

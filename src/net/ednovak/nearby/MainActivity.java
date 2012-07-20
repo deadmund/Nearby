@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.SeekBar;
@@ -48,6 +49,29 @@ public class MainActivity extends Activity {
         		tv.setText(Integer.toString(value) + " meters");
         	}
         });
+        
+        // 
+        Log.d("main.onCreate", "Generating some polys from some roots");
+        
+        /*
+        // Make a rep Set
+        protocol p = new protocol();
+        treeQueue roots = new treeQueue();
+        roots.push(new tree(5, null, null, null));
+        roots.push(new tree(6, null, null, null));
+        roots.push(new tree(7, null, null, null));
+        roots.push(new tree(8, null, null, null));
+        
+        // Make the poly
+        int[] poly = p.makeCoefficientsTwo(roots);
+        
+        // Print it
+        for (int i = 0; i < poly.length; i++){
+        	Log.d("poly", "poly[" + i + "]: " + poly[i]);
+        }
+        */
+        
+        
         	
     }
     

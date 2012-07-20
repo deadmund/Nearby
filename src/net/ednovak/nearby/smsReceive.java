@@ -243,7 +243,8 @@ public class smsReceive extends BroadcastReceiver {
 				        }
 				        
 				        // Generating coefficients (method 1, several polys)
-				        int[] coefficients = p.makeCoefficientsOne(repSet);
+				        //int[] coefficients = p.makeCoefficientsOne(repSet);
+				        int[] coefficients = p.makeCoefficientsTwo(repSet);
 				        
 				        // Encrypting the coefficients
 				        // Encrypting Coefficients

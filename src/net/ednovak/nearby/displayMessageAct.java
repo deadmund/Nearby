@@ -93,8 +93,10 @@ public class displayMessageAct extends Activity {
         	System.out.println("");
         }
         
-        System.out.println("Generating Poly Coefficients (method one)");
-        int[] coefficients = p.makeCoefficientsOne(repSet);
+        Log.d("stage 1", "Generating Poly Coefficients (method two)");
+        
+        //int[] coefficients = p.makeCoefficientsOne(repSet);
+        int[] coefficients = p.makeCoefficientsTwo(repSet);
 
         System.out.println("Printing the coefficients");
         for (int i = 0; i < coefficients.length; i++){

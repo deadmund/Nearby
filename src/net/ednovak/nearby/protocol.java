@@ -223,6 +223,104 @@ public class protocol {
 	}
 	
 	
+
+	
+	// Multiplys two polynomials.  We define a polynomial as a reverse string of 
+	// integers.  For example poly a = x^2 - 4x + 5 int[] a = {5, -4, 1}
+	// For any i > 2; a[i] = 0;
+	private int[] multPolys(int[]a, int[]b){
+		
+		/*
+		// Print A and B
+		for (int i = 0; i < a.length; i++){
+			Log.d("poly", "a[" + i +"]: " + a[i]);
+		}
+		for (int i = 0; i < b.length; i++){
+			Log.d("poly", "b[" + i +"]: " + b[i]);
+		}
+		*/
+		
+		// Initialize C
+		int cLength = (a.length -1) + (b.length - 1) + 1;
+		int[] c = new int[cLength];
+		//Log.d("poly", "c.length: " + c.length);
+		
+		// Pad a & b
+		int[] newA = new int[cLength];
+		for (int i = 0; i < a.length; i++){
+			newA[i] = a[i];
+		}
+		int[] newB = new int[cLength];
+		for (int i = 0; i < b.length; i++){
+			newB[i] = b[i];
+		}
+		
+		/*
+		// Print a & b padded
+		for (int i = 0; i < newA.length; i++){
+			Log.d("poly", "newa[" + i +"]: " + newA[i]);
+		}
+		for (int i = 0; i < newB.length; i++){
+			Log.d("poly", "newB[" + i +"]: " + newB[i]);
+		}
+		*/
+		
+		// Generate C
+		for (int n = 0; n < c.length; n++){
+			int tmp = 0;
+			//Log.d("poly", "Generating c[" + n + "]");
+			for( int k = 0; k <= n; k++){
+				//Log.d("poly", "k: " + k + "    n:" + n);
+				tmp += newA[k] * newB[n-k];
+			}
+			c[n] = tmp;
+			//Log.d("poly", "c[" + n + "]: " + c[n]);
+		}
+		
+		/*
+		// Print C
+		for (int i = 0; i < c.length; i++){
+			Log.d("poly", "c[" + i +"]: " + c[i]);
+		}
+		*/
+		return c;
+		
+	}
+	
+	private int[][] genPolysFromRoots(treeQueue trees){
+		// Generate Result
+		int[][] result = new int[trees.length][2];
+		for (int i = 0; i < trees.length; i++){
+			int[] tmp = new int[2];
+			tmp[0] = trees.peek(i).value * -1;
+			tmp[1] = 1;
+			result[i] = tmp;
+			//Log.d("poly", "result[" + i + "]: " + result[i][0] + " " + result[i][1]);
+		}
+		
+		// Print Result
+		/*
+		for(int i = 0; i < result.length; i++){
+			for (int j = 0; j < result[i].length; j++){
+				Log.d("poly", "result[" + i +"][" + j + "]: " + result[i][j]);
+			}
+		}
+		*/
+		return result;
+	}
+	
+	
+	// Generates one large polynomial rooted at all the points in the rep set
+	public int[] makeCoefficientsTwo(treeQueue repSet){
+		
+		int[][] polys = genPolysFromRoots(repSet);
+		int[] cur = multPolys(polys[0], polys[1]);
+		for (int i = 2; i < polys.length; i++){
+			cur = multPolys(cur, polys[i]);
+		}
+		return cur;
+	}
+	
 	// Returns an array of coefficients that each form a poly that 
 	// is rooted at a node from the given repSet
 	public int[] makeCoefficientsOne(treeQueue repSet){
@@ -235,13 +333,26 @@ public class protocol {
 	}
 	
 	
-	// Generates one large polynomial rooted at all the points in the rep set
-	//public int[] makeCoefficientsTwo(treeQueue repSet){
-	//	
-	//	
-	//}
+	public int[] makeCoefficients(treeQueue repSet){
+		// Get the setting
+		
+		if ( ){
+			// This returns the coefficients of several polynomials
+			// They are of the form (x - coe).  The 1 in front of the x is implied
+			return makeCoefficientsOne(repSet);
+		}
+		
+		else ( ) {
+			// This returns coefficients of one polynomial
+			// It is of the form (c_nx^n + c_n-1 * x^n-1 ...)
+			return makeCoefficientsTwo(repSet);
+		}
+		}
+	}
 
-
+	
+	// Does Bob's calculations 
+	// (assumes we received many polys but I think it doen't matter?, IDK, gotta think 'bout that)
 	public BigInteger[] bobCalc(treeQueue coveringSet, String[] encCoe){
 		BigInteger[] results = new BigInteger[(encCoe.length - 5) * coveringSet.length];
         Random randomGen = new Random();
