@@ -333,20 +333,25 @@ public class protocol {
 	}
 	
 	
-	public int[] makeCoefficients(treeQueue repSet){
-		// Get the setting
+	public int[] makeCoefficients(treeQueue repSet, String method){
 		
-		if ( ){
+		if ( method.equals("1") ){
+			Log.d("poly", "It was 1");
 			// This returns the coefficients of several polynomials
 			// They are of the form (x - coe).  The 1 in front of the x is implied
 			return makeCoefficientsOne(repSet);
 		}
 		
-		else ( ) {
+		else if( method.equals("2") ) {
+			Log.d("poly", "It was 2");
 			// This returns coefficients of one polynomial
 			// It is of the form (c_nx^n + c_n-1 * x^n-1 ...)
 			return makeCoefficientsTwo(repSet);
 		}
+		
+		else{
+			Log.d("poly", "NO preference selected!");
+			return null;
 		}
 	}
 

@@ -6,6 +6,9 @@ import android.content.Intent;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.SeekBar;
@@ -75,6 +78,7 @@ public class MainActivity extends Activity {
         	
     }
     
+    /*
     @Override
     public void onResume() {
     	super.onResume();
@@ -106,13 +110,31 @@ public class MainActivity extends Activity {
         });
     }
 
-    /*
+    */
+    
+    // Creates the menu (from pressing menu button on main screen)
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_main, menu);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.activity_main, menu);
         return true;
     }
-    */
+    
+    // When the settngs butotn is selected
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){  	
+    	
+    	switch ( item.getItemId() ){
+    		case R.id.settings:
+    			Log.d("menu", "It is working...");
+    			startActivity(new Intent(this, settings.class));
+    			return true;
+    		
+    		default:
+    			return super.onOptionsItemSelected(item);
+    	}
+    }
+    
     
     
     public void query(View view) {
@@ -142,11 +164,11 @@ public class MainActivity extends Activity {
         		intent.putExtra("number", number);
         		startActivity(intent);
         	}
-    		else {
+    		else { // Don't have a good location lock yet
     			Toast.makeText(context, "Still waiting for a lock on your location", Toast.LENGTH_SHORT).show();
     		}
         }
-        else {
+        else { // Don't have the phone number entered!
         	Toast.makeText(context, "You need to provide a phone number", Toast.LENGTH_SHORT).show();
         }
     }

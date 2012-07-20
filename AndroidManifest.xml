@@ -31,6 +31,7 @@
         <activity android:name=".displayMessageAct" />
         <activity android:name=".answerAct" />
         <activity android:name=".paillierTest" />
+        <activity android:name=".settings" />
             
     </application>
     <uses-permission android:name="android.permission.SEND_SMS"></uses-permission>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+	<PreferenceCategory
+	    android:title="protocol"
+	    android:key="category1" >
+	    
+	    <ListPreference
+	        android:key="poly_method"
+	        android:summary="Polynomial Style To Use"
+	        android:defaultValue="2"
+	        android:entries="@array/poly_method"
+	        android:entryValues="@array/poly_method_values" />
+	    
+	    <ListPreference
+	        android:key="encryption_strength"
+	        android:summary="Strength of Encyption (in bits)"
+	        android:defaultValue="1024"
+	        android:entries="@array/encryption"
+	        android:entryValues="@array/encryption_values" />
+	    
+	    <ListPreference
+	        android:key="message_type"
+	        android:summary="Type of messages to use for communication"
+	        android:defaultValue="sms"
+	        android:entries="@array/messages"
+	        android:entryValues="@array/messages_values" />
+	</PreferenceCategory>
+</PreferenceScreen>

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.util.Log;
@@ -95,9 +96,11 @@ public class displayMessageAct extends Activity {
         
         Log.d("stage 1", "Generating Poly Coefficients (method two)");
         
-        //int[] coefficients = p.makeCoefficientsOne(repSet);
-        int[] coefficients = p.makeCoefficientsTwo(repSet);
-
+		SharedPreferences prefs = getSharedPreferences("preferences", 0);
+		String method = prefs.getString("poly_method", "2");
+		int[] coefficients = p.makeCoefficients(repSet, method);
+		
+		
         System.out.println("Printing the coefficients");
         for (int i = 0; i < coefficients.length; i++){
         	System.out.println(coefficients[i]);
