@@ -46,6 +46,13 @@
         android:layout_height="0dp"
         android:text="@string/test"
         android:onClick="goToEncryptionTest" />
+	
+	<Button android:id="@+id/test_fb"
+        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:text="@string/test_fb"
+        android:onClick="goToFacebook" />
 
 	
 

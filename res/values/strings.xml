@@ -15,5 +15,12 @@
 	<string name="test">Test Encryption Speed</string>
 	<string name="test_waiting">Enter parameters and test encryption speed!</string>
 	<string name="settings">Settings</string>
+	<string name="test_fb">Test Facebook App</string>
+	<string name="request">Request</string>
+	<string name="post">Post</string>
+	<string name="delete">Delete</string>
+	<string name="login_button">Login</string>
+	<string name="hello">Hello World</string>
+	<string name="upload">Upload Something</string>
 	    
 </resources>

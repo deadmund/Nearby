@@ -182,7 +182,7 @@ public class Paillier {
 		BigInteger expo_em1m2 = em1.modPow(m2, paillier.nsquare);
 		BigInteger prod_m1m2 = m1.multiply(m2).mod(paillier.n);
 		System.out.println("original product: " + prod_m1m2.toString());
-		System.out.println("decrypted product: " + paillier.Decryption(expo_em1m2).toString());
+		System.out.println("decrypted product: " + paillier.Decryption(expo_em1m2).toString());	
 	
 	}
 }

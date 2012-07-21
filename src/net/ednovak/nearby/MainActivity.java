@@ -1,5 +1,7 @@
 package net.ednovak.nearby;
 
+import java.math.BigInteger;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -54,7 +56,26 @@ public class MainActivity extends Activity {
         });
         
         // 
-        Log.d("main.onCreate", "Generating some polys from some roots");        	
+        Log.d("main.onCreate", "Testing paillier homomorphic properties");
+        
+        Paillier paillier = new Paillier();
+		BigInteger ma = new BigInteger("5");
+		BigInteger mb = new BigInteger("6");
+		BigInteger mc = new BigInteger("7");
+		BigInteger ema = paillier.Encryption(ma);
+		BigInteger emb = paillier.Encryption(mb);
+		//BigInteger emc = paillier.Encryption(mc);
+		
+						//  (ema      *  (          (emb^mc) % n         ))    % n^2      
+		BigInteger answer = (ema.multiply(emb.modPow(mc, paillier.nsquare))).mod(paillier.nsquare);
+		
+		Log.d("main", "Should be 47 " + paillier.Decryption(answer));
+		
+		protocol p = new protocol();
+		BigInteger test1 = p.homoAdd(ema, emb, paillier.n);
+		BigInteger test2 = p.homoMult(ema, mb, paillier.n);
+		BigInteger test3 = p.homoExpo(ema, ma, new BigInteger("4"), paillier.n);
+		Log.d("main", "test 1: " + paillier.Decryption(test1) + "   test 2: " + paillier.Decryption(test2)+ "   test 3: " + paillier.Decryption(test3));
     }
     
     // Creates the menu (from pressing menu button on main screen)
@@ -118,5 +139,10 @@ public class MainActivity extends Activity {
     public void goToEncryptionTest(View view){
     	Intent intent = new Intent(this, paillierTest.class);
     	startActivity(intent);    	
+    }
+    
+    public void goToFacebook(View view){
+    	Intent intent = new Intent(this, sendMessageFB.class);
+    	startActivity(intent);
     }
 }

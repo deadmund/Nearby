@@ -22,6 +22,53 @@ public class protocol {
 	}
 	
 	
+	// Homomorphic Addition (E(m1) * E(m2)) % n^2 = (m1 + m2) % n
+	// This function works in the encrypted domain to get clear domain addition
+	public BigInteger homoAdd(BigInteger em1, BigInteger em2, BigInteger n){
+		return (em1.multiply(em2)).mod(n.multiply(n));
+	}
+	
+	// Homomorphic Multiplication ( E(m1)^m2) ) % n^2 = (m1 * m2) % n
+	// This function works in the encrypted domain to get clear text multiplication
+	public BigInteger homoMult(BigInteger em1, BigInteger m2, BigInteger n){
+		return em1.modPow(m2, n.multiply(n));
+	}
+	
+	// Homomorphic Exponentiation ( (E(m1) ^ m1) ^ m1) ^ ... ) % n^2 = (m1^n) % n
+	// For these I NEED to have em1 and m1
+	public BigInteger homoExpo(BigInteger em1, BigInteger m1, BigInteger m2, BigInteger n){
+		// Pretend m2 = 2
+		BigInteger cur = homoMult(em1, m1, n);
+		int intM2 = m2.intValue() - 2;
+		while ( intM2 > 0 ){
+			cur = homoMult(cur, m1, n);
+			intM2--;
+		}
+		return cur;
+	}
+	
+	
+	// Evaluates the polynmial represented by the encrypted coefficients in poly (in reverse)
+	// at the point b.  The n is that used in the homomorphic encryption of the coefficients
+	public BigInteger homoEval(BigInteger b, BigInteger[] poly, BigInteger n){
+		BigInteger[] terms = new BigInteger[poly.length];
+		BigInteger tmp;
+		
+		// Find the terms between the addition
+		for (int i = 0; i < poly.length; i++){
+			tmp = new BigInteger(String.valueOf(Math.pow(b.intValue(), i)));
+			terms[i] = homoMult(poly[i], tmp, n);
+		}
+		
+		// Add up the terms
+		BigInteger sum = new BigInteger(String.valueOf(terms[0]));
+		for (int i = 1; i < terms.length; i++){
+			sum = homoAdd(sum, terms[i], n);
+		}
+		
+		return sum;
+	}
+	
 	//Creates the leaf nodes from a left and right longitude value
 	//X is the leaf that the user is at
 	public treeQueue genLeaves(int left, int right, int x){
@@ -42,23 +89,8 @@ public class protocol {
         return leaves;
 	}
 	
-	/*
-	// Converts longitude to the int values I use in the tree
-	// This function depends on the distance in meters between degrees long
-	// and the distance we want in meters between nodes
-	public int longitudeToInt(double longitude){
-		// This absolutely returns an int but it might be not rounded correctly...
-		if (longitude < -180 || longitude > 180){
-			System.out.println("Input longitude out of range: " + longitude);
-			System.exit(101);
-		}
-		
-		longitude = longitude + 180;
-		// .00017 means the nodes are 10m apart and we're talking about long near the equator
-		return (int)Math.round((longitude / 0.00017));   
-	}
-	*/
-	
+
+	// Convert latitude to leaf Value
 	public int latitudeToLeaf(double latitude){
 		if (latitude < -90 || latitude > 90){
 			System.out.println("Input latitude out of range: "  + latitude);
@@ -74,7 +106,7 @@ public class protocol {
 	}
 	
 	
-	// Converts a longitude to a leaf node value (between 0 and 2117647)
+	// Converts a longitude to a leaf node value
 	public int longitudeToLeaf(double longitude){
 		if (longitude < -180 || longitude > 180){
 			System.out.println("Input longitude out of range: " + longitude);
@@ -363,44 +395,51 @@ public class protocol {
 
 	
 	// Does Bob's calculations 
-	// (assumes we received many polys but I think it doen't matter?, IDK, gotta think 'bout that)
-	//public BigInteger[] bobCalc(treeQueue coveringSet, String[] encCoe, String method, int bits){
-		
 	public BigInteger[] bobCalc(treeQueue coveringSet, BigInteger[] encCoe, int bits, String g, String n, int method){
 		
-		Paillier paillierE = new Paillier(bits, 64);
-		paillierE.loadPublicKey(new BigInteger(g), new BigInteger(n));
-	
+		BigInteger[] results = new BigInteger[1];
 		
-		if ( method == 1) ){ 
-		BigInteger[] results = new BigInteger[encCoe.length * coveringSet.length];
-        Random randomGen = new Random();
+		Paillier paillierE = new Paillier(bits, 64);
+		paillierE.loadPublicKey(new BigInteger(g), new BigInteger(n));	
+		
+		if ( method == 1) { 
+			results = new BigInteger[encCoe.length * coveringSet.length];
+			Random randomGen = new Random();
         
-        
-        
-        // This should probs be a protocol function
-        // Evaluate the polys
-    	for (int j = 0; j < coveringSet.length; j++){
-    		int tmp = coveringSet.peek(j).value;
-    		BigInteger bob = new BigInteger(String.valueOf(tmp));
-    		bob = paillierE.Encryption(bob);
-    		for (int i = 0; i < encCoe.length; i++){ // The last token is the width
-    			BigInteger alice = encCoe[i];
-    			BigInteger c = bob.multiply(alice).mod(paillierE.nsquare);
-    			
-    			// Pack them randomly to send back
-    			boolean unplaced = true;
-    			while (unplaced){
-    				int randInt = randomGen.nextInt(results.length);
-    				//Log.d("receive", "trying spot: " + randInt);
-    				if ( results[randInt] == null){
-    					results[randInt] = c;
-    					unplaced = false;
-    				}
-    			}	
-    		}
-        }
-    	return results;
+	        // This should probs be a protocol function
+	        // Evaluate the polys
+	    	for (int j = 0; j < coveringSet.length; j++){
+	    		int tmp = coveringSet.peek(j).value;
+	    		BigInteger bob = new BigInteger(String.valueOf(tmp));
+	    		bob = paillierE.Encryption(bob);
+	    		for (int i = 0; i < encCoe.length; i++){ // The last token is the width
+	    			BigInteger alice = encCoe[i];
+	    			BigInteger c = bob.multiply(alice).mod(paillierE.nsquare);
+	    			
+	    			// Pack them randomly to send back
+	    			boolean unplaced = true;
+	    			while (unplaced){
+	    				int randInt = randomGen.nextInt(results.length);
+	    				//Log.d("receive", "trying spot: " + randInt);
+	    				if ( results[randInt] == null){
+	    					results[randInt] = c;
+	    					unplaced = false;
+	    				}
+	    			}	
+	    		}
+	        }
+		}
+		
+		else if ( method == 2 ){
+			results = new BigInteger[coveringSet.length];
+			for (int i = 0; i < coveringSet.length; i++){
+				BigInteger b = new BigInteger(String.valueOf(coveringSet.peek(i).value));
+				results[i] = homoEval(b, encCoe, new BigInteger(n));
+			}
+			return results;
+		}
+		
+		return results;
 	}
 	
 	
@@ -443,10 +482,14 @@ public class protocol {
         // Make the leaves and build the tree
         treeQueue leaves = genLeaves(left, right, aliceLeafNumber);
         tree root = buildUp(leaves);
-        Log.d("stage " + stage, "The entire tree: " + treeToStringDown(root));
+        //Log.d("stage " + stage, "The entire tree: " + treeToStringDown(root));
         
         // Get the rep set
         treeQueue repSet = root.findRepSet(leaves.peek(0), leaves.peek(-1), root);
+        Log.d("stage " + stage, "The rep set");
+        for (int i = 0; i < repSet.length; i++){
+        	Log.d("stage " + stage, "" + repSet.peek(i).value);
+        }
         
         // Make the coefficients
         SharedPreferences prefs = context.getSharedPreferences("preferences", 0);
