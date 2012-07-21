@@ -1,8 +1,14 @@
 package net.ednovak.nearby;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Random;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.location.Location;
+import android.location.LocationManager;
+import android.telephony.SmsManager;
 import android.util.Log;
 
 
@@ -358,12 +364,19 @@ public class protocol {
 	
 	// Does Bob's calculations 
 	// (assumes we received many polys but I think it doen't matter?, IDK, gotta think 'bout that)
-	public BigInteger[] bobCalc(treeQueue coveringSet, String[] encCoe){
-		BigInteger[] results = new BigInteger[(encCoe.length - 5) * coveringSet.length];
+	//public BigInteger[] bobCalc(treeQueue coveringSet, String[] encCoe, String method, int bits){
+		
+	public BigInteger[] bobCalc(treeQueue coveringSet, BigInteger[] encCoe, int bits, String g, String n, int method){
+		
+		Paillier paillierE = new Paillier(bits, 64);
+		paillierE.loadPublicKey(new BigInteger(g), new BigInteger(n));
+	
+		
+		if ( method == 1) ){ 
+		BigInteger[] results = new BigInteger[encCoe.length * coveringSet.length];
         Random randomGen = new Random();
         
-        Paillier paillierE = new Paillier();
-        paillierE.loadPublicKey(new BigInteger(encCoe[encCoe.length - 2]), new BigInteger(encCoe[encCoe.length-1]));
+        
         
         // This should probs be a protocol function
         // Evaluate the polys
@@ -371,8 +384,8 @@ public class protocol {
     		int tmp = coveringSet.peek(j).value;
     		BigInteger bob = new BigInteger(String.valueOf(tmp));
     		bob = paillierE.Encryption(bob);
-    		for (int i = 2; i < encCoe.length - 3; i++){ // The last token is the width
-    			BigInteger alice = new BigInteger(encCoe[i]);
+    		for (int i = 0; i < encCoe.length; i++){ // The last token is the width
+    			BigInteger alice = encCoe[i];
     			BigInteger c = bob.multiply(alice).mod(paillierE.nsquare);
     			
     			// Pack them randomly to send back
@@ -388,6 +401,181 @@ public class protocol {
     		}
         }
     	return results;
+	}
+	
+	
+	// Alice for stage 1 || 3
+	public int alice(int stage, Context context){
+		Log.d("stage " + stage, "Alice finding / sending lon || lat");
+		
+		shareSingleton share = shareSingleton.getInstance();
+		
+		// Get location
+		double edge;
+		int edgeLeafNumber;
+		int aliceLeafNumber;
+		
+		if (stage == 1){
+			edge = findLong(share.lon, share.lat, share.pol);
+			edgeLeafNumber = longitudeToLeaf(edge);
+			aliceLeafNumber = longitudeToLeaf(share.lon);
+		}
+		else if (stage == 3){
+			edge = findLat(share.lon, share.lat, share.pol);
+			edgeLeafNumber = latitudeToLeaf(edge);
+			aliceLeafNumber = latitudeToLeaf(share.lat);
+		}
+		else{
+			return 1;
+		}
+		
+		// Find the leaves on the edge and build the span
+        Log.d("stage " + stage, "Alice's leaf value: " + aliceLeafNumber);
+        Log.d("stage " + stage, "Edge gps lon value: " + edge);
+        Log.d("stage " + stage, "edge leaf value: " + edgeLeafNumber);
+		
+        int spanLength = ( Math.abs(edgeLeafNumber - aliceLeafNumber) * 2 ) +  1;
+        int left = aliceLeafNumber - (spanLength / 2);
+        int right = aliceLeafNumber + (spanLength / 2);
+        
+        Log.d("stage " + stage, "Alice's leaf nodes go from " + left + " to " + right + ".  That's: " + spanLength + " nodes.  Her node is: " + aliceLeafNumber);
+        
+        // Make the leaves and build the tree
+        treeQueue leaves = genLeaves(left, right, aliceLeafNumber);
+        tree root = buildUp(leaves);
+        Log.d("stage " + stage, "The entire tree: " + treeToStringDown(root));
+        
+        // Get the rep set
+        treeQueue repSet = root.findRepSet(leaves.peek(0), leaves.peek(-1), root);
+        
+        // Make the coefficients
+        SharedPreferences prefs = context.getSharedPreferences("preferences", 0);
+        String method = prefs.getString("poly_method", "2");
+        int[] coefficients = makeCoefficients(repSet, method);
+        
+        Log.d("stage " + stage, "Printing the coefficients");
+        for (int i = 0; i < coefficients.length; i++){
+        	Log.d("stage " + stage, "" + coefficients[i]);
+        }
+        
+        
+        // Do the coefficient encryption
+        String bits = prefs.getString("encryption_strength", "1024");
+        Paillier paillier = new Paillier(Integer.valueOf(bits), 64);
+        if ( stage == 1 ){
+        	BigInteger[] tmp = paillier.privateKey();
+        	share.g = tmp[0];
+        	share.lambda = tmp[1];
+        	share.n = tmp[2];
+        }	
+    	else if ( stage == 3 ){
+    		paillier.loadPrivateKey(share.g, share.lambda, share.n);
+    	}
+    	else{
+			return 2;
+    	}
+		BigInteger[] encCoe = new BigInteger[coefficients.length];
+		for (int i = 0; i < coefficients.length; i++){
+			encCoe[i] = paillier.Encryption(new BigInteger(String.valueOf(coefficients[i])));
+		}
+        
+        // Build the message
+        // Format of a stage 1 or stage 3 message
+		// [@@<stageNumber>:encCoe;encCoe2:encCoe3:...::pol:bit:g:n:polyMethodNumber]
+		//        0            1       2      3         -5  -4 -3-2   length - 1 
+        String txt = "@@" + stage;
+        for (int i = 0; i < encCoe.length; i++){
+        	txt += ":" + encCoe[i].toString(16);
+        }
+        BigInteger[] key = paillier.publicKey();
+        txt += ":" + String.valueOf(spanLength/2) + ":" + key[0].toString(16) + ":" + key[1].toString(16) + ":" + method;
+        
+        // Send the message
+    	ArrayList<String> list = new ArrayList<String>();
+    	SmsManager sms = SmsManager.getDefault();
+    	list = sms.divideMessage(txt);
+    	Log.d("stage 1", "sending the encrypted coefficients (and other stuff) to Bob");
+    	sms.sendMultipartTextMessage(share.number, null, list, null, null);
+		
+		return 0;
+	}
+	
+	
+	
+	// Bob for stage 2 || 4
+	public int Bob(int stage, String s, String[] tokens, lListener myListener, Context context){
+		Log.d("stage " + stage, "Recieving From alice, going to do my thing with the C's");
+		Log.d("stage " + stage, "received: " + s);
+		
+		// Get Bob's location
+		LocationManager lManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+		lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10000, myListener);
+		Location lastKnownLocation = lManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if ( lastKnownLocation == null ){
+        	lastKnownLocation = lManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        }
+        if ( lastKnownLocation == null ) {
+        	Log.d("recieve" , "Bob's location is null!");
+        }
+        lManager.removeUpdates(myListener);
+        
+        // Get Bob's leaf and span
+		int width = Integer.parseInt( tokens[tokens.length - 5] );
+		int bobLeafNumber = -1;
+		if ( stage == 2) {
+			bobLeafNumber = longitudeToLeaf(lastKnownLocation.getLongitude());
+		}
+		else if ( stage == 4 ){
+			bobLeafNumber = latitudeToLeaf(lastKnownLocation.getLatitude());
+		}
+		else{
+			return 1;
+		}
+		int left = bobLeafNumber - width;
+		int right = bobLeafNumber + width;
+		Log.d("stage " + stage, "Bob's leaf nodes go from " + left + " to " + right + ".  His node is: " + bobLeafNumber);
+		
+		// Build the leaves and tree
+        treeQueue leaves = genLeaves(left, right, bobLeafNumber);
+        tree root = buildUp(leaves);
+        
+        // Find covering set
+        treeQueue coveringSet = root.findCoverSet(user);
+        // Printing Bob's cover set
+        for (int i = 0; i < coveringSet.length; i++){
+        	Log.d("stage " + stage, "Bob's covering set: " + coveringSet.peek(i).value);
+        }
+        
+        // Set up arguments to bobCalc
+        // Separate out EncCoe from tokens
+        BigInteger[] encCoe = new BigInteger[tokens.length - 7];
+        for (int i = 0; i < encCoe.length; i++){
+        	encCoe[i] = new BigInteger(tokens[i+2]);
+        }
+        int bits = Integer.valueOf(tokens[tokens.length - 4]);
+        String g = tokens[tokens.length - 3];
+        String n = tokens[tokens.length - 2];
+        int method = Integer.valueOf(tokens[tokens.length - 1]);
+        BigInteger[] results = bobCalc(coveringSet, encCoe, bits, g, n, method);
+        
+        // Making the string
+        // Format of a stage 2 || 4 message
+        // [@@<stageNumber>:C1:C2:C3...:CN]
+        String txt = "@@" + stage;
+    	for (int i = 0; i < results.length; i++){
+    		txt += ":" + results[i].toString(16);
+    	}
+    	
+    	// Store the phone number that this message came from
+    	shareSingleton share = shareSingleton.getInstance();
+    	share.number = tokens[0].substring(7);
+		
+    	// Send the message
+    	ArrayList<String> list = new ArrayList<String>();
+    	SmsManager sms = SmsManager.getDefault();
+    	list = sms.divideMessage(txt);
+    	sms.sendMultipartTextMessage(share.number, null, list, null, null);	   
+		return 0;
 	}
 }
 

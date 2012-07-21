@@ -32,8 +32,14 @@ public class lListener implements LocationListener {
 	
 	
 	private void updateCurrent(Location loc){
+		// For the 'still listening function (maybe not used)
 		lon = loc.getLongitude();
 		lat = loc.getLatitude();
+		
+		// To make it available globally later
+		shareSingleton share = shareSingleton.getInstance();
+		share.lon = loc.getLongitude();
+		share.lat = loc.getLatitude();
 		
 	}
 	
