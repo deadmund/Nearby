@@ -103,8 +103,7 @@ public class smsReceive extends BroadcastReceiver {
 						context.startActivity(intent2);
 					}
 					
-					else { // Stage 3 stuff
-						
+					else { // Stage 3 stuff (they are near in longitude
 						p.alice(3, context);
 					}
 					
