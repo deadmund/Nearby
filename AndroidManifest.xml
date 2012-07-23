@@ -33,6 +33,8 @@
         <activity android:name=".paillierTest" />
         <activity android:name=".settings" />
         <activity android:name=".sendMessageFB" />
+        <service android:name=".xmppService" />
+        
             
     </application>
     <uses-permission android:name="android.permission.SEND_SMS"></uses-permission>

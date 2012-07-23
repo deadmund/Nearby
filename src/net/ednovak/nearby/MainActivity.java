@@ -1,11 +1,15 @@
 package net.ednovak.nearby;
 
+import net.ednovak.nearby.xmppService.LocalBinder;
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -24,7 +28,7 @@ public class MainActivity extends Activity {
 	private final static lListener myListener = new lListener();
 	private LocationManager lManager;
 	private EditText other_user;
-	private Runnable xmppThread;
+	private xmppService serv;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -82,11 +86,13 @@ public class MainActivity extends Activity {
         	Log.d("main", "Bad option choice " + message_type);
         }
         
-        // XMPP listener
-        Runnable r = new xmppThread("ed.novak3", "fetusgo2");
-        xmppThread = r;
-        new Thread(r).start();
+        Intent xmppIntent = new Intent(MainActivity.this, xmppService.class);
+        xmppIntent.putExtra("user", "ed.novak3");
+        xmppIntent.putExtra("pass", "fetusgo2");
+        startService(xmppIntent);
         
+        bindService(new Intent(this, xmppService.class), mConnection, Context.BIND_AUTO_CREATE);
+        //stopService(new Intent(MainActivity.this, xmppService.class));
         
         /* Big Fat Paillier Homomorphic Encryption Test
         // 
@@ -112,6 +118,24 @@ public class MainActivity extends Activity {
 		Log.d("main", "test 1: " + paillier.Decryption(test1) + "   test 2: " + paillier.Decryption(test2)+ "   test 3: " + paillier.Decryption(test3));
 		*/
     }
+    
+    // To bind to service
+    private ServiceConnection mConnection = new ServiceConnection() {
+    	@Override
+    	public void onServiceConnected(ComponentName className, IBinder service) {
+    		LocalBinder binder = (LocalBinder) service;
+    		serv = binder.getService();
+    		//serv.sendMessage("", msg); And now I can send a message with the service
+    		// Next step: move this into the protocol class
+    		Log.d("main", "We are bound !");
+    	}
+    	
+    	@Override
+    	public void onServiceDisconnected(ComponentName name){
+    		// Do notta
+    	}
+    };
+    
     
     // Creates the menu (from pressing menu button on main screen)
     @Override
@@ -160,6 +184,7 @@ public class MainActivity extends Activity {
         		lManager.removeUpdates(myListener);
         		// I used to pass stuff in over the intent but using the shareSingleton is
         		// easy to code
+        		//intent.putExtra("xmpp", xmppThread);
         		startActivity(intent);
         	}
     		else { // Don't have a good location lock yet
