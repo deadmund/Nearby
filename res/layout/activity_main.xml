@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >   
+    android:orientation="vertical" 
+    android:id="@+id/ll">   
     
     <TextView android:id="@+id/text_view"
        	android:layout_weight="1"
@@ -27,12 +28,6 @@
         android:text="@string/s10"
         android:gravity="center" />
     
-    <EditText android:id="@+id/other_user"
-        android:layout_weight="1"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:hint="@string/other_user" />
-    
 	<Button android:id="@+id/bt_query"
         android:layout_weight="1"
         android:layout_width="match_parent"
@@ -52,7 +47,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:text="@string/test_fb"
-        android:onClick="goToFacebook" />
+        android:onClick="xmpp" />
 
 	
 

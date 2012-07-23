@@ -533,12 +533,25 @@ public class protocol {
         BigInteger[] key = paillier.publicKey();
         txt += ":" + String.valueOf(spanLength/2) + ":" + key[0].toString(16) + ":" + key[1].toString(16) + ":" + method;
         
-        // Send the message
-    	ArrayList<String> list = new ArrayList<String>();
-    	SmsManager sms = SmsManager.getDefault();
-    	list = sms.divideMessage(txt);
-    	Log.d("stage 1", "sending the encrypted coefficients (and other stuff) to Bob");
-    	sms.sendMultipartTextMessage(share.number, null, list, null, null);
+        String message_type = prefs.getString("message_type", "fb");
+        		
+        if ( message_type.equals("sms") ){
+	        // Send the message as a SMS
+	    	ArrayList<String> list = new ArrayList<String>();
+	    	SmsManager sms = SmsManager.getDefault();
+	    	list = sms.divideMessage(txt);
+	    	Log.d("stage 1", "sending the encrypted coefficients (and other stuff) to Bob");
+	    	sms.sendMultipartTextMessage(share.number, null, list, null, null);
+        }
+        
+        else if ( message_type.equals("fb") ){
+        	// Put code here to send a facebook message
+        	Log.d("stage " + stage, "Sending a fb message not yet implemented");
+        }
+        
+        else{
+        	return 3;
+        }
 		
 		return 0;
 	}

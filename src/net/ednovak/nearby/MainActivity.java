@@ -1,10 +1,9 @@
 package net.ednovak.nearby;
 
-import java.math.BigInteger;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,6 +12,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
@@ -23,18 +23,21 @@ public class MainActivity extends Activity {
 	public final static String EXTRA_MESSAGE = "net.ednovak.nearby.MESSAGE";
 	private final static lListener myListener = new lListener();
 	private LocationManager lManager;
+	private EditText other_user;
+	private Runnable xmppThread;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);  
         
+        // Location listener stuff
         lManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10000, myListener);
         // Turn on the following for a physical phone, turn it off for emulated device
         //lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, lListener);
 
-        
+        // Seek bar
         SeekBar sk = (SeekBar)findViewById(R.id.seekBar);
         final TextView tv = (TextView)findViewById(R.id.seekbar_text);
         
@@ -55,6 +58,37 @@ public class MainActivity extends Activity {
         	}
         });
         
+        // Other user ID
+        SharedPreferences prefs = getSharedPreferences("preferences", 0);
+        String message_type = prefs.getString("message_type", "fb");
+        if ( message_type.equals("fb") ){
+        	EditText et = new EditText(this);
+        	other_user = et;
+        	et.setHint("Facebook Friend's Name");
+        	
+        	LinearLayout ll = (LinearLayout)findViewById(R.id.ll);
+        	ll.addView(et, 3);
+        }
+        
+        else if ( message_type.equals("sms") ) {
+        	EditText et = new EditText(this);
+        	other_user = et;
+        	et.setHint("Phone number");
+        	LinearLayout ll = (LinearLayout)findViewById(R.id.ll);
+        	ll.addView(et, 3);
+        }
+        
+        else {
+        	Log.d("main", "Bad option choice " + message_type);
+        }
+        
+        // XMPP listener
+        Runnable r = new xmppThread("ed.novak3", "fetusgo2");
+        xmppThread = r;
+        new Thread(r).start();
+        
+        
+        /* Big Fat Paillier Homomorphic Encryption Test
         // 
         Log.d("main.onCreate", "Testing paillier homomorphic properties");
         
@@ -76,6 +110,7 @@ public class MainActivity extends Activity {
 		BigInteger test2 = p.homoMult(ema, mb, paillier.n);
 		BigInteger test3 = p.homoExpo(ema, ma, new BigInteger("4"), paillier.n);
 		Log.d("main", "test 1: " + paillier.Decryption(test1) + "   test 2: " + paillier.Decryption(test2)+ "   test 3: " + paillier.Decryption(test3));
+		*/
     }
     
     // Creates the menu (from pressing menu button on main screen)
@@ -115,7 +150,7 @@ public class MainActivity extends Activity {
         share.pol = distance;
         
         // recipient number
-        EditText editText = (EditText) findViewById(R.id.other_user);
+        EditText editText = other_user;
         String number = editText.getText().toString();
         share.number = number;
         
@@ -139,10 +174,5 @@ public class MainActivity extends Activity {
     public void goToEncryptionTest(View view){
     	Intent intent = new Intent(this, paillierTest.class);
     	startActivity(intent);    	
-    }
-    
-    public void goToFacebook(View view){
-    	Intent intent = new Intent(this, sendMessageFB.class);
-    	startActivity(intent);
     }
 }
