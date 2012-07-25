@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 	<PreferenceCategory
 	    android:title="protocol"
@@ -8,7 +7,7 @@
 	    <ListPreference
 	        android:key="poly_method"
 	        android:summary="Polynomial Style To Use"
-	        android:defaultValue="2"
+	        android:defaultValue="3"
 	        android:entries="@array/poly_method"
 	        android:entryValues="@array/poly_method_values" />
 	    
@@ -25,5 +24,20 @@
 	        android:defaultValue="sms"
 	        android:entries="@array/messages"
 	        android:entryValues="@array/messages_values" />
+	    
+	    <EditTextPreference
+	        android:key="fb_user"
+	        android:name="Facebook Username Name"
+	        android:summary="Used to send FB messages"
+	        android:defaultValue="None"
+	        android:title="Facebook Username" />
+	    
+		<EditTextPreference
+		    android:key="fb_pass"
+   	        android:name="Facebook Username Pass"
+	        android:summary="Used to send FB messages"
+	        android:defaultValue="None"
+	        android:title="Facebook Password" />
+	    
 	</PreferenceCategory>
 </PreferenceScreen>

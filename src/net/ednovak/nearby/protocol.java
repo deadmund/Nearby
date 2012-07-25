@@ -13,6 +13,7 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.telephony.SmsManager;
 import android.util.Log;
 
@@ -379,6 +380,8 @@ public class protocol {
 	
 	public int[] makeCoefficients(treeQueue repSet, String method){
 		
+		Log.d("poly", "method: " + method);
+		
 		if ( method.equals("1") ){
 			Log.d("poly", "It was 1");
 			// This returns the coefficients of several polynomials
@@ -498,7 +501,8 @@ public class protocol {
         }
         
         // Make the coefficients
-        SharedPreferences prefs = context.getSharedPreferences("preferences", 0);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        Log.d("poly" , "It contains: " + prefs.getAll());
         String method = prefs.getString("poly_method", "2");
         int[] coefficients = makeCoefficients(repSet, method);
         
@@ -553,7 +557,7 @@ public class protocol {
         else if ( message_type.equals("fb") ){
         	// Put code here to send a facebook message
         	//Log.d("stage " + stage, "Sending a fb message not yet implemented");
-        	sendFBMessage("ed.newvack", "fetusgo2", share.number, txt, context);
+        	sendFBMessage(share.number, txt, context);
         }
         
         else{
@@ -702,7 +706,7 @@ public class protocol {
 	
 
 	// Send a FB message
-	public void sendFBMessage(String user, String pass, String rec, String message, Context context){
+	public void sendFBMessage(String rec, String message, Context context){
 		
 		/*
 		Intent bindIntent = new Intent(context, xmppService.class);

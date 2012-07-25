@@ -49,7 +49,7 @@ public class xmppService extends Service {
 		
         Runnable r = new xmppThread(user, pass);
         new Thread(r).start();
-        Toast.makeText(this, "thread created and ran", Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "thread created and ran", Toast.LENGTH_LONG).show();
         
         return START_REDELIVER_INTENT;
 	}
@@ -78,9 +78,10 @@ public class xmppService extends Service {
 						}
 					});
 					try {
-						Log.d("xmpp", "sending message: " + msg + "  to: " + rec);
-						
+						Log.d("xmpp", "sending message: " + msg + "  to: " + entry.getUser());
+						//msg = "some other string";
 						newChat.sendMessage(msg);
+						Log.d("xmpp", "Message sent");
 					}
 					catch (XMPPException e){
 						Log.d("xmpp", "Error sending message");

@@ -36,11 +36,9 @@ public class xmppThread extends xmppService implements Runnable {
 			ConnectionConfiguration config = new ConnectionConfiguration("chat.facebook.com", 5222);
 			config.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);    				
     		connection = new XMPPConnection(config);
-    		Log.d("chat", "Made a new connection object");
     		connection.connect();
-    		Log.d("chat", "Connection made");
     		connection.login(username, password);
-    		Log.d("chat", "logged in!");
+    		Log.d("chat", "logged in as: " + username);
     		conn = connection;
     		roster = connection.getRoster();
     		
@@ -51,7 +49,7 @@ public class xmppThread extends xmppService implements Runnable {
     	}  
     		
 
-		
+		/*
 		// A Roster listener
 		roster.addRosterListener(new RosterListener() {
 			public void entriesAdded(Collection<String> addresses) {
@@ -74,6 +72,7 @@ public class xmppThread extends xmppService implements Runnable {
 				//entries = roster.getEntries();
 			} 			
 		});
+		*/
 		
 		// Listen for incoming Messages
 		ChatManager cManager = connection.getChatManager();

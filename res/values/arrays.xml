@@ -2,36 +2,36 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
     
     <string-array name="poly_method">
-        <item name="1">Many small polynomials</item>
-        <item name="2">One large polynomial</item>
+        <item>Many small polynomials</item>
+        <item>One large polynomial</item>
     </string-array>
     <string-array name="poly_method_values">
-        <item name="1">1</item>
-        <item name="2">2</item>
+        <item>1</item>
+        <item>2</item>
     </string-array>
     
     
     <string-array name="encryption">
-        <item name="256">256</item>
-        <item name="512">512</item>
-        <item name="1024">1024</item>
-        <item name="2048">2048</item>
+        <item>256</item>
+        <item>512</item>
+        <item>1024</item>
+        <item>2048</item>
     </string-array>
     <string-array name="encryption_values">
-        <item name="256">256</item>
-        <item name="512">512</item>
-        <item name="1024">1024</item>
-        <item name="2048">2048</item>
+        <item>256</item>
+        <item>512</item>
+        <item>1024</item>
+        <item>2048</item>
     </string-array>
     
     
     <string-array name="messages">
-        <item name="sms">SMS Messages</item>
-        <item name="fb">Facebook Messages</item>
+        <item>SMS Messages</item>
+        <item>Facebook Messages</item>
     </string-array>
     <string-array name="messages_values">
-        <item name="sms">sms</item>
-        <item name="fb">fb</item>
+        <item>sms</item>
+        <item>fb</item>
     </string-array>
     
 </resources>

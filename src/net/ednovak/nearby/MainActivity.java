@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -92,8 +93,11 @@ public class MainActivity extends Activity {
         //startService(xmppIntent);
         
         Intent bindIntent = new Intent(this, xmppService.class);
-        bindIntent.putExtra("user", "ed.newvack");
-        bindIntent.putExtra("pass", "fetusgo2");
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        String user = sp.getString("fb_user", "None");
+        String pass = sp.getString("fb_pass", "None");
+        bindIntent.putExtra("user", user);
+        bindIntent.putExtra("pass", pass);
         bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);
         //stopService(new Intent(MainActivity.this, xmppService.class));
         
