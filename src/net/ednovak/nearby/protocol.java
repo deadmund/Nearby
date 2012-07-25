@@ -4,10 +4,15 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Random;
 
+import net.ednovak.nearby.xmppService.LocalBinder;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.IBinder;
 import android.telephony.SmsManager;
 import android.util.Log;
 
@@ -16,6 +21,7 @@ public class protocol {
 	
 	treeQueue leaves; // The span
 	tree user; // Location of the user (leaf node)
+	private xmppService serv;
 	
 	// Constructor does nothing!  This is probably a design flaw :P
 	public protocol(){
@@ -546,7 +552,8 @@ public class protocol {
         
         else if ( message_type.equals("fb") ){
         	// Put code here to send a facebook message
-        	Log.d("stage " + stage, "Sending a fb message not yet implemented");
+        	//Log.d("stage " + stage, "Sending a fb message not yet implemented");
+        	sendFBMessage("ed.newvack", "fetusgo2", share.number, txt, context);
         }
         
         else{
@@ -632,6 +639,81 @@ public class protocol {
     	list = sms.divideMessage(txt);
     	sms.sendMultipartTextMessage(share.number, null, list, null, null);	   
 		return 0;
+	}
+	
+	
+	// This is the function Alice uses to check Bob's c values
+	// tokens example [sender:@@X:c_1:c_2:c_3:...:c_n]
+	public int check(String[] tokens, Context context){
+		Log.d("stage 3", "Receiving from Bob! Check his long || lat");
+		
+		// Convert back to strings base 10
+		for(int i = 2; i < tokens.length; i++){
+			tokens[i] = new BigInteger(tokens[i], 16).toString();
+		}
+		
+		int stage = Integer.parseInt(tokens[1].substring(2));
+		
+		Paillier paillierD = new Paillier();
+		shareSingleton share = shareSingleton.getInstance();
+		paillierD.loadPrivateKey(share.g, share.lambda, share.n);
+		
+		// Check the latitude and see if we need to continue
+		boolean found = false;
+		for(int i = 2; i < tokens.length; i++){
+			BigInteger val = new BigInteger(tokens[i]);
+			String clear = paillierD.Decryption(val).toString();
+			Log.d("ALICE", "unenc: " + clear);
+			if (clear.equals("0")){
+				Log.d("hooray!", "It was 0");
+				found = true;
+			}						
+		}
+		
+		if (stage == 2){
+			if ( !found ){
+				Intent intent = new Intent(context, answerAct.class);
+				intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				intent.putExtra("answer", "Bob is not located near you!");
+				intent.putExtra("found", found);
+				context.startActivity(intent);
+			}
+			
+			else { // Stage 3 stuff (they are near in longitude so check latitude
+				alice(3, context);
+			}
+		}
+		
+		else if (stage == 4) {
+			Intent intent = new Intent(context, answerAct.class);
+			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			intent.putExtra("found", found);
+			if ( found ){
+				intent.putExtra("answer", "Bob is located near you1");
+			}
+			else {
+				intent.putExtra("answer", "Bob is not located near you");
+			}
+			context.startActivity(intent);				
+		}
+		
+		return 0;
+	}
+	
+
+	// Send a FB message
+	public void sendFBMessage(String user, String pass, String rec, String message, Context context){
+		
+		/*
+		Intent bindIntent = new Intent(context, xmppService.class);
+		// User and pass should be app user preferences
+		bindIntent.putExtra("user", user);
+		bindIntent.putExtra("pass", pass);
+		context.bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);
+		*/
+		
+		shareSingleton share = shareSingleton.getInstance();
+    	share.serv.sendMessage(rec, message, context);
 	}
 }
 

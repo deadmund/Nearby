@@ -11,6 +11,7 @@ public class shareSingleton {
 	public double lon;
 	public double lat;
 	public String number;
+	public xmppService serv;
 	
 	protected shareSingleton(){
 		// Only to defeat instantiation

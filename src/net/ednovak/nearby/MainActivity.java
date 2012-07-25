@@ -28,7 +28,6 @@ public class MainActivity extends Activity {
 	private final static lListener myListener = new lListener();
 	private LocationManager lManager;
 	private EditText other_user;
-	private xmppService serv;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -86,12 +85,16 @@ public class MainActivity extends Activity {
         	Log.d("main", "Bad option choice " + message_type);
         }
         
-        Intent xmppIntent = new Intent(MainActivity.this, xmppService.class);
-        xmppIntent.putExtra("user", "ed.novak3");
-        xmppIntent.putExtra("pass", "fetusgo2");
-        startService(xmppIntent);
+        // Used to start the service but binding allows me to stop it ever
+        //Intent xmppIntent = new Intent(MainActivity.this, xmppService.class);
+        //xmppIntent.putExtra("user", "ed.novak3");
+        //xmppIntent.putExtra("pass", "fetusgo2");
+        //startService(xmppIntent);
         
-        bindService(new Intent(this, xmppService.class), mConnection, Context.BIND_AUTO_CREATE);
+        Intent bindIntent = new Intent(this, xmppService.class);
+        bindIntent.putExtra("user", "ed.newvack");
+        bindIntent.putExtra("pass", "fetusgo2");
+        bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);
         //stopService(new Intent(MainActivity.this, xmppService.class));
         
         /* Big Fat Paillier Homomorphic Encryption Test
@@ -124,8 +127,9 @@ public class MainActivity extends Activity {
     	@Override
     	public void onServiceConnected(ComponentName className, IBinder service) {
     		LocalBinder binder = (LocalBinder) service;
-    		serv = binder.getService();
-    		//serv.sendMessage("", msg); And now I can send a message with the service
+    		shareSingleton share = shareSingleton.getInstance();
+    		share.serv = binder.getService();
+    		
     		// Next step: move this into the protocol class
     		Log.d("main", "We are bound !");
     	}
@@ -160,7 +164,11 @@ public class MainActivity extends Activity {
     	}
     }
     
-    
+    @Override
+    public void onDestroy(){
+    	super.onDestroy();
+    	unbindService(mConnection);
+    }
     
     public void query(View view) {
         Intent intent = new Intent(this, displayMessageAct.class);
@@ -184,7 +192,7 @@ public class MainActivity extends Activity {
         		lManager.removeUpdates(myListener);
         		// I used to pass stuff in over the intent but using the shareSingleton is
         		// easy to code
-        		//intent.putExtra("xmpp", xmppThread);
+        		//intent.putExtra("serv", serv); Can't pass this type of object around
         		startActivity(intent);
         	}
     		else { // Don't have a good location lock yet
@@ -199,5 +207,11 @@ public class MainActivity extends Activity {
     public void goToEncryptionTest(View view){
     	Intent intent = new Intent(this, paillierTest.class);
     	startActivity(intent);    	
+    }
+    
+    public void xmpp(View view){
+    	Log.d("main", "Sending message");
+    	shareSingleton share = shareSingleton.getInstance();
+    	share.serv.sendMessage("Ed Novak", "hey there", getApplicationContext());
     }
 }

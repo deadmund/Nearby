@@ -42,6 +42,7 @@ public class xmppThread extends xmppService implements Runnable {
     		connection.login(username, password);
     		Log.d("chat", "logged in!");
     		conn = connection;
+    		roster = connection.getRoster();
     		
     	} // End of try block
     	catch (XMPPException e){
@@ -49,29 +50,28 @@ public class xmppThread extends xmppService implements Runnable {
     		Log.d("chat", e.toString());
     	}  
     		
-		Roster roster = connection.getRoster();
-		entries = roster.getEntries();
-		for (RosterEntry entry : entries){
-			Log.d("chat", ""+entry);
-		}
-		Log.d("chat", "printed the roster");
+
 		
 		// A Roster listener
 		roster.addRosterListener(new RosterListener() {
 			public void entriesAdded(Collection<String> addresses) {
-				Log.d("xmpp", "entries added");
+				Log.d("xmpp", "Entry added");
+				//entries = roster.getEntries();
 			}
 			
 			public void entriesDeleted(Collection<String> addresses) {
 				Log.d("xmpp", "Entry deleted");
+				//entries = roster.getEntries();
 			}
 			
 			public void entriesUpdated(Collection<String> addresses) {
 				Log.d("xmpp", "Entries Updated");
+				//entries = roster.getEntries();
 			}
 			
 			public void presenceChanged(Presence presence){
 				Log.d("xmpp", "presence changed " + presence.getFrom() + " " + presence);
+				//entries = roster.getEntries();
 			} 			
 		});
 		
