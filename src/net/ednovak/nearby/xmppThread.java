@@ -20,6 +20,7 @@ import android.util.Log;
 public class xmppThread extends xmppService implements Runnable {
 	
 	private String buff = "";
+	private int stage = 0;
 	private String username;
 	private String password;
 	private Context context;
@@ -64,15 +65,17 @@ public class xmppThread extends xmppService implements Runnable {
 							// If the protocol is being queried twice at once there is a big problem
 							if ( message.getBody().substring(0, 2).equals("@@") ){
 								buff += message.getBody().substring(4); // Remove the begging "@@X:"
-								Log.d("xmpp", "state of buff: " + buff);
+								stage = Integer.valueOf(message.getBody().substring(2, 3));
+								//Log.d("xmpp", "state of buff: " + buff + "    state: " + stage);
 							}
 
 							
+							// Message stream over, time to process this message
 							if ( buff.substring(buff.length() - 2).equals("@@")) {
-								Log.d("xmpp", "emptying and processing buff!");
-								buff = buff.substring(0, buff.length() - 3); // Remove the trailing "@@"
+								//Log.d("xmpp", "emptying and processing buff!");
+								buff = buff.substring(0, buff.length() - 2); // Remove the trailing "@@"
 								
-								int stage = Integer.valueOf(buff.substring(0, 1));
+								// I can use sender later to fix the collision problem
 								String sender = roster.getEntry(message.getFrom().toString()).getName();
 								String[] parts = buff.split(":");
 								buff = "";
@@ -81,22 +84,22 @@ public class xmppThread extends xmppService implements Runnable {
 								protocol p = new protocol();
 								switch (stage){
 									case 1:
-										// Set up string
 										
-										
-										// Set up variables to call p.Bob 
+										// Set up variables to call p.Bob
 										Location location = p.locSimple(context);
-										int pol = Integer.parseInt( parts[parts.length - 5] );
-								        int bits = Integer.valueOf(parts[parts.length - 4]);
-								        BigInteger g = new BigInteger(parts[parts.length - 3], 16);
-								        BigInteger n = new BigInteger(parts[parts.length - 2], 16);
-								        int method = Integer.valueOf(parts[parts.length - 1]);
-								        Log.d("stage " + stage, "Generate and send Bob's messag");
+										int pol = Integer.valueOf( parts[parts.length - 5] );
+								        int bits = Integer.valueOf( parts[parts.length - 4] );
+								        BigInteger g = new BigInteger( parts[parts.length - 3], 16 );
+								        BigInteger n = new BigInteger( parts[parts.length - 2], 16 );
+								        int method = Integer.valueOf( parts[parts.length - 1] );						        
+								        
+								        //Log.d("stage " + stage, "Generate and send Bob's message");
 								        // Call Bob's function generate new message
 										String txt = p.Bob(2, parts, pol, bits, g, n, method, location);
 										Log.d("xmpp", "txt in Bob: " + txt);
 									
-								    	//sendFBMessage(parts[0], txt, context); // This came in off xmpp
+										// Send Bob's C values
+								    	p.sendFBMessage(sender, txt, 2, context); // This came in off xmpp
 								    	
 										break;
 									case 2:

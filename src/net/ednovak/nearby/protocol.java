@@ -29,37 +29,6 @@ public class protocol {
 	}
 	
 	
-	/*
-	// Takes the tokens from 'over the wire' and converts each spot to it's real datatype
-	public String[] fromHex(String[] tokens){
-		int swtch = tokens[0].substring(2);
-		switch (swtch){
-		case 1:
-			for(int i = 1; i < length; i++){
-				
-			}
-		}
-	}
-	
-	public String toHex(String txt){
-		String[] tokens = txt.split(":");
-		for (int i = 2; i < tokens.length; i++){
-			tokens[i] = new BigInteger(tokens[i]).toString(16); 
-		}
-		
-		StringBuffer result = new StringBuffer();
-		result.append(tokens[0]);
-		for (int i = 1; i < tokens.length; i++){
-			result.append(":");
-			result.append(tokens[i]);
-		}
-		
-		return result.toString();
-	}
-	
-	*/
-	
-	
 	// Homomorphic Addition (E(m1) * E(m2)) % n^2 = (m1 + m2) % n
 	// This function works in the encrypted domain to get clear domain addition
 	public BigInteger homoAdd(BigInteger em1, BigInteger em2, BigInteger n){
@@ -481,7 +450,7 @@ public class protocol {
 	
 	
 	// Alice for stage 1 || 3
-	public StringBuffer alice(int stage, int policy, int bits, int method){
+	public String alice(int stage, int policy, int bits, int method){
 		Log.d("stage " + stage, "Alice finding / sending lon || lat");
 		
 		// Save all this stuff for the stage 3 call (happens in check but probs shouldn't happen in check)
@@ -567,9 +536,9 @@ public class protocol {
 		//    0       1       2         -5  -4 -3-2   length - 1 
         //String txt = "@@" + stage + ":" + share.number; //Number might be the recipients fb name as well.
 		StringBuffer txt = new StringBuffer();
-		txt.append(encCoe[0].toString()); // The first one should not have a ":" at the front of it
+		txt.append(encCoe[0].toString(16)); // The first one should not have a ":" at the front of it
         for (int i = 1; i < encCoe.length; i++){
-        	txt.append(":" + encCoe[i].toString());
+        	txt.append(":" + encCoe[i].toString(16));
         }
         
         BigInteger[] key = paillier.publicKey();
@@ -580,7 +549,7 @@ public class protocol {
         txt.append(":" + method); // poly generation method
         // The arguments from "policy" through "poly method number" are required by Bob to do his part properly
         
-        return txt;
+        return txt.toString();
 	}
 	
 	
@@ -628,18 +597,22 @@ public class protocol {
         
         // Making the string
         // Format of a stage 2 || 4 message
-        // [#:@@<stageNumber>:C1:C2:C3...:CN]
-        String txt = "@@" + stage;
-    	for (int i = 0; i < results.length; i++){
-    		txt += ":" + results[i].toString(16);
+        // [C1:C2:C3...:CN]
+        
+        StringBuffer txt = new StringBuffer();
+        txt.append(results[0].toString(16));
+    	for (int i = 1; i < results.length; i++){
+    		txt.append(":" + results[i].toString(16));
     	}
 
+    	
+    	// Used to store the sender here but I think this is better handled outside this function
     	// Store the phone number that this message came from
-    	shareSingleton share = shareSingleton.getInstance();
-    	//share.number = tokens[0].substring(7); // Different on a physical phone
-    	share.rec = tokens[0];
+    	// shareSingleton share = shareSingleton.getInstance();
+    	// share.number = tokens[0].substring(7); // Different on a physical phone
+    	// Log.d("stage " + stage, "
 		
-    	return txt;
+    	return txt.toString();
 		
 	}
 	

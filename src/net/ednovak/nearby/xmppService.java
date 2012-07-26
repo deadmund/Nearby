@@ -58,6 +58,7 @@ public class xmppService extends Service {
 	// Each packet is 502 characters long.  A beginning @@<stage number>
 	// and, on the last packet in the stream, a trailing @@
 	private List<String> make_packets(String msg, int stage){
+		//Log.d("stage " + stage, "Dividing this string: " + msg);
 		List<String> packets = new ArrayList<String>();
 		int cur = 0;
 		int end = 0;

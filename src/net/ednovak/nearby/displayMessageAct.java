@@ -27,7 +27,7 @@ public class displayMessageAct extends Activity {
         int method = Integer.valueOf(prefs.getString("poly_method", "2"));
         int pol = intent.getIntExtra("pol", 10);
         int bits = Integer.valueOf(prefs.getString("encryption_strength", "1024"));
-        StringBuffer txt = p.alice(1, pol, bits, method); // stage number, policy, enc bits, polynomial method
+        String txt = p.alice(1, pol, bits, method); // stage number, policy, enc bits, polynomial method
 
         // Determine message type and send message
         String rec = intent.getStringExtra("rec");
