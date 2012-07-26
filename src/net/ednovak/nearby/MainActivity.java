@@ -183,20 +183,22 @@ public class MainActivity extends Activity {
         int distance = sk.getProgress();
         distance = (int)((29.9 * distance) + 10);
         distance = Math.round(distance / 10) * 10;
-        share.pol = distance;
+        share.pol = distance; // need this in the service receive
         
         // recipient number
         EditText editText = other_user;
-        String number = editText.getText().toString();
-        share.number = number;
+        String rec = editText.getText().toString();
+        share.rec = rec; // need this in the service receive
         
         Context context = getApplicationContext();
-        if ( number.length() != 0 && number != null ){
+        if ( rec.length() != 0 && rec != null ){
         	if (!myListener.listening() ){
         		lManager.removeUpdates(myListener);
         		// I used to pass stuff in over the intent but using the shareSingleton is
-        		// easy to code
+        		// allows me to access these values in the on receive later
         		//intent.putExtra("serv", serv); Can't pass this type of object around
+        		intent.putExtra("rec", rec);
+        		intent.putExtra("pol", distance);
         		startActivity(intent);
         	}
     		else { // Don't have a good location lock yet
@@ -214,8 +216,6 @@ public class MainActivity extends Activity {
     }
     
     public void xmpp(View view){
-    	Log.d("main", "Sending message");
-    	shareSingleton share = shareSingleton.getInstance();
-    	share.serv.sendMessage("Ed Novak", "hey there", getApplicationContext());
+    	Log.d("main", "Stub Function");
     }
 }

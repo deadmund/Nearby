@@ -10,8 +10,10 @@ public class shareSingleton {
 	public int pol;
 	public double lon;
 	public double lat;
-	public String number;
+	public String rec;
 	public xmppService serv;
+	public int bits;
+	public int method;
 	
 	protected shareSingleton(){
 		// Only to defeat instantiation

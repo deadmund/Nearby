@@ -59,7 +59,7 @@ public class smsReceive extends BroadcastReceiver {
 			//Log.d("BOB", "the code after the @@: " + swtch);
 			switch (swtch){
 				case 1: // stage 2 (Bob does his part for Alice, longitude)
-				    p.Bob(2, s, tokens, myListener, context);
+				    //p.Bob(2, s, tokens, myListener, context);
 			    	break;
 			        
 				case 2: //stage 3 (alice finds latitude if she's near Bob in longitude)
@@ -104,7 +104,7 @@ public class smsReceive extends BroadcastReceiver {
 					}
 					
 					else { // Stage 3 stuff (they are near in longitude
-						p.alice(3, context);
+						//p.alice(3, context);
 					}
 					
 					break;
@@ -113,7 +113,7 @@ public class smsReceive extends BroadcastReceiver {
 					Log.d("stage 4", "Recieving latitude from Alice! (our longitude was probs close");
 					Log.d("recieve", s);
 					
-					p.Bob(4, s, tokens, myListener, context);
+					//p.Bob(4, s, tokens, myListener, context);
 					 
 					break;
 					

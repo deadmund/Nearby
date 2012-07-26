@@ -29,6 +29,37 @@ public class protocol {
 	}
 	
 	
+	/*
+	// Takes the tokens from 'over the wire' and converts each spot to it's real datatype
+	public String[] fromHex(String[] tokens){
+		int swtch = tokens[0].substring(2);
+		switch (swtch){
+		case 1:
+			for(int i = 1; i < length; i++){
+				
+			}
+		}
+	}
+	
+	public String toHex(String txt){
+		String[] tokens = txt.split(":");
+		for (int i = 2; i < tokens.length; i++){
+			tokens[i] = new BigInteger(tokens[i]).toString(16); 
+		}
+		
+		StringBuffer result = new StringBuffer();
+		result.append(tokens[0]);
+		for (int i = 1; i < tokens.length; i++){
+			result.append(":");
+			result.append(tokens[i]);
+		}
+		
+		return result.toString();
+	}
+	
+	*/
+	
+	
 	// Homomorphic Addition (E(m1) * E(m2)) % n^2 = (m1 + m2) % n
 	// This function works in the encrypted domain to get clear domain addition
 	public BigInteger homoAdd(BigInteger em1, BigInteger em2, BigInteger n){
@@ -378,18 +409,16 @@ public class protocol {
 	}
 	
 	
-	public int[] makeCoefficients(treeQueue repSet, String method){
+	public int[] makeCoefficients(treeQueue repSet, int method){
 		
-		Log.d("poly", "method: " + method);
-		
-		if ( method.equals("1") ){
+		if ( method == 1 ){
 			Log.d("poly", "It was 1");
 			// This returns the coefficients of several polynomials
 			// They are of the form (x - coe).  The 1 in front of the x is implied
 			return makeCoefficientsOne(repSet);
 		}
 		
-		else if( method.equals("2") ) {
+		else if( method == 2 ) {
 			Log.d("poly", "It was 2");
 			// This returns coefficients of one polynomial
 			// It is of the form (c_nx^n + c_n-1 * x^n-1 ...)
@@ -404,12 +433,12 @@ public class protocol {
 
 	
 	// Does Bob's calculations 
-	public BigInteger[] bobCalc(treeQueue coveringSet, BigInteger[] encCoe, int bits, String g, String n, int method){
+	public BigInteger[] bobCalc(treeQueue coveringSet, BigInteger[] encCoe, int bits, BigInteger g, BigInteger n, int method){
 		
-		BigInteger[] results = new BigInteger[1];
+		BigInteger[] results = null;
 		
 		Paillier paillierE = new Paillier(bits, 64);
-		paillierE.loadPublicKey(new BigInteger(g), new BigInteger(n));	
+		paillierE.loadPublicKey(g, n);	
 		
 		if ( method == 1) { 
 			results = new BigInteger[encCoe.length * coveringSet.length];
@@ -443,25 +472,28 @@ public class protocol {
 			results = new BigInteger[coveringSet.length];
 			for (int i = 0; i < coveringSet.length; i++){
 				BigInteger b = new BigInteger(String.valueOf(coveringSet.peek(i).value));
-				results[i] = homoEval(b, encCoe, new BigInteger(n));
+				results[i] = homoEval(b, encCoe, n);
 			}
 			return results;
 		}
-		
 		return results;
 	}
 	
 	
 	// Alice for stage 1 || 3
-	public int alice(int stage, Context context){
+	public StringBuffer alice(int stage, int policy, int bits, int method){
 		Log.d("stage " + stage, "Alice finding / sending lon || lat");
 		
+		// Save all this stuff for the stage 3 call (happens in check but probs shouldn't happen in check)
 		shareSingleton share = shareSingleton.getInstance();
+		share.pol = policy;
+		share.bits = bits;
+		share.method = method;
 		
 		// Get location
-		double edge;
-		int edgeLeafNumber;
-		int aliceLeafNumber;
+		double edge= 0.0;
+		int edgeLeafNumber = 0;
+		int aliceLeafNumber = 0;
 		
 		if (stage == 1){
 			edge = findLong(share.lon, share.lat, share.pol);
@@ -474,7 +506,7 @@ public class protocol {
 			aliceLeafNumber = latitudeToLeaf(share.lat);
 		}
 		else{
-			return 1;
+			Log.d("Error", "Bad stage number");
 		}
 		
 		// Find the leaves on the edge and build the span
@@ -500,10 +532,7 @@ public class protocol {
         	Log.d("stage " + stage, "" + repSet.peek(i).value);
         }
         
-        // Make the coefficients
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        Log.d("poly" , "It contains: " + prefs.getAll());
-        String method = prefs.getString("poly_method", "2");
+
         int[] coefficients = makeCoefficients(repSet, method);
         
         Log.d("stage " + stage, "Printing the coefficients");
@@ -513,8 +542,7 @@ public class protocol {
         
         
         // Do the coefficient encryption
-        String bits = prefs.getString("encryption_strength", "1024");
-        Paillier paillier = new Paillier(Integer.valueOf(bits), 64);
+        Paillier paillier = new Paillier(bits, 64);
         if ( stage == 1 ){
         	BigInteger[] tmp = paillier.privateKey();
         	share.g = tmp[0];
@@ -525,7 +553,7 @@ public class protocol {
     		paillier.loadPrivateKey(share.g, share.lambda, share.n);
     	}
     	else{
-			return 2;
+			Log.d("error", "Bad stage number");
     	}
 		BigInteger[] encCoe = new BigInteger[coefficients.length];
 		for (int i = 0; i < coefficients.length; i++){
@@ -533,73 +561,48 @@ public class protocol {
 		}
         
         // Build the message
-        // Format of a stage 1 or stage 3 message
-		// [@@<stageNumber>:encCoe;encCoe2:encCoe3:...::pol:bit:g:n:polyMethodNumber]
-		//        0            1       2      3         -5  -4 -3-2   length - 1 
-        String txt = "@@" + stage;
-        for (int i = 0; i < encCoe.length; i++){
-        	txt += ":" + encCoe[i].toString(16);
+        // Format of a stage 1 or stage 3 message.  The xmpp service adds some @@ but this leve
+		// does not have to deal with those details
+		// [encCoe;encCoe2:encCoe3:...::pol:bit:g:n:polyMethodNumber]
+		//    0       1       2         -5  -4 -3-2   length - 1 
+        //String txt = "@@" + stage + ":" + share.number; //Number might be the recipients fb name as well.
+		StringBuffer txt = new StringBuffer();
+		txt.append(encCoe[0].toString()); // The first one should not have a ":" at the front of it
+        for (int i = 1; i < encCoe.length; i++){
+        	txt.append(":" + encCoe[i].toString());
         }
+        
         BigInteger[] key = paillier.publicKey();
-        txt += ":" + String.valueOf(spanLength/2) + ":" + key[0].toString(16) + ":" + key[1].toString(16) + ":" + method;
+        txt.append(":" + policy); // Policy Size
+        txt.append(":" + bits);
+        txt.append(":" + key[0].toString(16)); // g
+        txt.append(":" + key[1].toString(16)); // n
+        txt.append(":" + method); // poly generation method
+        // The arguments from "policy" through "poly method number" are required by Bob to do his part properly
         
-        String message_type = prefs.getString("message_type", "fb");
-        		
-        if ( message_type.equals("sms") ){
-	        // Send the message as a SMS
-	    	ArrayList<String> list = new ArrayList<String>();
-	    	SmsManager sms = SmsManager.getDefault();
-	    	list = sms.divideMessage(txt);
-	    	Log.d("stage 1", "sending the encrypted coefficients (and other stuff) to Bob");
-	    	sms.sendMultipartTextMessage(share.number, null, list, null, null);
-        }
-        
-        else if ( message_type.equals("fb") ){
-        	// Put code here to send a facebook message
-        	//Log.d("stage " + stage, "Sending a fb message not yet implemented");
-        	sendFBMessage(share.number, txt, context);
-        }
-        
-        else{
-        	return 3;
-        }
-		
-		return 0;
+        return txt;
 	}
 	
 	
 	
 	// Bob for stage 2 || 4
-	public int Bob(int stage, String s, String[] tokens, lListener myListener, Context context){
+	public String Bob(int stage, String[] tokens, int policy, int bits, BigInteger g, BigInteger n, int method, Location loc){
 		Log.d("stage " + stage, "Recieving From alice, going to do my thing with the C's");
-		Log.d("stage " + stage, "received: " + s);
 		
-		// Get Bob's location
-		LocationManager lManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-		lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10000, myListener);
-		Location lastKnownLocation = lManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        if ( lastKnownLocation == null ){
-        	lastKnownLocation = lManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        }
-        if ( lastKnownLocation == null ) {
-        	Log.d("recieve" , "Bob's location is null!");
-        }
-        lManager.removeUpdates(myListener);
-        
+
+        //lManager.removeUpdates(myListener);
+        Log.d("stage " + stage, "tokens[tokens.length - 5]: " + tokens[tokens.length -5]);
         // Get Bob's leaf and span
-		int width = Integer.parseInt( tokens[tokens.length - 5] );
+
 		int bobLeafNumber = -1;
 		if ( stage == 2) {
-			bobLeafNumber = longitudeToLeaf(lastKnownLocation.getLongitude());
+			bobLeafNumber = longitudeToLeaf(loc.getLongitude());
 		}
 		else if ( stage == 4 ){
-			bobLeafNumber = latitudeToLeaf(lastKnownLocation.getLatitude());
+			bobLeafNumber = latitudeToLeaf(loc.getLatitude());
 		}
-		else{
-			return 1;
-		}
-		int left = bobLeafNumber - width;
-		int right = bobLeafNumber + width;
+		int left = bobLeafNumber - policy;
+		int right = bobLeafNumber + policy;
 		Log.d("stage " + stage, "Bob's leaf nodes go from " + left + " to " + right + ".  His node is: " + bobLeafNumber);
 		
 		// Build the leaves and tree
@@ -617,32 +620,27 @@ public class protocol {
         // Separate out EncCoe from tokens
         BigInteger[] encCoe = new BigInteger[tokens.length - 7];
         for (int i = 0; i < encCoe.length; i++){
-        	encCoe[i] = new BigInteger(tokens[i+2]);
+        	encCoe[i] = new BigInteger(tokens[i+2], 16);
         }
-        int bits = Integer.valueOf(tokens[tokens.length - 4]);
-        String g = tokens[tokens.length - 3];
-        String n = tokens[tokens.length - 2];
-        int method = Integer.valueOf(tokens[tokens.length - 1]);
+
+        //Log.d("stage " + stage, "bits : " + bits + "  g: " + g + "  n: " + n +"  method: " + method);
         BigInteger[] results = bobCalc(coveringSet, encCoe, bits, g, n, method);
         
         // Making the string
         // Format of a stage 2 || 4 message
-        // [@@<stageNumber>:C1:C2:C3...:CN]
+        // [#:@@<stageNumber>:C1:C2:C3...:CN]
         String txt = "@@" + stage;
     	for (int i = 0; i < results.length; i++){
     		txt += ":" + results[i].toString(16);
     	}
-    	
+
     	// Store the phone number that this message came from
     	shareSingleton share = shareSingleton.getInstance();
-    	share.number = tokens[0].substring(7);
+    	//share.number = tokens[0].substring(7); // Different on a physical phone
+    	share.rec = tokens[0];
 		
-    	// Send the message
-    	ArrayList<String> list = new ArrayList<String>();
-    	SmsManager sms = SmsManager.getDefault();
-    	list = sms.divideMessage(txt);
-    	sms.sendMultipartTextMessage(share.number, null, list, null, null);	   
-		return 0;
+    	return txt;
+		
 	}
 	
 	
@@ -684,7 +682,7 @@ public class protocol {
 			}
 			
 			else { // Stage 3 stuff (they are near in longitude so check latitude
-				alice(3, context);
+				alice(3, share.pol, share.bits, share.method); //stage policy bits polymethod
 			}
 		}
 		
@@ -706,18 +704,23 @@ public class protocol {
 	
 
 	// Send a FB message
-	public void sendFBMessage(String rec, String message, Context context){
-		
-		/*
-		Intent bindIntent = new Intent(context, xmppService.class);
-		// User and pass should be app user preferences
-		bindIntent.putExtra("user", user);
-		bindIntent.putExtra("pass", pass);
-		context.bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);
-		*/
-		
+	public void sendFBMessage(String rec, String message, int stage, Context context){
 		shareSingleton share = shareSingleton.getInstance();
-    	share.serv.sendMessage(rec, message, context);
+    	share.serv.sendMessage(rec, message, stage, context);
+	}
+	
+	public Location locSimple(Context context){
+		// Get Bob's location
+		LocationManager lManager = (LocationManager)context.getSystemService(Context.LOCATION_SERVICE);
+		Location lastKnownLocation = lManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+	    if ( lastKnownLocation == null ){
+	    	Log.d("receive", "lastKnown was null");
+	    	lastKnownLocation = lManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+	    }
+	    if ( lastKnownLocation == null ) {
+	    	Log.d("recieve" , "location is null!");
+	    }
+	    return lastKnownLocation;
 	}
 }
 

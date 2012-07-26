@@ -1,14 +1,14 @@
 package net.ednovak.nearby;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.Connection;
-import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.packet.Message;
 
 import android.app.Service;
 import android.content.Context;
@@ -21,7 +21,6 @@ import android.widget.Toast;
 public class xmppService extends Service {
 	
 	public static Connection conn;
-	//public static Collection<RosterEntry> entries;
 	public static Roster roster;
 	IBinder xmppBinder = new LocalBinder();
 	
@@ -47,14 +46,50 @@ public class xmppService extends Service {
 		String user = intent.getStringExtra("user");
 		String pass = intent.getStringExtra("pass");
 		
-        Runnable r = new xmppThread(user, pass);
+        Runnable r = new xmppThread(user, pass, this);
         new Thread(r).start();
         //Toast.makeText(this, "thread created and ran", Toast.LENGTH_LONG).show();
         
         return START_REDELIVER_INTENT;
 	}
 	
-	public void sendMessage(String rec, String msg, final Context context){
+	
+	// Splits a long string up into several 'packets' so the fb does not filter them
+	// Each packet is 502 characters long.  A beginning @@<stage number>
+	// and, on the last packet in the stream, a trailing @@
+	private List<String> make_packets(String msg, int stage){
+		List<String> packets = new ArrayList<String>();
+		int cur = 0;
+		int end = 0;
+		while (end < msg.length()){
+			end = Math.min(msg.length(), cur + 500);
+			packets.add("@@" + stage + ":" + msg.substring(cur, end));
+			cur += end;
+		}
+		// I use the "@@" on the last packet to mark the end of a stream
+		packets.set(packets.size()-1, packets.get(packets.size()-1) + "@@"); // Put a "@@" on the last one
+		return packets;
+	}
+	
+	
+	// Send message that actually does the sending
+	private void real_send(Chat chat, String msg, int stage){
+		List<String> parts = make_packets(msg, stage);
+		for(int i = 0; i < parts.size(); i++){
+			Log.d("xmpp", "part: " + parts.get(i));
+			try{
+				chat.sendMessage(parts.get(i));
+			}
+			catch (XMPPException e){
+				Log.d("xmpp", "Caught exception: " + e.toString());
+			}
+		}	
+		Log.d("xmpp", "Message sent");
+	}
+	
+	
+	// Send message exposed to real world
+	public void sendMessage(String rec, String msg, int stage, final Context context){
 		Log.d("xmpp", "Looking for: " + rec);
 		Collection<RosterEntry> entries = roster.getEntries();
 		if (entries != null){
@@ -62,30 +97,9 @@ public class xmppService extends Service {
 				//Log.d("chat", ""+entry);
 				if (entry.getName().equals(rec)){
 					Log.d("xmpp", "found this person: " + entry.getName() + " " + entry.getUser() + " " + entry.getStatus());
-					Chat newChat = conn.getChatManager().createChat(entry.getUser(), new MessageListener() {
-						public void processMessage(Chat chat, Message message){
-							
-							// Convert to regular token array (cause over sms there is a phone number
-							String[] tmp = message.toString().split(":");
-							String[] tokens = new String[tmp.length+1];
-							for(int i = 1; i < tokens.length; i++){
-								tokens[i] = tmp[i-1];
-							}
-							
-							// Check the incoming C's
-							protocol p = new protocol();
-							p.check(tokens, context);							
-						}
-					});
-					try {
-						Log.d("xmpp", "sending message: " + msg + "  to: " + entry.getUser());
-						//msg = "some other string";
-						newChat.sendMessage(msg);
-						Log.d("xmpp", "Message sent");
-					}
-					catch (XMPPException e){
-						Log.d("xmpp", "Error sending message");
-					}
+					Chat newChat = conn.getChatManager().createChat(entry.getUser(), null);
+					Log.d("xmpp", "sending message to: " + entry.getUser());
+					real_send(newChat, msg, stage);
 				}
 			}
 		}
@@ -104,9 +118,9 @@ public class xmppService extends Service {
 			String user = intent.getStringExtra("user");
 			String pass = intent.getStringExtra("pass");
 			
-	        Runnable r = new xmppThread(user, pass);
+	        Runnable r = new xmppThread(user, pass, this);
 	        new Thread(r).start();
-	        Toast.makeText(this, "thread created and ran", Toast.LENGTH_LONG).show();
+	        //Toast.makeText(this, "thread created and ran", Toast.LENGTH_LONG).show();
 		}
 		
 		return xmppBinder;
