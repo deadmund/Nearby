@@ -35,6 +35,7 @@ public class xmppService extends Service {
 	public void onDestroy(){
 		super.onDestroy();
 		conn.disconnect();
+		conn = null;
 		Toast.makeText(this, "service destroyed", Toast.LENGTH_LONG).show();
 	}	
 	
@@ -64,8 +65,9 @@ public class xmppService extends Service {
 		int end = 0;
 		while (end < msg.length()){
 			end = Math.min(msg.length(), cur + 500);
+			//Log.d("xmpp", "Adding chunk from " + cur + " to " + end);
 			packets.add("@@" + stage + ":" + msg.substring(cur, end));
-			cur += end;
+			cur = end;
 		}
 		// I use the "@@" on the last packet to mark the end of a stream
 		packets.set(packets.size()-1, packets.get(packets.size()-1) + "@@"); // Put a "@@" on the last one
@@ -77,7 +79,7 @@ public class xmppService extends Service {
 	private void real_send(Chat chat, String msg, int stage){
 		List<String> parts = make_packets(msg, stage);
 		for(int i = 0; i < parts.size(); i++){
-			Log.d("xmpp", "part: " + parts.get(i));
+			//Log.d("xmpp", "part: " + parts.get(i));
 			try{
 				chat.sendMessage(parts.get(i));
 			}
@@ -115,7 +117,7 @@ public class xmppService extends Service {
 	public IBinder onBind(Intent intent){
 		Toast.makeText(this, "service bound to", Toast.LENGTH_LONG).show();
 		
-		if (conn == null){
+		if ( conn == null ){
 			String user = intent.getStringExtra("user");
 			String pass = intent.getStringExtra("pass");
 			

@@ -13,8 +13,8 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 
 import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
-import android.location.LocationManager;
 import android.util.Log;
 
 public class xmppThread extends xmppService implements Runnable {
@@ -96,7 +96,7 @@ public class xmppThread extends xmppService implements Runnable {
 								        //Log.d("stage " + stage, "Generate and send Bob's message");
 								        // Call Bob's function generate new message
 										String txt = p.Bob(2, parts, pol, bits, g, n, method, location);
-										Log.d("xmpp", "txt in Bob: " + txt);
+										//Log.d("xmpp", "txt in Bob: " + txt);
 									
 										// Send Bob's C values
 								    	p.sendFBMessage(sender, txt, 2, context); // This came in off xmpp
@@ -104,7 +104,21 @@ public class xmppThread extends xmppService implements Runnable {
 										break;
 									case 2:
 										// Check the incoming C's
-										//p.check(tokens, context);	
+										boolean found = p.check(parts, context);
+										
+										if ( !found ) {
+											Intent intent = new Intent(context, answerAct.class);
+											intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+											intent.putExtra("answer", "Bob is not located near you!");
+											intent.putExtra("found", found);
+											context.startActivity(intent);
+										}
+
+										// Continue the protocol anyway so Bob doesn't catch wise.
+										shareSingleton share = shareSingleton.getInstance();
+										txt = p.alice(3, share.pol, share.bits, share.method); // txt is used in the above .Bob call
+										Log.d("xmpp", "Done checking continuing protocol");
+										p.sendFBMessage(sender, txt, 4, context);
 								}
 							}							
 						}

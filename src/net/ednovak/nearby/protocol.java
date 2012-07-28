@@ -60,12 +60,15 @@ public class protocol {
 	public BigInteger homoEval(BigInteger b, BigInteger[] poly, BigInteger n){
 		BigInteger[] terms = new BigInteger[poly.length];
 		BigInteger tmp;
+		int intVal;
 		
 		// Find the terms between the addition
-		for (int i = 0; i < poly.length; i++){
-			tmp = new BigInteger(String.valueOf(Math.pow(b.intValue(), i)));
+		for (int i = 0; i < poly.length; i++){			
+			intVal = (int)Math.pow(b.intValue(), i);
+			tmp = new BigInteger(String.valueOf(intVal));
 			terms[i] = homoMult(poly[i], tmp, n);
 		}
+		
 		
 		// Add up the terms
 		BigInteger sum = new BigInteger(String.valueOf(terms[0]));
@@ -381,14 +384,14 @@ public class protocol {
 	public int[] makeCoefficients(treeQueue repSet, int method){
 		
 		if ( method == 1 ){
-			Log.d("poly", "It was 1");
+			Log.d("poly", "Several Small Polys");
 			// This returns the coefficients of several polynomials
 			// They are of the form (x - coe).  The 1 in front of the x is implied
 			return makeCoefficientsOne(repSet);
 		}
 		
 		else if( method == 2 ) {
-			Log.d("poly", "It was 2");
+			Log.d("poly", "One Large Poly");
 			// This returns coefficients of one polynomial
 			// It is of the form (c_nx^n + c_n-1 * x^n-1 ...)
 			return makeCoefficientsTwo(repSet);
@@ -441,6 +444,7 @@ public class protocol {
 			results = new BigInteger[coveringSet.length];
 			for (int i = 0; i < coveringSet.length; i++){
 				BigInteger b = new BigInteger(String.valueOf(coveringSet.peek(i).value));
+				Log.d("bobCalc", "Evaluating " + b);
 				results[i] = homoEval(b, encCoe, n);
 			}
 			return results;
@@ -559,19 +563,25 @@ public class protocol {
 		Log.d("stage " + stage, "Recieving From alice, going to do my thing with the C's");
 		
 
-        //lManager.removeUpdates(myListener);
-        Log.d("stage " + stage, "tokens[tokens.length - 5]: " + tokens[tokens.length -5]);
         // Get Bob's leaf and span
-
-		int bobLeafNumber = -1;
+        double edge = 0.0;
+        int edgeLeafNumber = 0;
+        int bobLeafNumber = 0;
+        
 		if ( stage == 2) {
+			edge = findLong(loc.getLongitude(), loc.getLatitude(), policy);
+			edgeLeafNumber = longitudeToLeaf(edge);
 			bobLeafNumber = longitudeToLeaf(loc.getLongitude());
 		}
 		else if ( stage == 4 ){
+			edge = findLat(loc.getLongitude(), loc.getLatitude(), policy);
+			edgeLeafNumber = latitudeToLeaf(edge);
 			bobLeafNumber = latitudeToLeaf(loc.getLatitude());
 		}
-		int left = bobLeafNumber - policy;
-		int right = bobLeafNumber + policy;
+		
+		int spanLength = ( Math.abs(edgeLeafNumber - bobLeafNumber) * 2 ) + 1;
+		int left = bobLeafNumber - (spanLength / 2);
+		int right = bobLeafNumber + (spanLength /2);
 		Log.d("stage " + stage, "Bob's leaf nodes go from " + left + " to " + right + ".  His node is: " + bobLeafNumber);
 		
 		// Build the leaves and tree
@@ -585,20 +595,22 @@ public class protocol {
         	Log.d("stage " + stage, "Bob's covering set: " + coveringSet.peek(i).value);
         }
         
-        // Set up arguments to bobCalc
-        // Separate out EncCoe from tokens
-        BigInteger[] encCoe = new BigInteger[tokens.length - 7];
+        // Pull the encCoe out of the tokens for bobCalc
+        BigInteger[] encCoe = new BigInteger[tokens.length - 5];
         for (int i = 0; i < encCoe.length; i++){
-        	encCoe[i] = new BigInteger(tokens[i+2], 16);
+        	Log.d("stage " + stage, "Pulling out enc coefficient #" + i + ": " + tokens[i]);
+        	encCoe[i] = new BigInteger(tokens[i], 16); // Makes them NOT hex as well
         }
 
         //Log.d("stage " + stage, "bits : " + bits + "  g: " + g + "  n: " + n +"  method: " + method);
         BigInteger[] results = bobCalc(coveringSet, encCoe, bits, g, n, method);
-        
+        Log.d("stage " + stage, "The results are found");
+        for (int i = 0; i < results.length; i++){
+        	Log.d("stage " + stage, "results[" + i +"]: " + results[i]);
+        }
         // Making the string
         // Format of a stage 2 || 4 message
-        // [C1:C2:C3...:CN]
-        
+        // [C1:C2:C3...:CN]       
         StringBuffer txt = new StringBuffer();
         txt.append(results[0].toString(16));
     	for (int i = 1; i < results.length; i++){
@@ -619,23 +631,27 @@ public class protocol {
 	
 	// This is the function Alice uses to check Bob's c values
 	// tokens example [sender:@@X:c_1:c_2:c_3:...:c_n]
-	public int check(String[] tokens, Context context){
+	public boolean check(String[] tokens, Context context){
 		Log.d("stage 3", "Receiving from Bob! Check his long || lat");
 		
+		//Log.d("stage 3", "Here is the String[] I was given to check: " + tokens);
+		//for (int i = 0; i < tokens.length; i++){
+		//	Log.d("stage 3" , "tokens[" + i + "]: " + tokens[i]);
+		//}
+		
+		
 		// Convert back to strings base 10
-		for(int i = 2; i < tokens.length; i++){
+		for(int i = 0; i < tokens.length; i++){
 			tokens[i] = new BigInteger(tokens[i], 16).toString();
 		}
-		
-		int stage = Integer.parseInt(tokens[1].substring(2));
-		
-		Paillier paillierD = new Paillier();
+
 		shareSingleton share = shareSingleton.getInstance();
+		Paillier paillierD = new Paillier(share.bits, 64);
 		paillierD.loadPrivateKey(share.g, share.lambda, share.n);
 		
 		// Check the latitude and see if we need to continue
 		boolean found = false;
-		for(int i = 2; i < tokens.length; i++){
+		for(int i = 0; i < tokens.length; i++){
 			BigInteger val = new BigInteger(tokens[i]);
 			String clear = paillierD.Decryption(val).toString();
 			Log.d("ALICE", "unenc: " + clear);
@@ -644,22 +660,10 @@ public class protocol {
 				found = true;
 			}						
 		}
+		return found;
 		
-		if (stage == 2){
-			if ( !found ){
-				Intent intent = new Intent(context, answerAct.class);
-				intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-				intent.putExtra("answer", "Bob is not located near you!");
-				intent.putExtra("found", found);
-				context.startActivity(intent);
-			}
-			
-			else { // Stage 3 stuff (they are near in longitude so check latitude
-				alice(3, share.pol, share.bits, share.method); //stage policy bits polymethod
-			}
-		}
-		
-		else if (stage == 4) {
+		/*
+		if (stage == 4) {
 			Intent intent = new Intent(context, answerAct.class);
 			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			intent.putExtra("found", found);
@@ -671,8 +675,8 @@ public class protocol {
 			}
 			context.startActivity(intent);				
 		}
-		
-		return 0;
+		*/
+
 	}
 	
 
