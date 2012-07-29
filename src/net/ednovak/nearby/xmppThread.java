@@ -60,7 +60,8 @@ public class xmppThread extends xmppService implements Runnable {
 					chat.addMessageListener(new MessageListener() {
 						@Override
 						public void processMessage(Chat chat, Message message) {
-							Log.d("xmpp", "Chat recieved in thread: " + message.getBody());
+							//Log.d("xmpp", "Chat recieved in thread: " + message.getBody());
+							Log.d("xmpp", "Chat recieved in thread");
 							
 							// If the protocol is being queried twice at once there is a big problem
 							if ( message.getBody().substring(0, 2).equals("@@") ){
@@ -83,8 +84,7 @@ public class xmppThread extends xmppService implements Runnable {
 
 								protocol p = new protocol();
 								switch (stage){
-									case 1:
-										
+									case 1: // This is Bob, stage 2										
 										// Set up variables to call p.Bob
 										Location location = p.locSimple(context);
 										int pol = Integer.valueOf( parts[parts.length - 5] );
@@ -99,10 +99,10 @@ public class xmppThread extends xmppService implements Runnable {
 										//Log.d("xmpp", "txt in Bob: " + txt);
 									
 										// Send Bob's C values
-								    	p.sendFBMessage(sender, txt, 2, context); // This came in off xmpp
+								    	p.sendFBMessage(sender, txt, 2, context);
 								    	
 										break;
-									case 2:
+									case 2:  // This is Alice, stage 3 (repeat of stage 1)
 										// Check the incoming C's
 										boolean found = p.check(parts, context);
 										
@@ -118,8 +118,47 @@ public class xmppThread extends xmppService implements Runnable {
 										shareSingleton share = shareSingleton.getInstance();
 										txt = p.alice(3, share.pol, share.bits, share.method); // txt is used in the above .Bob call
 										Log.d("xmpp", "Done checking continuing protocol");
-										p.sendFBMessage(sender, txt, 4, context);
-								}
+										p.sendFBMessage(sender, txt, 3, context);
+										break;
+										
+									case 3: // This is Bob, stage 4 (repeat of stage 2)
+										// Set up variables to call p.Bob
+										// This have all been instantiated in stage 2 (case 1)
+										// This happens to be in this file
+										location = p.locSimple(context);
+										pol = Integer.valueOf( parts[parts.length - 5] );
+								        bits = Integer.valueOf( parts[parts.length - 4] );
+								        g = new BigInteger( parts[parts.length - 3], 16 );
+								        n = new BigInteger( parts[parts.length - 2], 16 );
+								        method = Integer.valueOf( parts[parts.length - 1] );						        
+								        
+								        //Log.d("stage " + stage, "Generate and send Bob's message");
+								        // Call Bob's function generate new message
+										txt = p.Bob(4, parts, pol, bits, g, n, method, location);
+										//Log.d("xmpp", "txt in Bob: " + txt);
+									
+										// Send Bob's C values
+								    	p.sendFBMessage(sender, txt, 4, context);
+								    	break;
+								    	
+									case 4: // This is Alice, stage 5 (final check of latitude)
+										// Check the incoming C's
+										found = p.check(parts, context);
+										
+										Intent intent = new Intent(context, answerAct.class);
+										intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+										intent.putExtra("found", found);
+										
+										if ( found ) {
+											intent.putExtra("answer", "Bob is near you!");
+										}
+										else {
+											intent.putExtra("answer", "Bob is not located near you!");
+										}
+										
+										context.startActivity(intent);
+										break;
+								} // End of switch
 							}							
 						}
 					}); // End of addMessageListener

@@ -22,7 +22,6 @@ public class protocol {
 	
 	treeQueue leaves; // The span
 	tree user; // Location of the user (leaf node)
-	private xmppService serv;
 	
 	// Constructor does nothing!  This is probably a design flaw :P
 	public protocol(){
@@ -444,7 +443,7 @@ public class protocol {
 			results = new BigInteger[coveringSet.length];
 			for (int i = 0; i < coveringSet.length; i++){
 				BigInteger b = new BigInteger(String.valueOf(coveringSet.peek(i).value));
-				Log.d("bobCalc", "Evaluating " + b);
+				//Log.d("bobCalc", "Evaluating " + b);
 				results[i] = homoEval(b, encCoe, n);
 			}
 			return results;
@@ -598,7 +597,7 @@ public class protocol {
         // Pull the encCoe out of the tokens for bobCalc
         BigInteger[] encCoe = new BigInteger[tokens.length - 5];
         for (int i = 0; i < encCoe.length; i++){
-        	Log.d("stage " + stage, "Pulling out enc coefficient #" + i + ": " + tokens[i]);
+        	//Log.d("stage " + stage, "Pulling out enc coefficient #" + i + ": " + tokens[i]);
         	encCoe[i] = new BigInteger(tokens[i], 16); // Makes them NOT hex as well
         }
 
@@ -606,7 +605,7 @@ public class protocol {
         BigInteger[] results = bobCalc(coveringSet, encCoe, bits, g, n, method);
         Log.d("stage " + stage, "The results are found");
         for (int i = 0; i < results.length; i++){
-        	Log.d("stage " + stage, "results[" + i +"]: " + results[i]);
+        	//Log.d("stage " + stage, "results[" + i +"]: " + results[i]);
         }
         // Making the string
         // Format of a stage 2 || 4 message
