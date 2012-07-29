@@ -8,6 +8,7 @@ public class tree{
 	public tree left; // Leaves have null for left and right  // some other nodes might have \\
 	public tree right; // Leave have null for left and right  // null for these values       \\
 	public tree parent; // Root node has null for parent
+	public String treeType;
 	
 	public tree(int newValue, char[] newPath, tree newLeft, tree newRight){
 		value = newValue; 
@@ -15,15 +16,33 @@ public class tree{
 		special = null; 
 		left = newLeft; 
 		right = newRight; 
+		//treeType = nTreeType;
 	}
 	
+	
+	// For rightLeaf and leftLeaf the follow table holds true
+	// -----------------------------
+	// | type | largest | smallest |
+	// -----------------------------
+	// | lon  | 4003017 | 0        |
+	// | lat  | 4003003 | 0		   |
+	// -----------------------------
+	// The slight difference is a rounding error.  If you look at longitudeToLeaf and latitudeToLeaf
+	// You'll see they use slightly different constants and that the constants are not exactly 2:1 
+	// yet the Magnitude of degrees is exactly 2:1.  As a result, and to simply programming, I'm choosing to
+	// consider a leaf anything more than 4003017.  This means there are bugs around 90 and -90 latitude
+	// fortunately this is at the poles.  Also, there are bugs there anyway because the protocol does not recognize
+	// that -180 and 180 are right next to each other.  So we have problems at the extremes.  Fortunatley, again
+	// -180 and 180 is in the middle of the pacific ocean.
 	// Used to find Alice's rep set
 	public tree rightLeaf(){
 		tree cur = this;
 		while (cur.right != null){
 			cur = cur.right;
 		}
-		if (cur.value > 2117648){
+		
+		// This only holds for the old longtitude values! 
+		if (cur.value > 4003017){
 			return null;
 			//System.out.println("This 'leaf' is not really a leaf.");
 		}
@@ -35,7 +54,8 @@ public class tree{
 		while (cur.left != null){
 			cur = cur.left;
 		}
-		if (cur.value > 2117648){
+		// Same problem here!!
+		if (cur.value > 4003017){
 			return null;
 			//System.out.println("This 'leaf' is not really a leaf.");
 		}

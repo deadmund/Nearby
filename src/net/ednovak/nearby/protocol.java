@@ -81,6 +81,7 @@ public class protocol {
 	//Creates the leaf nodes from a left and right longitude value
 	//X is the leaf that the user is at
 	public treeQueue genLeaves(int left, int right, int x){
+		// left, right, and x are leaf node values (integers)
         System.out.println("Creating the leaves");
         treeQueue leaves = new treeQueue();
         int cur = left;
@@ -107,7 +108,7 @@ public class protocol {
 		}
 		
 		latitude = latitude + 90;
-		// On a line that goes through the poles .00000899 degrees is about 10 meters.
+		// On a line that goes through the poles .0000899 degrees is about 10 meters.
 		// This (like the longitude) means the protocol granularity is at best 10 meters
 		// I am assuming the Earth is a perfect sphere with radius 6371.  Even though
 		// it is not.
@@ -122,7 +123,7 @@ public class protocol {
 			System.exit(101);
 		}
 		longitude = longitude + 180;
-		// Along the equator 10 meters is about .00000899 degrees.  This
+		// Along the equator 10 meters is about .0000899 degrees.  This
 		// (like latitude) means that the protocol granularity is at best 10 meters
 		// I am assuming the Earth is a perfect sphere with radius 6371.  Even though
 		// it is not.
@@ -212,7 +213,7 @@ public class protocol {
 			//System.out.println("Checking the path letter" + old);
 			
 			if (cur.path[cur.path.length-1] == '0'){ // This is a branch that goes right
-				int nValue = cur.value + 4030175; // Max num of leaf nodes
+				int nValue = cur.value + 4003017; // Max num of leaf nodes (longitude only)
 				//System.out.println("Putting " + nValue + " in top row @ end");
 				top.push(new tree(nValue, nPath, cur, null));
 				cur.parent = top.peek(-1); // Thing at end
@@ -230,7 +231,7 @@ public class protocol {
 			}
 			
 			else { // This is a branch that goes left	
-				int nValue = cur.value + (4030175 - (int)(Math.pow(2.0, (double)(height -1))));
+				int nValue = cur.value + (4003018 - (int)(Math.pow(2.0, (double)(height -1))));
 				//System.out.println("Putting " + nValue + " in top row @ end");
 				top.push(new tree(nValue, nPath, null, cur));
 				cur.parent = top.peek(-1);
@@ -461,6 +462,15 @@ public class protocol {
 		share.pol = policy;
 		share.bits = bits;
 		share.method = method;
+		
+		// Quick thing
+		int sm_lon = longitudeToLeaf(-180.0);
+		int lg_lon = longitudeToLeaf(180.0);
+		int sm_lat = latitudeToLeaf(-90.0);
+		int lg_lat = latitudeToLeaf(90.0);
+		
+		Log.d("MAX VALUE", "These are in order: " + sm_lon + " " + lg_lon + " " + sm_lat + " " + lg_lat);
+		
 		
 		// Get location
 		double edge= 0.0;
