@@ -12,10 +12,10 @@
 	<string name="bit_strength">Bit Strength (power of 2)</string>
 	<string name="certainty">Random Prime Certainty</string>
 	<string name="message">Integer to Encrypt</string>
-	<string name="test">Test Encryption Speed</string>
+	<string name="test_enc">Test Encryption Speed</string>
 	<string name="test_waiting">Enter parameters and test encryption speed!</string>
 	<string name="settings">Settings</string>
-	<string name="test_fb">Test Facebook App</string>
+	<string name="test">Test</string>
 	<string name="request">Request</string>
 	<string name="post">Post</string>
 	<string name="delete">Delete</string>

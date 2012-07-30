@@ -1,20 +1,11 @@
 package net.ednovak.nearby;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Random;
 
-import net.ednovak.nearby.xmppService.LocalBinder;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationManager;
-import android.os.IBinder;
-import android.preference.PreferenceManager;
-import android.telephony.SmsManager;
 import android.util.Log;
 
 
@@ -58,13 +49,10 @@ public class protocol {
 	// at the point b.  The n is that used in the homomorphic encryption of the coefficients
 	public BigInteger homoEval(BigInteger b, BigInteger[] poly, BigInteger n){
 		BigInteger[] terms = new BigInteger[poly.length];
-		BigInteger tmp;
-		int intVal;
 		
 		// Find the terms between the addition
 		for (int i = 0; i < poly.length; i++){			
-			intVal = (int)Math.pow(b.intValue(), i);
-			tmp = new BigInteger(String.valueOf(intVal));
+			BigInteger tmp = b.pow(i);
 			terms[i] = homoMult(poly[i], tmp, n);
 		}
 		
@@ -276,7 +264,7 @@ public class protocol {
 	// Multiplys two polynomials.  We define a polynomial as a reverse string of 
 	// integers.  For example poly a = x^2 - 4x + 5 int[] a = {5, -4, 1}
 	// For any i > 2; a[i] = 0;
-	private int[] multPolys(int[]a, int[]b){
+	private BigInteger[] multPolys(BigInteger[]a, BigInteger[]b){
 		
 		/*
 		// Print A and B
@@ -290,17 +278,28 @@ public class protocol {
 		
 		// Initialize C
 		int cLength = (a.length -1) + (b.length - 1) + 1;
-		int[] c = new int[cLength];
+		BigInteger[] c = new BigInteger[cLength];
 		//Log.d("poly", "c.length: " + c.length);
 		
 		// Pad a & b
-		int[] newA = new int[cLength];
-		for (int i = 0; i < a.length; i++){
-			newA[i] = a[i];
+		BigInteger[] newA = new BigInteger[cLength];
+		for (int i = 0; i < newA.length; i++){
+			if ( i < a.length ){
+				newA[i] = a[i];
+			}
+			else {
+				newA[i] = new BigInteger("0");
+			}
 		}
-		int[] newB = new int[cLength];
-		for (int i = 0; i < b.length; i++){
-			newB[i] = b[i];
+		
+		BigInteger[] newB = new BigInteger[cLength];
+		for (int i = 0; i < newB.length; i++){
+			if (i < b.length ){
+				newB[i] = b[i];
+			}
+			else {
+				newB[i] = new BigInteger("0");
+			}
 		}
 		
 		/*
@@ -315,12 +314,14 @@ public class protocol {
 		
 		// Generate C
 		for (int n = 0; n < c.length; n++){
-			int tmp = 0;
+			BigInteger tmp = new BigInteger("0");
 			//Log.d("poly", "Generating c[" + n + "]");
 			for( int k = 0; k <= n; k++){
 				//Log.d("poly", "k: " + k + "    n:" + n);
-				tmp += newA[k] * newB[n-k];
+				tmp = tmp.add( newA[k].multiply(newB[n-k]) );
+				//Log.d("test", newA[k] + " * " + newB[n - k] + " = " + tmp);
 			}
+			//Log.d("test", "Adding coefficient to result big poly: " + tmp);
 			c[n] = tmp;
 			//Log.d("poly", "c[" + n + "]: " + c[n]);
 		}
@@ -335,34 +336,34 @@ public class protocol {
 		
 	}
 	
-	private int[][] genPolysFromRoots(treeQueue trees){
+	private BigInteger[][] genPolysFromRoots(treeQueue trees){
 		// Generate Result
-		int[][] result = new int[trees.length][2];
+		BigInteger result[][] = new BigInteger[trees.length][2];
 		for (int i = 0; i < trees.length; i++){
-			int[] tmp = new int[2];
-			tmp[0] = trees.peek(i).value * -1;
-			tmp[1] = 1;
+			BigInteger[] tmp = new BigInteger[2];
+			tmp[0] = new BigInteger(String.valueOf(trees.peek(i).value * -1));
+			tmp[1] = new BigInteger("1");
 			result[i] = tmp;
 			//Log.d("poly", "result[" + i + "]: " + result[i][0] + " " + result[i][1]);
 		}
 		
-		// Print Result
-		/*
+    	// Print Result
+		
 		for(int i = 0; i < result.length; i++){
 			for (int j = 0; j < result[i].length; j++){
-				Log.d("poly", "result[" + i +"][" + j + "]: " + result[i][j]);
+				//Log.d("poly", "result[" + i +"][" + j + "]: " + result[i][j]);
 			}
 		}
-		*/
+		
 		return result;
 	}
 	
 	
 	// Generates one large polynomial rooted at all the points in the rep set
-	public int[] makeCoefficientsTwo(treeQueue repSet){
+	public BigInteger[] makeCoefficientsTwo(treeQueue repSet){
 		
-		int[][] polys = genPolysFromRoots(repSet);
-		int[] cur = multPolys(polys[0], polys[1]);
+		BigInteger polys[][] = genPolysFromRoots(repSet);
+		BigInteger[] cur = multPolys(polys[0], polys[1]);
 		for (int i = 2; i < polys.length; i++){
 			cur = multPolys(cur, polys[i]);
 		}
@@ -371,17 +372,17 @@ public class protocol {
 	
 	// Returns an array of coefficients that each form a poly that 
 	// is rooted at a node from the given repSet
-	public int[] makeCoefficientsOne(treeQueue repSet){
-		int[] answer = new int[repSet.length];
+	public BigInteger[] makeCoefficientsOne(treeQueue repSet){
+		BigInteger[] answer = new BigInteger[repSet.length];
 		for (int i = 0; i < repSet.length; i++){
-			answer[i] = repSet.peek(i).value * -1;
+			answer[i] = new BigInteger( String.valueOf(repSet.peek(i).value * -1) );
 		}
 		
 		return answer;
 	}
 	
 	
-	public int[] makeCoefficients(treeQueue repSet, int method){
+	public BigInteger[] makeCoefficients(treeQueue repSet, int method){
 		
 		if ( method == 1 ){
 			Log.d("poly", "Several Small Polys");
@@ -515,7 +516,7 @@ public class protocol {
         }
         
 
-        int[] coefficients = makeCoefficients(repSet, method);
+        BigInteger[] coefficients = makeCoefficients(repSet, method);
         
         Log.d("stage " + stage, "Printing the coefficients");
         for (int i = 0; i < coefficients.length; i++){
@@ -539,7 +540,7 @@ public class protocol {
     	}
 		BigInteger[] encCoe = new BigInteger[coefficients.length];
 		for (int i = 0; i < coefficients.length; i++){
-			encCoe[i] = paillier.Encryption(new BigInteger(String.valueOf(coefficients[i])));
+			encCoe[i] = paillier.Encryption(coefficients[i]);
 		}
         
         // Build the message

@@ -45,8 +45,8 @@ public final class R {
         public static final int seekBar=0x7f0a0003;
         public static final int seekbar_text=0x7f0a0004;
         public static final int settings=0x7f0a000e;
+        public static final int test=0x7f0a0007;
         public static final int test_encryption=0x7f0a0006;
-        public static final int test_fb=0x7f0a0007;
         public static final int text_view=0x7f0a0002;
         public static final int txt=0x7f0a0000;
         public static final int waiting=0x7f0a000d;
@@ -76,8 +76,8 @@ public final class R {
         public static final int request=0x7f070010;
         public static final int s10=0x7f070008;
         public static final int settings=0x7f07000e;
-        public static final int test=0x7f07000c;
-        public static final int test_fb=0x7f07000f;
+        public static final int test=0x7f07000f;
+        public static final int test_enc=0x7f07000c;
         public static final int test_waiting=0x7f07000d;
         public static final int title_activity_main=0x7f070003;
         public static final int upload=0x7f070015;

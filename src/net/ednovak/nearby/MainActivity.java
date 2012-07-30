@@ -1,5 +1,7 @@
 package net.ednovak.nearby;
 
+import java.math.BigInteger;
+
 import net.ednovak.nearby.xmppService.LocalBinder;
 import android.app.Activity;
 import android.content.ComponentName;
@@ -215,7 +217,47 @@ public class MainActivity extends Activity {
     	startActivity(intent);    	
     }
     
-    public void xmpp(View view){
-    	Log.d("main", "Stub Function");
+    public void test(View view){
+    	Log.d("test", "Stub Function");
+    	
+    	// Create rep set
+    	treeQueue repSet = new treeQueue();
+    	repSet.push( new tree(2117648, null, null, null));
+    	repSet.push( new tree(2117649, null, null, null));
+    	
+    	// Make coefficients
+    	protocol p = new protocol();
+    	BigInteger[] coefficients = p.makeCoefficients(repSet, 2);
+    	// Print coefficients
+    	for(int i = 0; i < coefficients.length; i ++){
+    		Log.d("test", "coefficient: " + coefficients[i]);
+    	}
+    	
+    	// Encrypt coefficients
+    	Paillier pail = new Paillier(1024, 64);
+    	BigInteger[] encCoe = new BigInteger[coefficients.length];
+    	for(int i = 0; i < encCoe.length; i++){
+    		encCoe[i] = pail.Encryption(coefficients[i]); 
+    	}
+    	// Print encrypted Coe
+    	for(int i = 0; i < encCoe.length; i++){
+    		Log.d("test", "enc coefficient: " + encCoe[i]);
+    	}
+    	
+    	// Make covering set for Bob    	
+    	treeQueue coveringSet = new treeQueue();
+    	coveringSet.push( new tree(2117648, null, null, null) );
+    	
+    	// Do Bob's calculations
+    	// Get the key
+    	BigInteger[] pKey = pail.publicKey();
+    	BigInteger g = pKey[0];
+    	BigInteger n = pKey[1];
+    	BigInteger[] results = p.bobCalc(coveringSet, encCoe, 1024, g, n, 2);
+    	
+    	// Decrypt and print results
+    	for(int i = 0; i < results.length; i++){
+    		Log.d("test", "result: " + pail.Decryption(results[i]));
+    	}
     }
 }
