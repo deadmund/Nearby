@@ -24,6 +24,7 @@ public class xmppThread extends xmppService implements Runnable {
 	private String username;
 	private String password;
 	private Context context;
+	private long start;
 	//public Collection<RosterEntry> entries;
 	//public Connection conn;
 	
@@ -63,8 +64,12 @@ public class xmppThread extends xmppService implements Runnable {
 							//Log.d("xmpp", "Chat recieved in thread: " + message.getBody());
 							Log.d("xmpp", "Chat recieved in thread");
 							
-							// If the protocol is being queried twice at once there is a big problem
+							
+							// If the protocol is being queried twice at once there is a big collision problem
 							if ( message.getBody().substring(0, 2).equals("@@") ){
+								if (buff.equals("")){
+									start = System.currentTimeMillis();
+								}
 								buff += message.getBody().substring(4); // Remove the begging "@@X:"
 								stage = Integer.valueOf(message.getBody().substring(2, 3));
 								//Log.d("xmpp", "state of buff: " + buff + "    state: " + stage);
@@ -73,6 +78,10 @@ public class xmppThread extends xmppService implements Runnable {
 							
 							// Message stream over, time to process this message
 							if ( buff.substring(buff.length() - 2).equals("@@")) {
+								long end = System.currentTimeMillis();
+								long total_recTime = end - start;
+								Log.d("stats", "It took: " + total_recTime + "ms to recieve all chunks");
+								
 								//Log.d("xmpp", "emptying and processing buff!");
 								buff = buff.substring(0, buff.length() - 2); // Remove the trailing "@@"
 								
@@ -155,6 +164,11 @@ public class xmppThread extends xmppService implements Runnable {
 										else {
 											intent.putExtra("answer", "Bob is not located near you!");
 										}
+										
+										end = System.currentTimeMillis();
+										share = shareSingleton.getInstance();
+										long totalProtocol = end - share.start;
+										Log.d("stats", "Total protocol time for Alice: " + totalProtocol + "ms");
 										
 										context.startActivity(intent);
 										break;

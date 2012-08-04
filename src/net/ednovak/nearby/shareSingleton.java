@@ -14,6 +14,7 @@ public class shareSingleton {
 	public xmppService serv;
 	public int bits;
 	public int method;
+	public long start; // Holds the time the protocol was initiated by Alice dawg
 	
 	protected shareSingleton(){
 		// Only to defeat instantiation

@@ -179,6 +179,7 @@ public class MainActivity extends Activity {
     public void query(View view) {
         Intent intent = new Intent(this, displayMessageAct.class);
         shareSingleton share = shareSingleton.getInstance();
+        share.start = System.currentTimeMillis();
         
         // User's policy
         SeekBar sk = (SeekBar)findViewById(R.id.seekBar);

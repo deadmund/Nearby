@@ -464,6 +464,7 @@ public class protocol {
 		share.bits = bits;
 		share.method = method;
 		
+		/*
 		// Quick thing
 		int sm_lon = longitudeToLeaf(-180.0);
 		int lg_lon = longitudeToLeaf(180.0);
@@ -471,7 +472,7 @@ public class protocol {
 		int lg_lat = latitudeToLeaf(90.0);
 		
 		Log.d("MAX VALUE", "These are in order: " + sm_lon + " " + lg_lon + " " + sm_lat + " " + lg_lat);
-		
+		*/
 		
 		// Get location
 		double edge= 0.0;
@@ -498,6 +499,8 @@ public class protocol {
         Log.d("stage " + stage, "edge leaf value: " + edgeLeafNumber);
 		
         int spanLength = ( Math.abs(edgeLeafNumber - aliceLeafNumber) * 2 ) +  1;
+        Log.d("stats", "Alice's leaf node span: " + spanLength);
+       
         int left = aliceLeafNumber - (spanLength / 2);
         int right = aliceLeafNumber + (spanLength / 2);
         
@@ -514,17 +517,20 @@ public class protocol {
         for (int i = 0; i < repSet.length; i++){
         	Log.d("stage " + stage, "" + repSet.peek(i).value);
         }
+        Log.d("stats", "Alice's rep set size: " + repSet.length);
+        
         
 
         BigInteger[] coefficients = makeCoefficients(repSet, method);
-        
         Log.d("stage " + stage, "Printing the coefficients");
         for (int i = 0; i < coefficients.length; i++){
         	Log.d("stage " + stage, "" + coefficients[i]);
         }
+        Log.d("stats", "Alice's coefficients: " + coefficients.length);
         
         
         // Do the coefficient encryption
+        long start = System.currentTimeMillis();
         Paillier paillier = new Paillier(bits, 64);
         if ( stage == 1 ){
         	BigInteger[] tmp = paillier.privateKey();
@@ -538,10 +544,19 @@ public class protocol {
     	else{
 			Log.d("error", "Bad stage number");
     	}
+        long end = System.currentTimeMillis();
+        long total_keyGen = end - start;
+        Log.d("stats", "Alice key gen time: " + total_keyGen + "ms");
+        
+        start = System.currentTimeMillis();
 		BigInteger[] encCoe = new BigInteger[coefficients.length];
 		for (int i = 0; i < coefficients.length; i++){
 			encCoe[i] = paillier.Encryption(coefficients[i]);
 		}
+		end = System.currentTimeMillis();
+		long total_enc = end - start;
+		Log.d("stats", "Alice total time encrypting: " + total_enc + "ms");
+		
         
         // Build the message
         // Format of a stage 1 or stage 3 message.  The xmpp service adds some @@ but this leve
@@ -592,6 +607,7 @@ public class protocol {
 		int spanLength = ( Math.abs(edgeLeafNumber - bobLeafNumber) * 2 ) + 1;
 		int left = bobLeafNumber - (spanLength / 2);
 		int right = bobLeafNumber + (spanLength /2);
+		Log.d("stats", "Bob's leaf node span: " + spanLength);
 		Log.d("stage " + stage, "Bob's leaf nodes go from " + left + " to " + right + ".  His node is: " + bobLeafNumber);
 		
 		// Build the leaves and tree
@@ -600,6 +616,7 @@ public class protocol {
         
         // Find covering set
         treeQueue coveringSet = root.findCoverSet(user);
+        Log.d("stats", "Bob's coverSet size: " + coveringSet.length);
         // Printing Bob's cover set
         for (int i = 0; i < coveringSet.length; i++){
         	Log.d("stage " + stage, "Bob's covering set: " + coveringSet.peek(i).value);
@@ -613,7 +630,11 @@ public class protocol {
         }
 
         //Log.d("stage " + stage, "bits : " + bits + "  g: " + g + "  n: " + n +"  method: " + method);
+        long start = System.currentTimeMillis();
         BigInteger[] results = bobCalc(coveringSet, encCoe, bits, g, n, method);
+        long end = System.currentTimeMillis();
+        long total_bobCalc = end - start;
+        Log.d("stats", "time for Bob to do his calculations: " + total_bobCalc + "ms");
         Log.d("stage " + stage, "The results are found");
         for (int i = 0; i < results.length; i++){
         	//Log.d("stage " + stage, "results[" + i +"]: " + results[i]);
@@ -660,6 +681,8 @@ public class protocol {
 		paillierD.loadPrivateKey(share.g, share.lambda, share.n);
 		
 		// Check the latitude and see if we need to continue
+		
+		long start = System.currentTimeMillis();
 		boolean found = false;
 		for(int i = 0; i < tokens.length; i++){
 			BigInteger val = new BigInteger(tokens[i]);
@@ -670,6 +693,10 @@ public class protocol {
 				found = true;
 			}						
 		}
+		long end = System.currentTimeMillis();
+		long total_checkTime = end - start;
+		Log.d("stats", "Time for Alice to check Bob's numbers: " + total_checkTime + "ms");
+		
 		return found;
 		
 		/*
