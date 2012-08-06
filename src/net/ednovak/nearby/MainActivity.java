@@ -24,6 +24,7 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 public class MainActivity extends Activity {
 	
@@ -31,6 +32,7 @@ public class MainActivity extends Activity {
 	private final static lListener myListener = new lListener();
 	private LocationManager lManager;
 	private EditText other_user;
+	private boolean bound = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -69,7 +71,7 @@ public class MainActivity extends Activity {
         String message_type = prefs.getString("message_type", "fb");
         if ( message_type.equals("fb") ){
         	EditText et = new EditText(this);
-        	other_user = et;
+        	EditText other_user = et;
         	et.setHint("Facebook Friend's Name");
         	
         	LinearLayout ll = (LinearLayout)findViewById(R.id.ll);
@@ -78,7 +80,7 @@ public class MainActivity extends Activity {
         
         else if ( message_type.equals("sms") ) {
         	EditText et = new EditText(this);
-        	other_user = et;
+        	EditText other_user = et;
         	et.setHint("Phone number");
         	LinearLayout ll = (LinearLayout)findViewById(R.id.ll);
         	ll.addView(et, 3);
@@ -87,45 +89,6 @@ public class MainActivity extends Activity {
         else {
         	Log.d("main", "Bad option choice " + message_type);
         }
-        
-        // Used to start the service but binding allows me to stop it ever
-        //Intent xmppIntent = new Intent(MainActivity.this, xmppService.class);
-        //xmppIntent.putExtra("user", "ed.novak3");
-        //xmppIntent.putExtra("pass", "fetusgo2");
-        //startService(xmppIntent);
-        
-        Intent bindIntent = new Intent(this, xmppService.class);
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        String user = sp.getString("fb_user", "None");
-        String pass = sp.getString("fb_pass", "None");
-        bindIntent.putExtra("user", user);
-        bindIntent.putExtra("pass", pass);
-        bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);
-        //stopService(new Intent(MainActivity.this, xmppService.class));
-        
-        /* Big Fat Paillier Homomorphic Encryption Test
-        // 
-        Log.d("main.onCreate", "Testing paillier homomorphic properties");
-        
-        Paillier paillier = new Paillier();
-		BigInteger ma = new BigInteger("5");
-		BigInteger mb = new BigInteger("6");
-		BigInteger mc = new BigInteger("7");
-		BigInteger ema = paillier.Encryption(ma);
-		BigInteger emb = paillier.Encryption(mb);
-		//BigInteger emc = paillier.Encryption(mc);
-		
-						//  (ema      *  (          (emb^mc) % n         ))    % n^2      
-		BigInteger answer = (ema.multiply(emb.modPow(mc, paillier.nsquare))).mod(paillier.nsquare);
-		
-		Log.d("main", "Should be 47 " + paillier.Decryption(answer));
-		
-		protocol p = new protocol();
-		BigInteger test1 = p.homoAdd(ema, emb, paillier.n);
-		BigInteger test2 = p.homoMult(ema, mb, paillier.n);
-		BigInteger test3 = p.homoExpo(ema, ma, new BigInteger("4"), paillier.n);
-		Log.d("main", "test 1: " + paillier.Decryption(test1) + "   test 2: " + paillier.Decryption(test2)+ "   test 3: " + paillier.Decryption(test3));
-		*/
     }
     
     // To bind to service
@@ -135,14 +98,12 @@ public class MainActivity extends Activity {
     		LocalBinder binder = (LocalBinder) service;
     		shareSingleton share = shareSingleton.getInstance();
     		share.serv = binder.getService();
-    		
-    		// Next step: move this into the protocol class
-    		Log.d("main", "We are bound !");
+    		bound = true;
     	}
     	
     	@Override
     	public void onServiceDisconnected(ComponentName name){
-    		// Do notta
+    		bound = false;
     	}
     };
     
@@ -173,7 +134,6 @@ public class MainActivity extends Activity {
     @Override
     public void onDestroy(){
     	super.onDestroy();
-    	unbindService(mConnection);
     }
     
     public void query(View view) {
@@ -216,6 +176,27 @@ public class MainActivity extends Activity {
     public void goToEncryptionTest(View view){
     	Intent intent = new Intent(this, paillierTest.class);
     	startActivity(intent);    	
+    }
+    
+    public void fbChatConnect(View view){
+    	
+    	if (bound){
+    		Log.d("main", "Turning service off");
+    		unbindService(mConnection);
+    		((ToggleButton)view).setChecked(false);
+    	}
+    	
+    	else {
+    		Log.d("main", "turning service on");
+    		Intent bindIntent = new Intent(this, xmppService.class);
+    		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+    		String user = sp.getString("fb_user", "None");
+    		String pass = sp.getString("fb_pass", "None");
+    		bindIntent.putExtra("user", user);
+    		bindIntent.putExtra("pass", pass);
+    		bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);
+    		((ToggleButton)view).setChecked(true);
+    	}
     }
     
     public void test(View view){

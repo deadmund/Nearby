@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" 
+    android:gravity="center_horizontal"
     android:id="@+id/ll">   
     
     <TextView android:id="@+id/text_view"
@@ -42,12 +43,12 @@
         android:text="@string/test_enc"
         android:onClick="goToEncryptionTest" />
 	
-	<Button android:id="@+id/test"
-        android:layout_weight="1"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:text="@string/test"
-        android:onClick="test" />
+	<ToggleButton android:id="@+id/fb_chat"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:textOn="Logged In"
+	    android:textOff="FB Chat"
+	    android:onClick="fbChatConnect" />
 
 	
 

@@ -28,7 +28,7 @@ public class xmppService extends Service {
 	public void onCreate(){
 		// I think have nothing to do here.
 		super.onCreate();
-		Toast.makeText(this, "service created", Toast.LENGTH_LONG).show();
+		//Toast.makeText(this, "service created", Toast.LENGTH_LONG).show();
 	}
 	
 	@Override
@@ -36,7 +36,7 @@ public class xmppService extends Service {
 		super.onDestroy();
 		conn.disconnect();
 		conn = null;
-		Toast.makeText(this, "service destroyed", Toast.LENGTH_LONG).show();
+		//Toast.makeText(this, "fb chat service destroyed", Toast.LENGTH_LONG).show();
 	}	
 	
 	@Override
@@ -115,7 +115,7 @@ public class xmppService extends Service {
 	// I don't want to allow binding so the service keeps running in order to 
 	// accept xmpp messages in the future
 	public IBinder onBind(Intent intent){
-		Toast.makeText(this, "service bound to", Toast.LENGTH_LONG).show();
+		//Toast.makeText(this, "service bound to", Toast.LENGTH_LONG).show();
 		
 		if ( conn == null ){
 			String user = intent.getStringExtra("user");
