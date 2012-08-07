@@ -103,6 +103,7 @@ public class MainActivity extends Activity {
     	
     	@Override
     	public void onServiceDisconnected(ComponentName name){
+    		Log.d("main", "turning it off");
     		bound = false;
     	}
     };
@@ -120,11 +121,21 @@ public class MainActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item){  	
     	
+    	Log.d("main", "Selected: " + item.toString());
     	switch ( item.getItemId() ){
     		case R.id.settings:
-    			Log.d("menu", "It is working...");
     			startActivity(new Intent(this, settings.class));
     			return true;
+    			
+    		case R.id.names:
+    			if (bound){
+    				startActivity(new Intent(this, names.class));
+    				return true;
+    			}
+    			else{
+					Toast.makeText(this, "You must be logged into Facebook", Toast.LENGTH_SHORT).show();
+					return false;
+    			}
     		
     		default:
     			return super.onOptionsItemSelected(item);
@@ -134,6 +145,7 @@ public class MainActivity extends Activity {
     @Override
     public void onDestroy(){
     	super.onDestroy();
+    	unbindService(mConnection);
     }
     
     public void query(View view) {
@@ -183,6 +195,8 @@ public class MainActivity extends Activity {
     	if (bound){
     		Log.d("main", "Turning service off");
     		unbindService(mConnection);
+    		stopService(new Intent(this, xmppService.class));
+    		bound = false;
     		((ToggleButton)view).setChecked(false);
     	}
     	
@@ -196,50 +210,6 @@ public class MainActivity extends Activity {
     		bindIntent.putExtra("pass", pass);
     		bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);
     		((ToggleButton)view).setChecked(true);
-    	}
-    }
-    
-    public void test(View view){
-    	Log.d("test", "Stub Function");
-    	
-    	// Create rep set
-    	treeQueue repSet = new treeQueue();
-    	repSet.push( new tree(2117648, null, null, null));
-    	repSet.push( new tree(2117649, null, null, null));
-    	
-    	// Make coefficients
-    	protocol p = new protocol();
-    	BigInteger[] coefficients = p.makeCoefficients(repSet, 2);
-    	// Print coefficients
-    	for(int i = 0; i < coefficients.length; i ++){
-    		Log.d("test", "coefficient: " + coefficients[i]);
-    	}
-    	
-    	// Encrypt coefficients
-    	Paillier pail = new Paillier(1024, 64);
-    	BigInteger[] encCoe = new BigInteger[coefficients.length];
-    	for(int i = 0; i < encCoe.length; i++){
-    		encCoe[i] = pail.Encryption(coefficients[i]); 
-    	}
-    	// Print encrypted Coe
-    	for(int i = 0; i < encCoe.length; i++){
-    		Log.d("test", "enc coefficient: " + encCoe[i]);
-    	}
-    	
-    	// Make covering set for Bob    	
-    	treeQueue coveringSet = new treeQueue();
-    	coveringSet.push( new tree(2117648, null, null, null) );
-    	
-    	// Do Bob's calculations
-    	// Get the key
-    	BigInteger[] pKey = pail.publicKey();
-    	BigInteger g = pKey[0];
-    	BigInteger n = pKey[1];
-    	BigInteger[] results = p.bobCalc(coveringSet, encCoe, 1024, g, n, 2);
-    	
-    	// Decrypt and print results
-    	for(int i = 0; i < results.length; i++){
-    		Log.d("test", "result: " + pail.Decryption(results[i]));
     	}
     }
 }

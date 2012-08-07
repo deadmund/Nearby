@@ -16,12 +16,10 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
 public class xmppService extends Service {
 	
 	public static Connection conn;
-	public static Roster roster;
 	IBinder xmppBinder = new LocalBinder();
 	
 	@Override
@@ -94,7 +92,7 @@ public class xmppService extends Service {
 	// Send message exposed to real world
 	public void sendMessage(String rec, String msg, int stage, final Context context){
 		Log.d("xmpp", "Looking for: " + rec);
-		Collection<RosterEntry> entries = roster.getEntries();
+		Collection<RosterEntry> entries = getRoster().getEntries();
 		if (entries != null){
 			for (RosterEntry entry : entries){
 				//Log.d("chat", ""+entry);
@@ -135,5 +133,9 @@ public class xmppService extends Service {
 		xmppService getService() {
 			return xmppService.this;
 		}
+	}
+	
+	public Roster getRoster(){
+		return conn.getRoster();
 	}
 }

@@ -32,7 +32,7 @@
         <activity android:name=".answerAct" />
         <activity android:name=".paillierTest" />
         <activity android:name=".settings" />
-        <activity android:name=".sendMessageFB" />
+        <activity android:name=".names" />
         <service android:name=".xmppService" />
         
             

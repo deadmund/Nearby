@@ -45,7 +45,6 @@ public class xmppThread extends xmppService implements Runnable {
     		connection.login(username, password);
     		Log.d("chat", "logged in as: " + username);
     		conn = connection;
-    		roster = connection.getRoster();
     		
     	} // End of try block
     	catch (XMPPException e){
@@ -86,7 +85,7 @@ public class xmppThread extends xmppService implements Runnable {
 								buff = buff.substring(0, buff.length() - 2); // Remove the trailing "@@"
 								
 								// I can use sender later to fix the collision problem
-								String sender = roster.getEntry(message.getFrom().toString()).getName();
+								String sender = getRoster().getEntry(message.getFrom().toString()).getName();
 								String[] parts = buff.split(":");
 								buff = "";
 	
