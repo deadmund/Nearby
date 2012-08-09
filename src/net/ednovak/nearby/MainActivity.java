@@ -1,6 +1,5 @@
 package net.ednovak.nearby;
 
-import net.ednovak.nearby.xmppService.LocalBinder;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -42,7 +41,7 @@ public class MainActivity extends Activity {
         lManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10000, myListener);
         // Turn on the following for a physical phone, turn it off for emulated device
-        //lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, lListener);
+        lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 10000, myListener);
 
         // Seek bar
         SeekBar sk = (SeekBar)findViewById(R.id.seekBar);
@@ -127,7 +126,7 @@ public class MainActivity extends Activity {
     			return true;
     			
     		case R.id.names:
-    			if (bound && chatButton.isChecked()){
+    			if (bound && xmppService.in){
     				startActivityForResult(new Intent(this, names.class), 1);
     				return true;
     			}
@@ -202,9 +201,8 @@ public class MainActivity extends Activity {
     private ServiceConnection mConnection = new ServiceConnection() {
     	@Override
     	public void onServiceConnected(ComponentName className, IBinder service) {
-    		LocalBinder binder = (LocalBinder) service;
-    		shareSingleton share = shareSingleton.getInstance();
-    		share.serv = binder.getService();
+    		//LocalBinder binder = (LocalBinder) service;
+    		//share.serv = binder.getService();
     		bound = true;
     		chatButton.setChecked(true);
     	}

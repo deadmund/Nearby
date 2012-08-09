@@ -20,6 +20,7 @@ import android.util.Log;
 public class xmppService extends Service {
 	
 	public static Connection conn;
+	public static Boolean in = false;
 	IBinder xmppBinder = new LocalBinder();
 	
 	@Override
@@ -35,6 +36,7 @@ public class xmppService extends Service {
 		if ( conn != null ){
 			conn.disconnect();
 			conn = null;
+			in = false;
 		}
 		//Toast.makeText(this, "fb chat service destroyed", Toast.LENGTH_LONG).show();
 	}	
@@ -58,7 +60,7 @@ public class xmppService extends Service {
 	// Splits a long string up into several 'packets' so the fb does not filter them
 	// Each packet is 502 characters long.  A beginning @@<stage number>
 	// and, on the last packet in the stream, a trailing @@
-	private List<String> make_packets(String msg, int stage){
+	private static List<String> make_packets(String msg, int stage){
 		//Log.d("stage " + stage, "Dividing this string: " + msg);
 		List<String> packets = new ArrayList<String>();
 		int cur = 0;
@@ -76,7 +78,7 @@ public class xmppService extends Service {
 	
 	
 	// Send message that actually does the sending
-	private void real_send(Chat chat, String msg, int stage){
+	private static void real_send(Chat chat, String msg, int stage){
 		List<String> parts = make_packets(msg, stage);
 		for(int i = 0; i < parts.size(); i++){
 			//Log.d("xmpp", "part: " + parts.get(i));
@@ -92,7 +94,7 @@ public class xmppService extends Service {
 	
 	
 	// Send message exposed to real world
-	public void sendMessage(String rec, String msg, int stage, final Context context){
+	public static void sendMessage(String rec, String msg, int stage, final Context context){
 		Log.d("xmpp", "Looking for: " + rec);
 		Collection<RosterEntry> entries = getRoster().getEntries();
 		if (entries != null){
@@ -137,7 +139,7 @@ public class xmppService extends Service {
 		}
 	}
 	
-	public Roster getRoster(){
+	public static Roster getRoster(){
 		return conn.getRoster();
 	}
 }

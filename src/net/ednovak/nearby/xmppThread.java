@@ -44,6 +44,7 @@ public class xmppThread extends xmppService implements Runnable {
     		connection.connect();
     		connection.login(username, password);
     		Log.d("chat", "logged in as: " + username);
+    		in = true;
     		conn = connection;
     		
     	} // End of try block

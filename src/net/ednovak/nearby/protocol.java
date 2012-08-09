@@ -719,8 +719,7 @@ public class protocol {
 
 	// Send a FB message
 	public void sendFBMessage(String rec, String message, int stage, Context context){
-		shareSingleton share = shareSingleton.getInstance();
-    	share.serv.sendMessage(rec, message, stage, context);
+    	xmppService.sendMessage(rec, message, stage, context);
 	}
 	
 	public Location locSimple(Context context){

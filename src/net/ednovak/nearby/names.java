@@ -3,8 +3,6 @@ package net.ednovak.nearby;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import net.ednovak.nearby.xmppService.LocalBinder;
-
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
 
@@ -31,8 +29,8 @@ public class names extends Activity{
     private ServiceConnection mConnection = new ServiceConnection() {
     	@Override
     	public void onServiceConnected(ComponentName className, IBinder service) {
-    		LocalBinder binder = (LocalBinder) service;
-    		fillList(binder.getService().getRoster());
+    		//LocalBinder binder = (LocalBinder) service;
+    		fillList(xmppService.getRoster());
     	}
     	
     	@Override
