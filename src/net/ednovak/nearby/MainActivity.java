@@ -31,6 +31,7 @@ public class MainActivity extends Activity {
 	private LocationManager lManager;
 	private EditText other_user;
 	private boolean bound = false;
+	private ToggleButton chatButton;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -86,7 +87,11 @@ public class MainActivity extends Activity {
         else {
         	Log.d("main", "Bad option choice " + message_type);
         }
+        
+        // Grab reference to chat button
+        chatButton = (ToggleButton)findViewById(R.id.fb_chat);
     } // End of onCreate
+    
     
     // To update name based on names activity (startActivityForResult
     protected void onActivityResult(int requestCode, int resultCode, Intent intent){
@@ -101,23 +106,6 @@ public class MainActivity extends Activity {
     	
     }
     
-    // To bind to service
-    private ServiceConnection mConnection = new ServiceConnection() {
-    	@Override
-    	public void onServiceConnected(ComponentName className, IBinder service) {
-    		LocalBinder binder = (LocalBinder) service;
-    		shareSingleton share = shareSingleton.getInstance();
-    		share.serv = binder.getService();
-    		bound = true;
-    	}
-    	
-    	@Override
-    	public void onServiceDisconnected(ComponentName name){
-    		Log.d("main", "turning it off");
-    		bound = false;
-    	}
-    };
-    
     
     // Creates the menu (from pressing menu button on main screen)
     @Override
@@ -127,7 +115,8 @@ public class MainActivity extends Activity {
         return true;
     }
     
-    // When the settngs butotn is selected
+    
+    // When the settngs button is selected
     @Override
     public boolean onOptionsItemSelected(MenuItem item){  	
     	
@@ -138,7 +127,7 @@ public class MainActivity extends Activity {
     			return true;
     			
     		case R.id.names:
-    			if (bound){
+    			if (bound && chatButton.isChecked()){
     				startActivityForResult(new Intent(this, names.class), 1);
     				return true;
     			}
@@ -152,6 +141,8 @@ public class MainActivity extends Activity {
     	}
     }
     
+    
+    // When the activity ends
     @Override
     public void onDestroy(){
     	super.onDestroy();
@@ -160,6 +151,8 @@ public class MainActivity extends Activity {
     	}
     }
     
+    
+    // Query Button
     public void query(View view) {
         Intent intent = new Intent(this, displayMessageAct.class);
         shareSingleton share = shareSingleton.getInstance();
@@ -197,11 +190,35 @@ public class MainActivity extends Activity {
         }
     }
     
+    
+    // Encryption Button
     public void goToEncryptionTest(View view){
     	Intent intent = new Intent(this, paillierTest.class);
     	startActivity(intent);    	
     }
     
+    
+    // To bind to service
+    private ServiceConnection mConnection = new ServiceConnection() {
+    	@Override
+    	public void onServiceConnected(ComponentName className, IBinder service) {
+    		LocalBinder binder = (LocalBinder) service;
+    		shareSingleton share = shareSingleton.getInstance();
+    		share.serv = binder.getService();
+    		bound = true;
+    		chatButton.setChecked(true);
+    	}
+    	
+    	@Override
+    	public void onServiceDisconnected(ComponentName name){
+    		Log.d("main", "turning it off");
+    		bound = false;
+    		chatButton.setChecked(false);
+    	}
+    };
+    
+    
+    // Toggle Button at the bottom
     public void fbChatConnect(View view){
     	
     	if (bound){
@@ -221,7 +238,6 @@ public class MainActivity extends Activity {
     		bindIntent.putExtra("user", user);
     		bindIntent.putExtra("pass", pass);
     		bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);
-    		((ToggleButton)view).setChecked(true);
     	}
     }
 }

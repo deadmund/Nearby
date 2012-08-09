@@ -10,3 +10,6 @@ project.properties
 
 # Binaries
 bin/*
+
+# Some LINT thing
+lint.xml
