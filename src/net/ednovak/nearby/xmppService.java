@@ -32,8 +32,10 @@ public class xmppService extends Service {
 	@Override
 	public void onDestroy(){
 		super.onDestroy();
-		conn.disconnect();
-		conn = null;
+		if ( conn != null ){
+			conn.disconnect();
+			conn = null;
+		}
 		//Toast.makeText(this, "fb chat service destroyed", Toast.LENGTH_LONG).show();
 	}	
 	
