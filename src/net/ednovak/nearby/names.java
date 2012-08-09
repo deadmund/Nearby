@@ -18,8 +18,12 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 public class names extends Activity{
 	
@@ -28,10 +32,6 @@ public class names extends Activity{
     	@Override
     	public void onServiceConnected(ComponentName className, IBinder service) {
     		LocalBinder binder = (LocalBinder) service;
-    		
-    		//Log.d("names", binder.getService().roster.getEntries().toString());
-    		Log.d("names", "Got this far!");
-    		
     		fillList(binder.getService().getRoster());
     	}
     	
@@ -46,7 +46,7 @@ public class names extends Activity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_names);
 		
-		Log.d("names", "turning service on");
+		Log.d("names", "binding to service");
 		Intent bindIntent = new Intent(this, xmppService.class);
 		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
 		String user = sp.getString("fb_user", "None");
@@ -72,7 +72,8 @@ public class names extends Activity{
 	    }
 	      
 	    // Create ArrayAdapter using the planet list.  
-	    ArrayAdapter<String> listAdapter = new ArrayAdapter<String>(this, R.layout.simplerow, entriesList);  
+	    ArrayAdapter<String> listAdapter = new ArrayAdapter<String>(this, R.layout.simplerow, entriesList);
+	    
 	    
 	    /*
 	    // Add more planets. If you passed a String[] instead of a List<String>   
@@ -84,6 +85,17 @@ public class names extends Activity{
 	    
 	    // Set the ArrayAdapter as the ListView's adapter
 		main.setAdapter( listAdapter );
+		main.setOnItemClickListener(new OnItemClickListener () {			
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id){
+				String s = ((TextView)view).getText().toString();
+				Log.d("names", "The thing clicked on: " + s);
+				Intent rIntent = new Intent();
+				rIntent.putExtra("other_user", s);
+				setResult(RESULT_OK, rIntent);
+				finish();
+			}	 
+		});
 		
 	}
 	

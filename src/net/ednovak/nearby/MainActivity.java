@@ -1,7 +1,5 @@
 package net.ednovak.nearby;
 
-import java.math.BigInteger;
-
 import net.ednovak.nearby.xmppService.LocalBinder;
 import android.app.Activity;
 import android.content.ComponentName;
@@ -37,7 +35,7 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);  
+        setContentView(R.layout.activity_main);
         
         // Location listener stuff
         lManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -65,22 +63,21 @@ public class MainActivity extends Activity {
         		tv.setText(Integer.toString(value) + " meters");
         	}
         });
-        
+
         // Other user ID
         SharedPreferences prefs = getSharedPreferences("preferences", 0);
         String message_type = prefs.getString("message_type", "fb");
         if ( message_type.equals("fb") ){
         	EditText et = new EditText(this);
-        	EditText other_user = et;
-        	et.setHint("Facebook Friend's Name");
-        	
+        	other_user = et;
+        	et.setHint("Facebook Friend's Name");        	
         	LinearLayout ll = (LinearLayout)findViewById(R.id.ll);
         	ll.addView(et, 3);
         }
         
         else if ( message_type.equals("sms") ) {
         	EditText et = new EditText(this);
-        	EditText other_user = et;
+        	other_user = et;
         	et.setHint("Phone number");
         	LinearLayout ll = (LinearLayout)findViewById(R.id.ll);
         	ll.addView(et, 3);
@@ -89,6 +86,19 @@ public class MainActivity extends Activity {
         else {
         	Log.d("main", "Bad option choice " + message_type);
         }
+    } // End of onCreate
+    
+    // To update name based on names activity (startActivityForResult
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent){
+    	switch (requestCode) {
+    	case 1:
+    		if ( resultCode == RESULT_OK){
+    			String name = intent.getStringExtra("other_user");
+    			other_user.setText(name);
+    			break;
+    		}
+    	}
+    	
     }
     
     // To bind to service
@@ -129,7 +139,7 @@ public class MainActivity extends Activity {
     			
     		case R.id.names:
     			if (bound){
-    				startActivity(new Intent(this, names.class));
+    				startActivityForResult(new Intent(this, names.class), 1);
     				return true;
     			}
     			else{
@@ -145,7 +155,9 @@ public class MainActivity extends Activity {
     @Override
     public void onDestroy(){
     	super.onDestroy();
-    	unbindService(mConnection);
+    	if ( bound ){
+    		unbindService(mConnection);
+    	}
     }
     
     public void query(View view) {
