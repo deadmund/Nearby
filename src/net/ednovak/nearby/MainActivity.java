@@ -26,7 +26,7 @@ import android.widget.ToggleButton;
 public class MainActivity extends Activity {
 	
 	public final static String EXTRA_MESSAGE = "net.ednovak.nearby.MESSAGE";
-	private final static lListener myListener = new lListener();
+	private lListener myListener = new lListener();
 	private LocationManager lManager;
 	private EditText other_user;
 	private boolean bound = false;
@@ -41,7 +41,12 @@ public class MainActivity extends Activity {
         lManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10000, myListener);
         // Turn on the following for a physical phone, turn it off for emulated device
-        lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 10000, myListener);
+        try {
+        	lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 10000, myListener);
+        }
+        catch (Exception e){
+        	// Well nevermind then!
+        }
 
         // Seek bar
         SeekBar sk = (SeekBar)findViewById(R.id.seekBar);
@@ -65,7 +70,7 @@ public class MainActivity extends Activity {
         });
 
         // Other user ID
-        SharedPreferences prefs = getSharedPreferences("preferences", 0);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         String message_type = prefs.getString("message_type", "fb");
         if ( message_type.equals("fb") ){
         	EditText et = new EditText(this);
@@ -164,14 +169,22 @@ public class MainActivity extends Activity {
         distance = Math.round(distance / 10) * 10;
         share.pol = distance; // need this in the service receive
         
-        // recipient number
+        // recipient number / name
         EditText editText = other_user;
         String rec = editText.getText().toString();
         share.rec = rec; // need this in the service receive
         
         Context context = getApplicationContext();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        Log.d("main", "contains it: " + prefs.contains("fake_locations"));
+        boolean it = prefs.getBoolean("fake_locations", false);
+        Log.d("main", "prefs.getBoolean(\"fake_locations\"): " + it);
+        if ( it ){
+        	Log.d("main", "Fake locations turned on; plugging the fake one!");
+        	myListener.plugFake(context);
+        }
         if ( rec.length() != 0 && rec != null ){
-        	if (!myListener.listening() ){
+        	if ( !myListener.listening() ){
         		lManager.removeUpdates(myListener);
         		// I used to pass stuff in over the intent but using the shareSingleton is
         		// allows me to access these values in the on receive later

@@ -30,7 +30,8 @@
         <activity android:name=".displayMessageAct" />
         <activity android:name=".answerAct" />
         <activity android:name=".paillierTest" />
-        <activity android:name=".settings" />
+        <activity android:name=".settings" 
+            android:theme="@style/preferences"/>
         <activity android:name=".names" />
         <service android:name=".xmppService" />
         

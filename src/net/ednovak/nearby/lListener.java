@@ -1,17 +1,32 @@
 package net.ednovak.nearby;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class lListener implements LocationListener {
 	
 	public double lon = -190.0;
 	public double lat = -190.0;
+
 	
 	public lListener(){
-		// blank constructor yay!
+		// Blank one yay!
+	}
+	
+	public void plugFake(Context context){
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context); 
+		if ( prefs.getBoolean("fake_locations", false) ){
+	    	Double fake_lat = Double.valueOf(prefs.getString("fake_lat", "37.2708"));
+	    	Double fake_lon = Double.valueOf(prefs.getString("fake_lon", "-76.7113"));
+			lat = fake_lat;
+			lon = fake_lon;
+			Log.d("listener", "Fake lat:lon is now " + lat + ":" + lon);
+		}
 	}
 	
 	@Override

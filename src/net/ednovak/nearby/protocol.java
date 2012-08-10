@@ -4,8 +4,10 @@ import java.math.BigInteger;
 import java.util.Random;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationManager;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 
@@ -725,14 +727,31 @@ public class protocol {
 	public Location locSimple(Context context){
 		// Get Bob's location
 		LocationManager lManager = (LocationManager)context.getSystemService(Context.LOCATION_SERVICE);
+		
+		// Try to get location from gps
 		Location lastKnownLocation = lManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+		
+		// Try to get location from network if GPS is null
 	    if ( lastKnownLocation == null ){
 	    	Log.d("receive", "lastKnown was null");
 	    	lastKnownLocation = lManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 	    }
+	    
+	    // Get fake location is preference is turned on (overriding other locations!)
+	    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+	    if ( prefs.getBoolean("fake_locations", false) ){
+	    	Double fake_lat = Double.valueOf(prefs.getString("fake_lat", "37.2708"));
+	    	Double fake_lon = Double.valueOf(prefs.getString("fake_lat", "-76.7113"));
+	    	lastKnownLocation.setLatitude(fake_lat);
+	    	lastKnownLocation.setLongitude(fake_lon);
+	    	lastKnownLocation.setTime(System.currentTimeMillis());
+	    }
+	    
+	    // Error logging if no location was obtained through any of these methods
 	    if ( lastKnownLocation == null ) {
 	    	Log.d("recieve" , "location is null!");
 	    }
+	    
 	    return lastKnownLocation;
 	}
 }

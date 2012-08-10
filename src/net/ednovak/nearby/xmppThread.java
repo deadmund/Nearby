@@ -16,6 +16,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.util.Log;
+import android.widget.Toast;
 
 public class xmppThread extends xmppService implements Runnable {
 	
@@ -31,8 +32,7 @@ public class xmppThread extends xmppService implements Runnable {
 	public xmppThread(String nUsername, String nPassword, Context nContext){
 		username = nUsername;
 		password = nPassword;
-		context = nContext;
-		
+		context = nContext;		
 	}
 	
 	public void run(){
@@ -44,6 +44,7 @@ public class xmppThread extends xmppService implements Runnable {
     		connection.connect();
     		connection.login(username, password);
     		Log.d("chat", "logged in as: " + username);
+    		//Toast.makeText(context, "Logged Into Facebook", Toast.LENGTH_SHORT).show();
     		in = true;
     		conn = connection;
     		
