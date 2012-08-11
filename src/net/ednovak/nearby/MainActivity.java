@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -83,7 +84,7 @@ public class MainActivity extends Activity {
         else if ( message_type.equals("sms") ) {
         	EditText et = new EditText(this);
         	other_user = et;
-        	et.setHint("Phone number");
+        	et.setHint("Phone Number");
         	LinearLayout ll = (LinearLayout)findViewById(R.id.ll);
         	ll.addView(et, 3);
         }
@@ -145,6 +146,23 @@ public class MainActivity extends Activity {
     	}
     }
     
+    @Override
+    public void onResume(){
+    	super.onResume();
+        // Other user ID
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String message_type = prefs.getString("message_type", "fb");
+        if ( message_type.equals("fb") ){
+        	other_user.setHint("Facebook Friend's Name");
+        }
+        else if ( message_type.equals("sms") ) {
+        	other_user.setHint("Phone Number");
+        }    
+        else {
+        	Log.d("main", "Bad option choice " + message_type);
+        }
+    }
+    
     
     // When the activity ends
     @Override
@@ -188,7 +206,11 @@ public class MainActivity extends Activity {
         		lManager.removeUpdates(myListener);
         		// I used to pass stuff in over the intent but using the shareSingleton is
         		// allows me to access these values in the on receive later
-        		//intent.putExtra("serv", serv); Can't pass this type of object around
+        		protocol p = new protocol();
+        		Location l = p.locSimple(this);
+        		share.lon = l.getLongitude();
+        		share.lat = l.getLatitude();
+        		
         		intent.putExtra("rec", rec);
         		intent.putExtra("pol", distance);
         		startActivity(intent);
