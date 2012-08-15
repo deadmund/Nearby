@@ -13,8 +13,10 @@ import org.jivesoftware.smack.XMPPException;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class xmppService extends Service {
@@ -60,13 +62,15 @@ public class xmppService extends Service {
 	// Splits a long string up into several 'packets' so the fb does not filter them
 	// Each packet is 502 characters long.  A beginning @@<stage number>
 	// and, on the last packet in the stream, a trailing @@
-	private static List<String> make_packets(String msg, int stage){
+	private static List<String> make_packets(String msg, int stage, int chunk){
+		//Log.d("xmpp", "Chunk size set to: " + chunk);
+		
 		//Log.d("stage " + stage, "Dividing this string: " + msg);
 		List<String> packets = new ArrayList<String>();
 		int cur = 0;
 		int end = 0;
 		while (end < msg.length()){
-			end = Math.min(msg.length(), cur + 500);
+			end = Math.min(msg.length(), cur + chunk);
 			//Log.d("xmpp", "Adding chunk from " + cur + " to " + end);
 			packets.add("@@" + stage + ":" + msg.substring(cur, end));
 			cur = end;
@@ -78,8 +82,8 @@ public class xmppService extends Service {
 	
 	
 	// Send message that actually does the sending
-	private static void real_send(Chat chat, String msg, int stage){
-		List<String> parts = make_packets(msg, stage);
+	private static void real_send(Chat chat, String msg, int stage, int chunk){
+		List<String> parts = make_packets(msg, stage, chunk);
 		for(int i = 0; i < parts.size(); i++){
 			//Log.d("xmpp", "part: " + parts.get(i));
 			try{
@@ -95,16 +99,18 @@ public class xmppService extends Service {
 	
 	// Send message exposed to real world
 	public static void sendMessage(String rec, String msg, int stage, final Context context){
-		Log.d("xmpp", "Looking for: " + rec);
+		//Log.d("xmpp", "Looking for: " + rec);
 		Collection<RosterEntry> entries = getRoster().getEntries();
 		if (entries != null){
 			for (RosterEntry entry : entries){
 				//Log.d("chat", ""+entry);
 				if (entry.getName().equals(rec)){
-					Log.d("xmpp", "found this person: " + entry.getName() + " " + entry.getUser() + " " + entry.getStatus());
+					//Log.d("xmpp", "found this person: " + entry.getName() + " " + entry.getUser() + " " + entry.getStatus());
 					Chat newChat = conn.getChatManager().createChat(entry.getUser(), null);
-					Log.d("xmpp", "sending message to: " + entry.getUser());
-					real_send(newChat, msg, stage);
+					Log.d("xmpp", "sending message to: " + entry.getName());
+					SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+					int chunk = Integer.valueOf(prefs.getString("chunk", "500"));
+					real_send(newChat, msg, stage, chunk);
 				}
 			}
 		}

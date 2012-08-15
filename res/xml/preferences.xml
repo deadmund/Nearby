@@ -29,6 +29,12 @@
 	        android:entryValues="@array/messages_values" />
 	    
 	    <EditTextPreference
+	        android:key="chunk"
+  	        android:title="Chunk Size" 
+	        android:summary="Size of the chunks that messages are broken into"
+	        android:defaultValue="500" />
+	    
+	    <EditTextPreference
 	        android:key="fb_user"
 	        android:summary="Used to send FB messages"
 	        android:defaultValue="None"

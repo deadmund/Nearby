@@ -140,6 +140,21 @@ public class MainActivity extends Activity {
 					Toast.makeText(this, "You must be logged into Facebook", Toast.LENGTH_SHORT).show();
 					return false;
     			}
+    			
+    		case R.id.test_encryption:
+    	    	startActivity(new Intent(this, paillierTest.class));
+    	    	return true;
+    	    	
+    		case R.id.test_message: // Test sending messages on FB
+    			if (bound && xmppService.in){
+    				startActivity(new Intent(this, messageTest.class));
+    				return true;
+    			}
+    			else{
+					Toast.makeText(this, "You must be logged into Facebook", Toast.LENGTH_SHORT).show();
+					return false;
+    			}
+    			
     		
     		default:
     			return super.onOptionsItemSelected(item);
@@ -222,13 +237,6 @@ public class MainActivity extends Activity {
         else { // Don't have the phone number entered!
         	Toast.makeText(context, "You need to provide a phone number", Toast.LENGTH_SHORT).show();
         }
-    }
-    
-    
-    // Encryption Button
-    public void goToEncryptionTest(View view){
-    	Intent intent = new Intent(this, paillierTest.class);
-    	startActivity(intent);    	
     }
     
     

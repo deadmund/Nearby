@@ -115,13 +115,15 @@ public class xmppThread extends xmppService implements Runnable {
 									case 2:  // This is Alice, stage 3 (repeat of stage 1)
 										// Check the incoming C's
 										boolean found = p.check(parts, context);
-										
+										p.longitude = found;
+										// Maybe we shouldn't show this now...
 										if ( !found ) {
 											Intent intent = new Intent(context, answerAct.class);
 											intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 											intent.putExtra("answer", "Bob is not located near you!");
 											intent.putExtra("found", found);
 											context.startActivity(intent);
+											
 										}
 
 										// Continue the protocol anyway so Bob doesn't catch wise.
@@ -153,13 +155,16 @@ public class xmppThread extends xmppService implements Runnable {
 								    	
 									case 4: // This is Alice, stage 5 (final check of latitude)
 										// Check the incoming C's
+										// Found only holds the value of longitude || latitude NOT both.
+										// For example, found maybe be true here if the latitude's match but the
+										// longitudes do not.
 										found = p.check(parts, context);
-										
+										p.latitude = found;
 										Intent intent = new Intent(context, answerAct.class);
 										intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-										intent.putExtra("found", found);
+										intent.putExtra("found", p.longitude && p.latitude);
 										
-										if ( found ) {
+										if ( p.longitude && p.latitude ) {
 											intent.putExtra("answer", "Bob is near you!");
 										}
 										else {

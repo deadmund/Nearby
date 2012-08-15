@@ -11,6 +11,9 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class protocol {
+	
+	boolean longitude = false;
+	boolean latitude = false;
 
 	treeQueue leaves; // The span
 	tree user; // Location of the user (leaf node)
@@ -684,7 +687,7 @@ public class protocol {
 	// This is the function Alice uses to check Bob's c values
 	// tokens example [sender:@@X:c_1:c_2:c_3:...:c_n]
 	public boolean check(String[] tokens, Context context) {
-		Log.d("stage 3", "Receiving from Bob! Check his long || lat");
+		//Log.d("stage 3", "Receiving from Bob! Check his long || lat");
 
 		// Log.d("stage 3", "Here is the String[] I was given to check: " +
 		// tokens);

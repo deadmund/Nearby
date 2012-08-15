@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+    
     <item android:id="@+id/settings"
         android:title="@string/settings" />
+    
     <item android:id="@+id/names"
         android:title="@string/names" />
+    
+    <item android:id="@+id/test_encryption"
+        android:title="@string/test_enc" />
+    
+    <item android:id="@+id/test_message"
+        android:title="@string/mess" />
+        
 </menu>
