@@ -16,7 +16,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.util.Log;
-import android.widget.Toast;
 
 public class xmppThread extends xmppService implements Runnable {
 	
@@ -93,6 +92,7 @@ public class xmppThread extends xmppService implements Runnable {
 	
 
 								protocol p = new protocol();
+								shareSingleton share = shareSingleton.getInstance();
 								switch (stage){
 									case 1: // This is Bob, stage 2										
 										// Set up variables to call p.Bob
@@ -110,12 +110,13 @@ public class xmppThread extends xmppService implements Runnable {
 									
 										// Send Bob's C values
 								    	p.sendFBMessage(sender, txt, 2, context);
-								    	
 										break;
 									case 2:  // This is Alice, stage 3 (repeat of stage 1)
 										// Check the incoming C's
 										boolean found = p.check(parts, context);
-										p.longitude = found;
+										share.longitude = found;
+
+										/*
 										// Maybe we shouldn't show this now...
 										if ( !found ) {
 											Intent intent = new Intent(context, answerAct.class);
@@ -125,12 +126,21 @@ public class xmppThread extends xmppService implements Runnable {
 											context.startActivity(intent);
 											
 										}
+										*/
 
 										// Continue the protocol anyway so Bob doesn't catch wise.
-										shareSingleton share = shareSingleton.getInstance();
 										txt = p.alice(3, share.pol, share.bits, share.method); // txt is used in the above .Bob call
 										Log.d("xmpp", "Done checking continuing protocol");
 										p.sendFBMessage(sender, txt, 3, context);
+										
+										// This is in a thread so the update is not synchronous
+										// Not sure what a good solution is, I would love a toast...
+										//TextView tv = (TextView)share.waiting.findViewById(R.id.text_view);
+										//Log.d("stage" + 3, "tv's text: " + tv.getText().toString());
+										//tv.setText("thing");
+										//tv.setText(tv.getText().toString());
+										//tv.append("Done checking longitude, checking latitude now...\n");
+										//Log.d("stage" + 3, "tv's text: " + tv.getText().toString());
 										break;
 										
 									case 3: // This is Bob, stage 4 (repeat of stage 2)
@@ -158,13 +168,13 @@ public class xmppThread extends xmppService implements Runnable {
 										// Found only holds the value of longitude || latitude NOT both.
 										// For example, found maybe be true here if the latitude's match but the
 										// longitudes do not.
-										found = p.check(parts, context);
-										p.latitude = found;
+										share.latitude =  p.check(parts, context);
+										boolean near = share.latitude && share.longitude;
 										Intent intent = new Intent(context, answerAct.class);
 										intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-										intent.putExtra("found", p.longitude && p.latitude);
+										intent.putExtra("found", near);
 										
-										if ( p.longitude && p.latitude ) {
+										if ( near ) {
 											intent.putExtra("answer", "Bob is near you!");
 										}
 										else {

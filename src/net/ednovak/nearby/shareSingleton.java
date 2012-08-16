@@ -1,6 +1,8 @@
 package net.ednovak.nearby;
 
-import java.math.*;
+import java.math.BigInteger;
+
+import android.app.Activity;
 
 public class shareSingleton {
 	private static shareSingleton instance = null;
@@ -15,6 +17,12 @@ public class shareSingleton {
 	public int bits;
 	public int method;
 	public long start; // Holds the time the protocol was initiated by Alice dawg
+	public Activity waiting;
+	
+	// Alice uses these values to store whether or not the longitude / latitude matches
+	// This allows us to wait until stage 4 to respond to user
+	public boolean longitude = false;
+	public boolean latitude = false;
 	
 	protected shareSingleton(){
 		// Only to defeat instantiation

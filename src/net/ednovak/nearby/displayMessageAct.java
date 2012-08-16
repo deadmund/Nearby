@@ -22,6 +22,10 @@ public class displayMessageAct extends Activity {
         protocol p = new protocol();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         Intent intent = getIntent();
+        shareSingleton share = shareSingleton.getInstance();
+        
+        // Save a reference to myself for updating later
+        share.waiting = this;
         
         // Gather variables and call alice (stage 1)
         int method = Integer.valueOf(prefs.getString("poly_method", "2"));

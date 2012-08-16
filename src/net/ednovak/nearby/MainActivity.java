@@ -235,7 +235,7 @@ public class MainActivity extends Activity {
     		}
         }
         else { // Don't have the phone number entered!
-        	Toast.makeText(context, "You need to provide a phone number", Toast.LENGTH_SHORT).show();
+        	Toast.makeText(context, "You need to provide a recipient", Toast.LENGTH_SHORT).show();
         }
     }
     

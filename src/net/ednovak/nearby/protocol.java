@@ -11,9 +11,6 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class protocol {
-	
-	boolean longitude = false;
-	boolean latitude = false;
 
 	treeQueue leaves; // The span
 	tree user; // Location of the user (leaf node)
