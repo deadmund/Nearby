@@ -63,7 +63,7 @@ public class tree{
 	}
 	
 	// Starts at the root in the top queue.  For each node in top queue, if it has 
-	public treeQueue findRepSet(tree leftEnd, tree rightEnd, tree root){
+	public treeQueue findWall(tree leftEnd, tree rightEnd, tree root){
 		treeQueue answer = new treeQueue();
 		treeQueue bottom = new treeQueue();
 		treeQueue top = new treeQueue();

@@ -474,6 +474,77 @@ public class protocol {
 		}
 		return results;
 	}
+	
+	
+	public Paillier getKey(int bits, int stage){
+		
+		shareSingleton share = shareSingleton.getInstance();
+		Paillier p = new Paillier(bits, 64);
+		
+		if (stage == 1){
+			BigInteger[] tmp = p.privateKey();
+			share.g = tmp[0];
+			share.lambda = tmp[1];
+			share.n = tmp[2];
+		}
+		
+		else if (stage == 3){
+			p.loadPrivateKey(share.g, share.lambda, share.n);
+		}
+		
+		return p;
+	}
+	
+	
+	// Encrypts an array of BigIntegers (properly generates key
+	public BigInteger[] encryptArray(BigInteger[] clear, int stage, Context context){
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+		int bits = prefs.getInt("bits", 1024);
+		Paillier p = getKey(bits, stage);
+		BigInteger[] encCoe = new BigInteger[clear.length];
+		for (int i = 0; i < encCoe.length; i++){
+			encCoe[i] = p.Encryption(clear[i]);
+		}
+		
+		return encCoe;
+	}
+	
+	
+	public int[] makeSpan(int stage, Location loc, int policy){
+		double edge = 0.0;
+		int edgeLeafNumber = 0;
+		int userLeafNumber = 0;
+		
+		
+		if (stage == 2){
+			edge = findLong(loc.getLongitude(), loc.getLatitude(), policy);
+			edgeLeafNumber = longitudeToLeaf(edge);
+			userLeafNumber = longitudeToLeaf(loc.getLongitude());
+		}
+		
+		else if (stage == 4){
+			edge = findLat(loc.getLongitude(), loc.getLatitude(), policy);
+			edgeLeafNumber = latitudeToLeaf(edge);
+			userLeafNumber = latitudeToLeaf(loc.getLatitude());
+		}
+		
+		// Find the leaves on the edge and build the span
+		Log.d("stage " + stage, "User's leaf value: " + userLeafNumber);
+		Log.d("stage " + stage, "Edge gps value: " + edge);
+		Log.d("stage " + stage, "edge leaf value: " + edgeLeafNumber);
+
+		int spanLength = (Math.abs(edgeLeafNumber - userLeafNumber) * 2) + 1;
+		Log.d("stats", "Alice's leaf node span: " + spanLength);
+
+		int left = userLeafNumber - (spanLength / 2);
+		int right = userLeafNumber + (spanLength / 2);
+
+		Log.d("stage " + stage, "User's leaf nodes go from " + left + " to "
+				+ right + ".  That's: " + spanLength + " nodes.  Their node is: "
+				+ userLeafNumber);
+		
+		return new int[] {left, userLeafNumber, right};
+	}
 
 	// Alice for stage 1 || 3
 	public String alice(int stage, int policy, int bits, int method) {
@@ -537,7 +608,7 @@ public class protocol {
 		Log.d("stats", "The tree has " + root.count() + " nodes");
 
 		// Get the rep set
-		treeQueue repSet = root.findRepSet(leaves.peek(0), leaves.peek(-1),
+		treeQueue repSet = root.findWall(leaves.peek(0), leaves.peek(-1),
 				root);
 		Log.d("stage " + stage, "The rep set");
 		for (int i = 0; i < repSet.length; i++) {

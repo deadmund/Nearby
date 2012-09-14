@@ -1,6 +1,7 @@
 package net.ednovak.nearby;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
@@ -14,10 +15,10 @@ import org.jivesoftware.smack.packet.Message;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
+import android.preference.PreferenceManager;
 import android.util.Log;
-
-import java.util.ArrayList;
 
 public class xmppThread extends xmppService implements Runnable {
 	
@@ -68,8 +69,8 @@ public class xmppThread extends xmppService implements Runnable {
 		
 		boolean lastPacket = false;
 		if ( packet.getBody().substring(0, 2).equals("@@") ){
-			String message = packet.getBody();
-			int stage = Integer.valueOf(packet.getBody().substring(2,3));
+			//String message = packet.getBody();
+			//int stage = Integer.valueOf(packet.getBody().substring(2,3));
 			String[] parts = packet.getBody().split(":");
 			int session = Integer.valueOf(parts[1]);
 			buffer buff;
@@ -78,7 +79,7 @@ public class xmppThread extends xmppService implements Runnable {
 				String sender = getRoster().getEntry(packet.getFrom().toString()).getName();
 				buff = new buffer(sender, System.currentTimeMillis(), session);
 			}
-			buff.append(packet.getBody().substring(4)); // Remove the begging "@@X:"
+			buff.append(packet.getBody().substring(2)); // Remove the begging "@@" in "@@X:"
 			lastPacket = packet.getBody().substring( packet.getBody().length() - 2 ).equals("@@"); // Packet ends in "@@"
 			if ( lastPacket ){
 				clearBuff(buff);
@@ -125,24 +126,76 @@ public class xmppThread extends xmppService implements Runnable {
 							
 							// Message stream over, time to process this buffer
 							if ( buff != null ) {
+								
+								Log.d("receive", "buff.message" + buff.message);
+								
+								// Initialize stuff
+								protocol p = new protocol();
+								shareSingleton share = shareSingleton.getInstance();
+								SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+								
 								long end = System.currentTimeMillis();
 								long total_recTime = end - buff.start;
 								Log.d("stats", "It took: " + total_recTime + "ms to recieve all chunks");
 								
-								// I can use sender later to fix the collision problem
 								String sender = buff.sender;
 								String[] parts = buff.message.split(":");
+								int stage = Integer.valueOf(parts[0]);
 								
-								Log.d("new", "Message: " + buff.message);
-								for (String p: parts){
-									Log.d("parts:", p);
+								if ( stage == 1 && parts[2].equals("where are you?") ){
+									// Bob only wants to share if Alice is near him so lets run the protocol
+									
+									// Initialize
+									int bits = prefs.getInt("bits", 1024);
+									int policy = Integer.valueOf(prefs.getString("policy", "160000"));
+									int method = prefs.getInt("method", 1);
+									
+									// Find span
+									int[] span = new int[3];
+									span = p.makeSpan(2, p.locSimple(context), policy);
+									
+									// Generate leaves
+									treeQueue leaves = p.genLeaves(span[0], span[2], span[1]);
+									
+									// Generate root
+									tree root = p.buildUp(leaves);
+									Log.d("stats", "The tree has " + root.count() + " nodes");
+									
+									// Find Wall
+									treeQueue wall = root.findWall(leaves.peek(0), leaves.peek(-1), root);
+									Log.d("stats", "User's wall size: " + wall.length);
+									
+									// Find Coefficients
+									BigInteger[] coefficients = p.makeCoefficients(wall, method);
+									
+									// Encrypt Coefficients
+									BigInteger[] encCoe = p.encryptArray(coefficients, 2, context);
+									
+									// Put them in a string for sending
+									StringBuffer txt = new StringBuffer();
+									txt.append(encCoe[0].toString(16)); // The first one should not begin with ":"
+									for (int i = 1; i < encCoe.length; i++){
+										txt.append(":" + encCoe[i].toString(16));
+									}
+									
+									// Extra Stuff
+									BigInteger[] key = p.getKey(1024, 2).publicKey();
+									txt.append(":" + policy);
+									txt.append(":" + bits);
+									txt.append(":" + key[0].toString(16)); // g
+									txt.append(":" + key[1].toString(16)); // n
+									txt.append(":" + method); // Poly method used
+									// Other party needs these values
+									
+									// Send to Alice
+									p.sendFBMessage(sender, txt.toString(), 3, buff.session, context);							
 								}
+										
 
-								protocol p = new protocol();
-								shareSingleton share = shareSingleton.getInstance();								
+							
 								
 								switch (stage){
-									case 1: // This is Bob, stage 2										
+									case 100: // This is Bob, stage 2										
 										// Set up variables to call p.Bob
 										Location location = p.locSimple(context);
 										int pol = Integer.valueOf( parts[parts.length - 5] );

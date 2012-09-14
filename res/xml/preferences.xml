@@ -35,6 +35,12 @@
 	        android:defaultValue="500" />
 	    
 	    <EditTextPreference
+	        android:key="policy"
+	        android:title="Policy"
+	        android:summary="Maximum distance at which you will share GPS coordinates"
+	        android:defaultValue="30" />
+	    
+	    <EditTextPreference
 	        android:key="fb_user"
 	        android:summary="Used to send FB messages"
 	        android:defaultValue="None"
