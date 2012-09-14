@@ -60,9 +60,9 @@ public class xmppService extends Service {
 	
 	
 	// Splits a long string up into several 'packets' so the fb does not filter them
-	// Each packet is 502 characters long.  A beginning @@<stage number>
+	// Each packet beginning @@<stage number>:sessionnumber:
 	// and, on the last packet in the stream, a trailing @@
-	private static List<String> make_packets(String msg, int stage, int chunk){
+	private static List<String> make_packets(String msg, int stage, int session, int chunk){
 		//Log.d("xmpp", "Chunk size set to: " + chunk);
 		
 		//Log.d("stage " + stage, "Dividing this string: " + msg);
@@ -74,7 +74,7 @@ public class xmppService extends Service {
 			total += 1;
 			end = Math.min(msg.length(), cur + chunk);
 			//Log.d("xmpp", "Adding chunk from " + cur + " to " + end);
-			packets.add("@@" + stage + ":" + msg.substring(cur, end));
+			packets.add("@@" + stage + ":" + session + ":" + msg.substring(cur, end));
 			cur = end;
 		}
 		// I use the "@@" on the last packet to mark the end of a stream
@@ -85,8 +85,8 @@ public class xmppService extends Service {
 	
 	
 	// Send message that actually does the sending
-	private static void real_send(Chat chat, String msg, int stage, int chunk){
-		List<String> parts = make_packets(msg, stage, chunk);
+	private static void real_send(Chat chat, String msg, int stage, int session, int chunk){
+		List<String> parts = make_packets(msg, stage, session, chunk);
 		for(int i = 0; i < parts.size(); i++){
 			//Log.d("xmpp", "part: " + parts.get(i));
 			try{
@@ -101,7 +101,7 @@ public class xmppService extends Service {
 	
 	
 	// Send message exposed to real world
-	public static void sendMessage(String rec, String msg, int stage, final Context context){
+	public static void sendMessage(String rec, String msg, int stage, int session, final Context context){
 		//Log.d("xmpp", "Looking for: " + rec);
 		Collection<RosterEntry> entries = getRoster().getEntries();
 		if (entries != null){
@@ -113,7 +113,7 @@ public class xmppService extends Service {
 					Log.d("xmpp", "sending message to: " + entry.getName());
 					SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 					int chunk = Integer.valueOf(prefs.getString("chunk", "500"));
-					real_send(newChat, msg, stage, chunk);
+					real_send(newChat, msg, stage, session, chunk);
 				}
 			}
 		}

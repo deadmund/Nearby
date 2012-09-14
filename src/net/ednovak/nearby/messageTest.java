@@ -45,7 +45,7 @@ public class messageTest extends Activity{
 		*/
 		
 		protocol p = new protocol();
-		p.sendFBMessage(rec, message, 1, this);
+		p.sendFBMessage(rec, message, this);
 		
 	}
 }

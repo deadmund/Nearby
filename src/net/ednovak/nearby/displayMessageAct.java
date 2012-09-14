@@ -19,7 +19,6 @@ public class displayMessageAct extends Activity {
         
         // Instantiate stuff
         Random gen = new Random();
-        int session = gen.nextInt( 100 );
         shareSingleton share = shareSingleton.getInstance();
         //share.session = session; /not yet implemented....
         protocol p = new protocol();
@@ -27,7 +26,8 @@ public class displayMessageAct extends Activity {
         
         // Send that initial message!
         String rec = intent.getStringExtra("rec");
-        p.sendFBMessage(rec, "where are you?", this);
+        int session = p.sendFBMessage(rec, "where are you?", this);
+        share.session = session;
         
     } // End of onCreate
     

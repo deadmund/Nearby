@@ -741,9 +741,16 @@ public class protocol {
 	}
 
 	// Send a FB message
-	public void sendFBMessage(String rec, String message, Context context) {
-		int stage= 0; // Band-Aid Fix Yay!
-		xmppService.sendMessage(rec, message, stage, context);
+	public int sendFBMessage(String rec, String message, Context context) {
+		Random gen = new Random();
+		int session_id = gen.nextInt(10000);
+		xmppService.sendMessage(rec, message, 1, session_id, context);
+		return session_id;
+	}
+	
+	//@Overload
+	public void sendFBMessage(String rec, String message, int stage, int session, Context context){
+		xmppService.sendMessage(rec, message, stage, session, context);
 	}
 
 	public Location locSimple(Context context) {

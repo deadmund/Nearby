@@ -68,12 +68,15 @@ public class xmppThread extends xmppService implements Runnable {
 		
 		boolean lastPacket = false;
 		if ( packet.getBody().substring(0, 2).equals("@@") ){
-			int session = Integer.valueOf(packet.getBody().substring(2, 3));
+			String message = packet.getBody();
+			int stage = Integer.valueOf(packet.getBody().substring(2,3));
+			String[] parts = packet.getBody().split(":");
+			int session = Integer.valueOf(parts[1]);
 			buffer buff;
 			buff = searchBuff(session);
 			if (buff == null){ // If the buffer is null we haven't seen this session yet and create a new buffer
 				String sender = getRoster().getEntry(packet.getFrom().toString()).getName();
-				buff = new buffer(sender, System.currentTimeMillis());
+				buff = new buffer(sender, System.currentTimeMillis(), session);
 			}
 			buff.append(packet.getBody().substring(4)); // Remove the begging "@@X:"
 			lastPacket = packet.getBody().substring( packet.getBody().length() - 2 ).equals("@@"); // Packet ends in "@@"
@@ -131,9 +134,13 @@ public class xmppThread extends xmppService implements Runnable {
 								String[] parts = buff.message.split(":");
 								
 								Log.d("new", "Message: " + buff.message);
+								for (String p: parts){
+									Log.d("parts:", p);
+								}
 
 								protocol p = new protocol();
-								shareSingleton share = shareSingleton.getInstance();
+								shareSingleton share = shareSingleton.getInstance();								
+								
 								switch (stage){
 									case 1: // This is Bob, stage 2										
 										// Set up variables to call p.Bob
@@ -150,7 +157,7 @@ public class xmppThread extends xmppService implements Runnable {
 										//Log.d("xmpp", "txt in Bob: " + txt);
 									
 										// Send Bob's C values
-								    	p.sendFBMessage(sender, txt, context);
+								    	p.sendFBMessage(sender, txt, 2, 5, context);
 										break;
 									case 2:  // This is Alice, stage 3 (repeat of stage 1)
 										// Check the incoming C's
@@ -172,7 +179,7 @@ public class xmppThread extends xmppService implements Runnable {
 										// Continue the protocol anyway so Bob doesn't catch wise.
 										txt = p.alice(3, share.pol, share.bits, share.method); // txt is used in the above .Bob call
 										Log.d("xmpp", "Done checking continuing protocol");
-										p.sendFBMessage(sender, txt, context);
+										p.sendFBMessage(sender, txt, 3, 6, context);
 										
 										// This is in a thread so the update is not synchronous
 										// Not sure what a good solution is, I would love a toast...
@@ -201,7 +208,7 @@ public class xmppThread extends xmppService implements Runnable {
 										//Log.d("xmpp", "txt in Bob: " + txt);
 									
 										// Send Bob's C values
-								    	p.sendFBMessage(sender, txt, 4, context);
+								    	p.sendFBMessage(sender, txt, 4, 7, context);
 								    	break;
 								    	
 									case 4: // This is Alice, stage 5 (final check of latitude)

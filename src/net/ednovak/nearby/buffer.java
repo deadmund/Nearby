@@ -2,13 +2,14 @@ package net.ednovak.nearby;
 
 public class buffer {
 	public int session;
-	public String message;
+	public String message = "";
 	public long start;
 	public String sender;
 	
-	public buffer(String nSender, long nStart){
+	public buffer(String nSender, long nStart, int nSession){
 		sender = nSender;
 		start = nStart;
+		session = nSession;
 	}
 	
 	public void append(String m){
