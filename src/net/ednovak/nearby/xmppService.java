@@ -69,7 +69,9 @@ public class xmppService extends Service {
 		List<String> packets = new ArrayList<String>();
 		int cur = 0;
 		int end = 0;
+		int total = 0; // Total number of packets created
 		while (end < msg.length()){
+			total += 1;
 			end = Math.min(msg.length(), cur + chunk);
 			//Log.d("xmpp", "Adding chunk from " + cur + " to " + end);
 			packets.add("@@" + stage + ":" + msg.substring(cur, end));
@@ -77,6 +79,7 @@ public class xmppService extends Service {
 		}
 		// I use the "@@" on the last packet to mark the end of a stream
 		packets.set(packets.size()-1, packets.get(packets.size()-1) + "@@"); // Put a "@@" on the last one
+		Log.d("stats", "Total packets created: " + total);
 		return packets;
 	}
 	

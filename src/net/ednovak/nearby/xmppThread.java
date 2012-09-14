@@ -17,22 +17,76 @@ import android.content.Intent;
 import android.location.Location;
 import android.util.Log;
 
+import java.util.ArrayList;
+
 public class xmppThread extends xmppService implements Runnable {
 	
-	private String buff = "";
+	private ArrayList<buffer> buffs = new ArrayList<buffer>();
 	private int stage = 0;
 	private String username;
 	private String password;
 	private Context context;
-	private long start;
+	//private long start;
 	//public Collection<RosterEntry> entries;
 	//public Connection conn;
+	
 	
 	public xmppThread(String nUsername, String nPassword, Context nContext){
 		username = nUsername;
 		password = nPassword;
 		context = nContext;		
+		buffs = new ArrayList<buffer>(); // Blank the buffers
 	}
+	
+	
+	
+	// Return buffer if found, returns null otherwise
+	private buffer searchBuff(int session){
+		for (buffer b : buffs){
+			if (b.session == session){
+				return b;
+			}
+		}
+		return null;
+	}
+	
+	
+	
+	private void clearBuff(buffer b){
+		for (int i = 0; i < buffs.size(); i++){
+			if ( buffs.get(i) == b ){
+				buffs.remove(i);
+			}
+		}
+		b.message = b.message.substring(0, b.message.length() - 2); // Remove trailing "@@"
+	}
+	
+	
+	
+	// Puts packets into ArrayList<buffer>.  Returns a buffer when it is full, returns null otherwise
+	private buffer parseIncoming(Message packet){		
+		
+		boolean lastPacket = false;
+		if ( packet.getBody().substring(0, 2).equals("@@") ){
+			int session = Integer.valueOf(packet.getBody().substring(2, 3));
+			buffer buff;
+			buff = searchBuff(session);
+			if (buff == null){ // If the buffer is null we haven't seen this session yet and create a new buffer
+				String sender = getRoster().getEntry(packet.getFrom().toString()).getName();
+				buff = new buffer(sender, System.currentTimeMillis());
+			}
+			buff.append(packet.getBody().substring(4)); // Remove the begging "@@X:"
+			lastPacket = packet.getBody().substring( packet.getBody().length() - 2 ).equals("@@"); // Packet ends in "@@"
+			if ( lastPacket ){
+				clearBuff(buff);
+				return buff;
+			}
+		}
+		// This is true of the most recent packet contained the end of sequence symbol at the end
+		// buff.message.substring(buff.message.length() - 2).equals("@@");
+		return null;
+	}
+	
 	
 	public void run(){
 		Connection connection = null;
@@ -64,32 +118,19 @@ public class xmppThread extends xmppService implements Runnable {
 							//Log.d("xmpp", "Chat recieved in thread: " + message.getBody());
 							Log.d("xmpp", "Chat recieved in thread");
 							
+							buffer buff = parseIncoming(message);
 							
-							// If the protocol is being queried twice at once there is a big collision problem
-							if ( message.getBody().substring(0, 2).equals("@@") ){
-								if (buff.equals("")){
-									start = System.currentTimeMillis();
-								}
-								buff += message.getBody().substring(4); // Remove the begging "@@X:"
-								stage = Integer.valueOf(message.getBody().substring(2, 3));
-								//Log.d("xmpp", "state of buff: " + buff + "    state: " + stage);
-							}
-
-							
-							// Message stream over, time to process this message
-							if ( buff.substring(buff.length() - 2).equals("@@")) {
+							// Message stream over, time to process this buffer
+							if ( buff != null ) {
 								long end = System.currentTimeMillis();
-								long total_recTime = end - start;
+								long total_recTime = end - buff.start;
 								Log.d("stats", "It took: " + total_recTime + "ms to recieve all chunks");
 								
-								//Log.d("xmpp", "emptying and processing buff!");
-								buff = buff.substring(0, buff.length() - 2); // Remove the trailing "@@"
-								
 								// I can use sender later to fix the collision problem
-								String sender = getRoster().getEntry(message.getFrom().toString()).getName();
-								String[] parts = buff.split(":");
-								buff = "";
-	
+								String sender = buff.sender;
+								String[] parts = buff.message.split(":");
+								
+								Log.d("new", "Message: " + buff.message);
 
 								protocol p = new protocol();
 								shareSingleton share = shareSingleton.getInstance();
@@ -109,7 +150,7 @@ public class xmppThread extends xmppService implements Runnable {
 										//Log.d("xmpp", "txt in Bob: " + txt);
 									
 										// Send Bob's C values
-								    	p.sendFBMessage(sender, txt, 2, context);
+								    	p.sendFBMessage(sender, txt, context);
 										break;
 									case 2:  // This is Alice, stage 3 (repeat of stage 1)
 										// Check the incoming C's
@@ -131,7 +172,7 @@ public class xmppThread extends xmppService implements Runnable {
 										// Continue the protocol anyway so Bob doesn't catch wise.
 										txt = p.alice(3, share.pol, share.bits, share.method); // txt is used in the above .Bob call
 										Log.d("xmpp", "Done checking continuing protocol");
-										p.sendFBMessage(sender, txt, 3, context);
+										p.sendFBMessage(sender, txt, context);
 										
 										// This is in a thread so the update is not synchronous
 										// Not sure what a good solution is, I would love a toast...

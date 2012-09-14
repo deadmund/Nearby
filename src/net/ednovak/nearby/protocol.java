@@ -443,6 +443,10 @@ public class protocol {
 															// the width
 					BigInteger alice = encCoe[i];
 					BigInteger c = bob.multiply(alice).mod(paillierE.nsquare);
+					
+					//BigInteger test = paillierE.Decryption(c);					
+					//Log.d("important", "The is the decryption on Bob's end: " + test);
+					
 
 					// Pack them randomly to send back
 					boolean unplaced = true;
@@ -526,8 +530,11 @@ public class protocol {
 		// Make the leaves and build the tree
 		treeQueue leaves = genLeaves(left, right, aliceLeafNumber);
 		tree root = buildUp(leaves);
-		// Log.d("stage " + stage, "The entire tree: " +
-		// treeToStringDown(root));
+		
+		Log.d("stage " + stage, "The entire tree: " +
+		treeToStringDown(root));
+		
+		Log.d("stats", "The tree has " + root.count() + " nodes");
 
 		// Get the rep set
 		treeQueue repSet = root.findRepSet(leaves.peek(0), leaves.peek(-1),
@@ -629,6 +636,7 @@ public class protocol {
 		// Build the leaves and tree
 		treeQueue leaves = genLeaves(left, right, bobLeafNumber);
 		tree root = buildUp(leaves);
+		Log.d("stats", "The tree has " + root.count() + " nodes");
 
 		// Find covering set
 		treeQueue coveringSet = root.findCoverSet(user);
@@ -733,8 +741,8 @@ public class protocol {
 	}
 
 	// Send a FB message
-	public void sendFBMessage(String rec, String message, int stage,
-			Context context) {
+	public void sendFBMessage(String rec, String message, Context context) {
+		int stage= 0; // Band-Aid Fix Yay!
 		xmppService.sendMessage(rec, message, stage, context);
 	}
 

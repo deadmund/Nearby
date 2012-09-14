@@ -115,4 +115,31 @@ public class tree{
 		}
 		return s;		
 	}
+	
+	public int count(){
+		// Setup
+		int sum = 0;
+		treeQueue top = new treeQueue();
+		treeQueue bottom = new treeQueue();
+		top.push(this);
+		
+		// Breadth first traversal through entire tree
+		while (top.length != 0){
+			sum = sum + top.length;
+			for(int i = 0; i < top.length; i++){
+				tree cur = top.peek(i).left;
+				if (cur != null){
+					bottom.push(cur);
+				}
+				cur = top.peek(i).right;
+				if (cur != null){
+					bottom.push(cur);
+				}
+			}
+			top = bottom;
+			bottom = new treeQueue();
+		}
+		
+		return sum;
+	}
 }
