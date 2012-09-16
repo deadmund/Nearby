@@ -12,7 +12,7 @@ import android.util.Log;
 
 public class protocol {
 
-	treeQueue leaves; // The span
+	//treeQueue leaves; // The span
 	tree user; // Location of the user (leaf node)
 
 	// Constructor does nothing! This is probably a design flaw :P
@@ -82,7 +82,7 @@ public class protocol {
 					.toString(); // R is 0, L is 1;
 			// System.out.println(cur + " => " + mapString); // char of binary
 			// string from this int ()
-			leaves.push(new tree(cur, mapString.toCharArray(), null, null));
+			leaves.push(new tree(cur, mapString.toCharArray(), null, null, 0));
 			if (cur == x) {
 				leaves.peek(-1).special = "User!";
 				user = leaves.peek(-1);
@@ -190,102 +190,20 @@ public class protocol {
 		// laziness
 		return policy / 10;
 	}
-
-	// Builds 1 level of the tree. Starting at leaves, builds the row above the
-	// leaves
-	// The following method 'buildUp' feeds this the leaves, and repeats the
-	// process up the tree
-	// @SuppressLint("NewApi")
-	private treeQueue buildLevel(treeQueue bottom, int height) {
-		treeQueue top = new treeQueue(); // Level above ours
-
-		for (int i = 0; i < bottom.length; i++) {
-			tree cur = bottom.peek(i);
-
-			if (cur.path.length == 0) {
-				cur.path = new char[1];
-				cur.path[0] = '0';
-			}
-
-			// System.out.println("cur.path.length" + cur.path.length);
-			// System.out.println("cur.path: " + cur.path[0] +
-			// "  cur.path.length-1: " + (cur.path.length-1));
-			char[] nPath = new char[cur.path.length - 1]; // Drop the last bit
-															// (manual copy :(
-			for (int j = 0; j < nPath.length; j++) {
-				nPath[j] = cur.path[j];
-			}
-
-			// System.out.println("Checking the path letter" + old);
-
-			if (cur.path[cur.path.length - 1] == '0') { // This is a branch that
-														// goes right
-				int nValue = cur.value + 4003017; // Max num of leaf nodes
-													// (longitude only)
-				// System.out.println("Putting " + nValue +
-				// " in top row @ end");
-				top.push(new tree(nValue, nPath, cur, null));
-				cur.parent = top.peek(-1); // Thing at end
-				if (i + 1 <= bottom.length - 1) { // True if this node is not on
-													// the right end
-					// System.out.println(bottom.peek(i).value +
-					// " is not the right hand edge");
-					top.peek(-1).right = bottom.peek(i + 1);
-					// System.out.println("bottom length:" + bottom.length +
-					// " i+1:" + (i+1) + " top length:" + top.length);
-					bottom.peek(i + 1).parent = top.peek(-1);
-					// System.out.println("The problem was not above me!");
-				} else {
-					// System.out.println(bottom.peek(i).value + " RIGHT END");
-				}
-				i = i + 1; // I just took care of the node next to me with
-							// outQueue[i+1] above
-			}
-
-			else { // This is a branch that goes left
-				int nValue = cur.value
-						+ (4003018 - (int) (Math
-								.pow(2.0, (double) (height - 1))));
-				// System.out.println("Putting " + nValue +
-				// " in top row @ end");
-				top.push(new tree(nValue, nPath, null, cur));
-				cur.parent = top.peek(-1);
-				if (i > 0) { // True if this node is not on the left end
-					// System.out.println(bottom.peek(i) +
-					// " is not the left hand edge");
-					top.peek(-1).right = bottom.peek(i - 1);
-					bottom.peek(i - 1).parent = top.peek(-1);
-				} else {
-					// System.out.println(bottom.peek(i).value + " LEFT END");
-				}
-			}
-		}
-		return top;
-	}
-
-	// Uses the previous method to build the tree upwards from the leaves
-	public tree buildUp(treeQueue leaves) {
-		treeQueue row = leaves; // Nodes that we're iterating through
-		int height = 1; // Currently building height 1
-
-		while (row.length != 1) { // This isn't the root node yet
-			// System.out.println("Length of top > 1 so this isn't the root yet");
-			row = buildLevel(row, height);
-			height++;
-		}
-		return row.peek(0);
-	}
+	
+	
+	
 
 	// Returns a string of the entire tree from 'root' downward (depth first
 	// search)
-	public String treeToStringDown(tree root) {
-		if (root == null) {
-			return "";
-		}
+	//public String treeToStringDown(tree root) {
+	//	if (root == null) {
+	//		return "";
+	//	}
 
-		return root.value + "\n" + treeToStringDown(root.left)
-				+ treeToStringDown(root.right);
-	}
+	//	return root.value + "\n" + treeToStringDown(root.left)
+	//			+ treeToStringDown(root.right);
+	//}
 
 	// Multiplys two polynomials. We define a polynomial as a reverse string of
 	// integers. For example poly a = x^2 - 4x + 5 int[] a = {5, -4, 1}
@@ -349,6 +267,97 @@ public class protocol {
 		return c;
 
 	}
+	
+	// This function builds the parents of a given row of leaves
+	private treeQueue buildRow(treeQueue bottom){
+		treeQueue newRow = new treeQueue();
+		for (int i = 0; i < bottom.length; i++){
+			tree cur = bottom.peek(i);
+			tree parent = cur.createParent();
+			newRow.push(parent); // Maybe unique push but that shouldn't be an issue
+			cur.setParent(parent);
+	
+			// Set the parent's children
+			if (cur.upRightward()){
+				parent.left = cur;
+				if (i+1 < bottom.length){ // We're not on the right edge and a i+1 exists
+					parent.right = bottom.peek(i+1);
+					bottom.peek(i+1).setParent(parent);
+				}
+				i = i + 1; // Get to skip a node, yay
+			}
+			
+			else {
+				parent.right = cur;
+				if (i-1 >= 0){ // We're not on the left edge and a i-1 exists
+					parent.left = bottom.peek(i-1);
+					bottom.peek(i-1).setParent(parent);
+				}
+			}
+		}
+		return newRow;
+	}
+	
+	
+	// This function takes a set of leaves and builds all the nodes upward until we have a complete tree
+	// The stopping criteria: when the current row of nodes produces 1 parent among all (both) nodes.
+	public tree buildUp(treeQueue leaves){
+		treeQueue top = new treeQueue();
+		treeQueue bottom = leaves;
+		
+		int count = 0;
+		while (top.length != 1 && count < 12){
+			top = buildRow(bottom);	
+			bottom = top;
+			count++;
+		}
+		
+		return top.peek(0);
+	}
+	
+	
+	// Find the path from the given node to the root.
+	// This used to be the "covering set" but that name is confusing
+	// leaf is the node to start from (doesn't have to be a leaf)
+	// height is the desired height to ascend to (counted from starting point)
+	public treeQueue findPath(tree leaf, int height){
+		treeQueue answer = new treeQueue();
+		tree cur = leaf;
+		while (cur.height < height){
+			answer.push(cur);
+			cur = cur.createParent();
+		}
+		return answer;
+	}
+	
+	
+	// Find the wall given the edges
+	// Starts at the root in the top queue.
+	public treeQueue findWall(tree leftEnd, tree rightEnd, tree root){
+		treeQueue answer = new treeQueue();
+		treeQueue bottom = new treeQueue();
+		treeQueue top = new treeQueue();
+		top.push(root);
+		while (top.length != 0){
+			for (int i = 0; i < top.length; i++){
+				tree cur = top.peek(i);
+				// If a leaf is outside the span than it isn't in my tree and we'll see null
+				if (cur.leftLeaf() == null || cur.rightLeaf() == null){
+					if (cur.left != null){
+						bottom.push(cur.left);
+					}
+					if (cur.right != null){
+						bottom.push(cur.right);
+					}
+				}
+				else{ answer.push(cur); } // The left and right leaf was within the bounds
+			}
+			top = bottom;
+			bottom = new treeQueue();
+		}
+		return answer;
+	}
+	
 
 	private BigInteger[][] genPolysFromRoots(treeQueue trees) {
 		// Generate Result
@@ -421,12 +430,12 @@ public class protocol {
 	}
 
 	// Does Bob's calculations
-	public BigInteger[] bobCalc(treeQueue coveringSet, BigInteger[] encCoe,
+	public BigInteger[] computation(treeQueue coveringSet, BigInteger[] encCoe,
 			int bits, BigInteger g, BigInteger n, int method) {
 
 		BigInteger[] results = null;
 
-		Paillier paillierE = new Paillier(bits, 64);
+		Paillier paillierE = getKey(bits);
 		paillierE.loadPublicKey(g, n);
 
 		if (method == 1) {
@@ -476,23 +485,12 @@ public class protocol {
 	}
 	
 	
-	public Paillier getKey(int bits, int stage){
-		
+	public Paillier getKey(int bits){
 		shareSingleton share = shareSingleton.getInstance();
-		Paillier p = new Paillier(bits, 64);
-		
-		if (stage == 1){
-			BigInteger[] tmp = p.privateKey();
-			share.g = tmp[0];
-			share.lambda = tmp[1];
-			share.n = tmp[2];
+		if (share.pKey == null){
+			share.pKey = new Paillier(bits, 64);
 		}
-		
-		else if (stage == 3){
-			p.loadPrivateKey(share.g, share.lambda, share.n);
-		}
-		
-		return p;
+		return share.pKey;
 	}
 	
 	
@@ -500,7 +498,7 @@ public class protocol {
 	public BigInteger[] encryptArray(BigInteger[] clear, int stage, Context context){
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		int bits = prefs.getInt("bits", 1024);
-		Paillier p = getKey(bits, stage);
+		Paillier p = getKey(bits);
 		BigInteger[] encCoe = new BigInteger[clear.length];
 		for (int i = 0; i < encCoe.length; i++){
 			encCoe[i] = p.Encryption(clear[i]);
@@ -516,13 +514,13 @@ public class protocol {
 		int userLeafNumber = 0;
 		
 		
-		if (stage == 2){
+		if (stage == 2 || stage == 3){
 			edge = findLong(loc.getLongitude(), loc.getLatitude(), policy);
 			edgeLeafNumber = longitudeToLeaf(edge);
 			userLeafNumber = longitudeToLeaf(loc.getLongitude());
 		}
 		
-		else if (stage == 4){
+		else if (stage == 5 || stage == 6){
 			edge = findLat(loc.getLongitude(), loc.getLatitude(), policy);
 			edgeLeafNumber = latitudeToLeaf(edge);
 			userLeafNumber = latitudeToLeaf(loc.getLatitude());
@@ -547,218 +545,7 @@ public class protocol {
 	}
 
 	// Alice for stage 1 || 3
-	public String alice(int stage, int policy, int bits, int method) {
-		Log.d("stage " + stage, "Alice finding / sending lon || lat");
 
-		// Save all this stuff for the stage 3 call (happens in check but probs
-		// shouldn't happen in check)
-		shareSingleton share = shareSingleton.getInstance();
-		share.pol = policy;
-		share.bits = bits;
-		share.method = method;
-
-		/*
-		 * // Quick thing int sm_lon = longitudeToLeaf(-180.0); int lg_lon =
-		 * longitudeToLeaf(180.0); int sm_lat = latitudeToLeaf(-90.0); int
-		 * lg_lat = latitudeToLeaf(90.0);
-		 * 
-		 * Log.d("MAX VALUE", "These are in order: " + sm_lon + " " + lg_lon +
-		 * " " + sm_lat + " " + lg_lat);
-		 */
-
-		// Get location
-		double edge = 0.0;
-		int edgeLeafNumber = 0;
-		int aliceLeafNumber = 0;
-
-		if (stage == 1) {
-			edge = findLong(share.lon, share.lat, share.pol);
-			edgeLeafNumber = longitudeToLeaf(edge);
-			aliceLeafNumber = longitudeToLeaf(share.lon);
-		} else if (stage == 3) {
-			edge = findLat(share.lon, share.lat, share.pol);
-			edgeLeafNumber = latitudeToLeaf(edge);
-			aliceLeafNumber = latitudeToLeaf(share.lat);
-		} else {
-			Log.d("Error", "Bad stage number");
-		}
-
-		// Find the leaves on the edge and build the span
-		Log.d("stage " + stage, "Alice's leaf value: " + aliceLeafNumber);
-		Log.d("stage " + stage, "Edge gps value: " + edge);
-		Log.d("stage " + stage, "edge leaf value: " + edgeLeafNumber);
-
-		int spanLength = (Math.abs(edgeLeafNumber - aliceLeafNumber) * 2) + 1;
-		Log.d("stats", "Alice's leaf node span: " + spanLength);
-
-		int left = aliceLeafNumber - (spanLength / 2);
-		int right = aliceLeafNumber + (spanLength / 2);
-
-		Log.d("stage " + stage, "Alice's leaf nodes go from " + left + " to "
-				+ right + ".  That's: " + spanLength + " nodes.  Her node is: "
-				+ aliceLeafNumber);
-
-		// Make the leaves and build the tree
-		treeQueue leaves = genLeaves(left, right, aliceLeafNumber);
-		tree root = buildUp(leaves);
-		
-		Log.d("stage " + stage, "The entire tree: " +
-		treeToStringDown(root));
-		
-		Log.d("stats", "The tree has " + root.count() + " nodes");
-
-		// Get the rep set
-		treeQueue repSet = root.findWall(leaves.peek(0), leaves.peek(-1),
-				root);
-		Log.d("stage " + stage, "The rep set");
-		for (int i = 0; i < repSet.length; i++) {
-			Log.d("stage " + stage, "" + repSet.peek(i).value);
-		}
-		Log.d("stats", "Alice's rep set size: " + repSet.length);
-
-		BigInteger[] coefficients = makeCoefficients(repSet, method);
-		Log.d("stage " + stage, "Printing the coefficients");
-		for (int i = 0; i < coefficients.length; i++) {
-			Log.d("stage " + stage, "" + coefficients[i]);
-		}
-		Log.d("stats", "Alice's coefficients: " + coefficients.length);
-
-		// Do the coefficient encryption
-		long start = System.currentTimeMillis();
-		Paillier paillier = new Paillier(bits, 64);
-		if (stage == 1) {
-			BigInteger[] tmp = paillier.privateKey();
-			share.g = tmp[0];
-			share.lambda = tmp[1];
-			share.n = tmp[2];
-		} else if (stage == 3) {
-			paillier.loadPrivateKey(share.g, share.lambda, share.n);
-		} else {
-			Log.d("error", "Bad stage number");
-		}
-		long end = System.currentTimeMillis();
-		long total_keyGen = end - start;
-		Log.d("stats", "Alice key gen time: " + total_keyGen + "ms");
-
-		start = System.currentTimeMillis();
-		BigInteger[] encCoe = new BigInteger[coefficients.length];
-		for (int i = 0; i < coefficients.length; i++) {
-			encCoe[i] = paillier.Encryption(coefficients[i]);
-		}
-		end = System.currentTimeMillis();
-		long total_enc = end - start;
-		Log.d("stats", "Alice total time encrypting: " + total_enc + "ms");
-
-		// Build the message
-		// Format of a stage 1 or stage 3 message. The xmpp service adds some @@
-		// but this leve
-		// does not have to deal with those details
-		// [encCoe;encCoe2:encCoe3:...::pol:bit:g:n:polyMethodNumber]
-		// 0 1 2 -5 -4 -3-2 length - 1
-		// String txt = "@@" + stage + ":" + share.number; //Number might be the
-		// recipients fb name as well.
-		StringBuffer txt = new StringBuffer();
-		txt.append(encCoe[0].toString(16)); // The first one should not have a
-											// ":" at the front of it
-		for (int i = 1; i < encCoe.length; i++) {
-			txt.append(":" + encCoe[i].toString(16));
-		}
-
-		BigInteger[] key = paillier.publicKey();
-		txt.append(":" + policy); // Policy Size
-		txt.append(":" + bits);
-		txt.append(":" + key[0].toString(16)); // g
-		txt.append(":" + key[1].toString(16)); // n
-		txt.append(":" + method); // poly generation method
-		// The arguments from "policy" through "poly method number" are required
-		// by Bob to do his part properly
-
-		return txt.toString();
-	}
-
-	// Bob for stage 2 || 4
-	public String Bob(int stage, String[] tokens, int policy, int bits,
-			BigInteger g, BigInteger n, int method, Location loc) {
-		Log.d("stage " + stage,
-				"Recieving From alice, going to do my thing with the C's");
-
-		// Get Bob's leaf and span
-		double edge = 0.0;
-		int edgeLeafNumber = 0;
-		int bobLeafNumber = 0;
-
-		if (stage == 2) {
-			edge = findLong(loc.getLongitude(), loc.getLatitude(), policy);
-			edgeLeafNumber = longitudeToLeaf(edge);
-			bobLeafNumber = longitudeToLeaf(loc.getLongitude());
-		} else if (stage == 4) {
-			edge = findLat(loc.getLongitude(), loc.getLatitude(), policy);
-			edgeLeafNumber = latitudeToLeaf(edge);
-			bobLeafNumber = latitudeToLeaf(loc.getLatitude());
-		}
-
-		int spanLength = (Math.abs(edgeLeafNumber - bobLeafNumber) * 2) + 1;
-		int left = bobLeafNumber - (spanLength / 2);
-		int right = bobLeafNumber + (spanLength / 2);
-		Log.d("stats", "Bob's leaf node span: " + spanLength);
-		Log.d("stage " + stage, "Bob's leaf nodes go from " + left + " to "
-				+ right + ".  His node is: " + bobLeafNumber);
-
-		// Build the leaves and tree
-		treeQueue leaves = genLeaves(left, right, bobLeafNumber);
-		tree root = buildUp(leaves);
-		Log.d("stats", "The tree has " + root.count() + " nodes");
-
-		// Find covering set
-		treeQueue coveringSet = root.findCoverSet(user);
-		Log.d("stats", "Bob's coverSet size: " + coveringSet.length);
-		// Printing Bob's cover set
-		for (int i = 0; i < coveringSet.length; i++) {
-			Log.d("stage " + stage,
-					"Bob's covering set: " + coveringSet.peek(i).value);
-		}
-
-		// Pull the encCoe out of the tokens for bobCalc
-		BigInteger[] encCoe = new BigInteger[tokens.length - 5];
-		for (int i = 0; i < encCoe.length; i++) {
-			// Log.d("stage " + stage, "Pulling out enc coefficient #" + i +
-			// ": " + tokens[i]);
-			encCoe[i] = new BigInteger(tokens[i], 16); // Makes them NOT hex as
-														// well
-		}
-
-		// Log.d("stage " + stage, "bits : " + bits + "  g: " + g + "  n: " + n
-		// +"  method: " + method);
-		long start = System.currentTimeMillis();
-		BigInteger[] results = bobCalc(coveringSet, encCoe, bits, g, n, method);
-		long end = System.currentTimeMillis();
-		long total_bobCalc = end - start;
-		Log.d("stats", "time for Bob to do his calculations: " + total_bobCalc
-				+ "ms");
-		Log.d("stage " + stage, "The results are found");
-		for (int i = 0; i < results.length; i++) {
-			// Log.d("stage " + stage, "results[" + i +"]: " + results[i]);
-		}
-		// Making the string
-		// Format of a stage 2 || 4 message
-		// [C1:C2:C3...:CN]
-		StringBuffer txt = new StringBuffer();
-		txt.append(results[0].toString(16));
-		for (int i = 1; i < results.length; i++) {
-			txt.append(":" + results[i].toString(16));
-		}
-
-		// Used to store the sender here but I think this is better handled
-		// outside this function
-		// Store the phone number that this message came from
-		// shareSingleton share = shareSingleton.getInstance();
-		// share.number = tokens[0].substring(7); // Different on a physical
-		// phone
-		// Log.d("stage " + stage, "
-
-		return txt.toString();
-
-	}
 
 	// This is the function Alice uses to check Bob's c values
 	// tokens example [sender:@@X:c_1:c_2:c_3:...:c_n]
@@ -778,7 +565,7 @@ public class protocol {
 
 		shareSingleton share = shareSingleton.getInstance();
 		Paillier paillierD = new Paillier(share.bits, 64);
-		paillierD.loadPrivateKey(share.g, share.lambda, share.n);
+		//paillierD.loadPrivateKey(share.g, share.lambda, share.n);
 
 		// Check the latitude and see if we need to continue
 
@@ -819,11 +606,13 @@ public class protocol {
 		return session_id;
 	}
 	
+	
 	//@Overload
 	public void sendFBMessage(String rec, String message, int stage, int session, Context context){
 		xmppService.sendMessage(rec, message, stage, session, context);
 	}
 
+	
 	public Location locSimple(Context context) {
 		
 		// Get Bob's location

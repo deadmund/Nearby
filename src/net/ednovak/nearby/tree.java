@@ -1,5 +1,7 @@
 package net.ednovak.nearby;
 
+import android.util.Log;
+
 public class tree{
 
 	public int value; // All nodes have values
@@ -7,15 +9,18 @@ public class tree{
 	public String special; // If it's alice or Bob or something special
 	public tree left; // Leaves have null for left and right  // some other nodes might have \\
 	public tree right; // Leave have null for left and right  // null for these values       \\
-	public tree parent; // Root node has null for parent
+	private tree parent; // Root node has null for parent
 	public String treeType;
+	public int height;
 	
-	public tree(int newValue, char[] newPath, tree newLeft, tree newRight){
+	public tree(int newValue, char[] newPath, tree newLeft, tree newRight, int nHeight){
 		value = newValue; 
 		path = newPath;
 		special = null; 
 		left = newLeft; 
-		right = newRight; 
+		right = newRight;
+		height = nHeight;
+		
 		//treeType = nTreeType;
 	}
 	
@@ -62,41 +67,39 @@ public class tree{
 		return cur;
 	}
 	
-	// Starts at the root in the top queue.  For each node in top queue, if it has 
-	public treeQueue findWall(tree leftEnd, tree rightEnd, tree root){
-		treeQueue answer = new treeQueue();
-		treeQueue bottom = new treeQueue();
-		treeQueue top = new treeQueue();
-		top.push(root);
-		while (top.length != 0){
-			for (int i = 0; i < top.length; i++){
-				tree cur = top.peek(i);
-				// If a leaf is outside the span that it isn't in my tree and we'll see null
-				if (cur.leftLeaf() == null || cur.rightLeaf() == null){
-					if (cur.left != null){
-						bottom.push(cur.left);
-					}
-					if (cur.right != null){
-						bottom.push(cur.right);
-					}
-				}
-				else{ answer.push(cur); } // The left and right leaf was within the bounds
-			}
-			top = bottom;
-			bottom = new treeQueue();
+	public tree createParent(){
+		tree parent;
+		if (path.length == 0) {
+			path = new char[1];
+			path[0] = '0';
 		}
-		return answer;
+
+		char[] nPath = new char[path.length - 1]; // Drop the last bit (manual copy) :(
+		for (int j = 0; j < nPath.length; j++) {
+			nPath[j] = path[j];
+		}
+
+		if (this.upRightward()) { // This is a branch that goes right (upward)
+			int nValue = value + 4003017; // Max num of leaf nodes (longitude only)
+			parent = new tree(nValue, nPath, this, null, height+1);
+		}
+
+		else { // This is a branch that goes left (upward)
+			int nValue = value + (4003018 - (int) (Math.pow(2.0, (double) (height+1))));
+			parent = new tree(nValue, nPath, null, this, height+1);
+		}
+		return parent;
 	}
 	
-	public treeQueue findCoverSet(tree leaf){
-		treeQueue answer = new treeQueue();
-		tree cur = leaf;
-		while (cur != null){
-			answer.push(cur);
-			cur = cur.parent;
-		}
-		return answer;
+	public tree getParent(){
+		return parent;
 	}
+	
+	
+	public void setParent(tree t){
+		parent = t;
+	}
+	
 	
 	@Override
 	public String toString(){
@@ -141,5 +144,18 @@ public class tree{
 		}
 		
 		return sum;
+	}
+	
+	public void setNullChild(tree t){
+		if (left == null){
+			left = t;
+		}
+		else if (right == null){
+			right = t;
+		}
+	}
+	
+	public boolean upRightward(){
+		 return path[path.length - 1] == '0';
 	}
 }

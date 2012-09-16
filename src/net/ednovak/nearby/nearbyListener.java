@@ -8,9 +8,7 @@ import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.packet.Message;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.location.Location;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -34,11 +32,11 @@ public class nearbyListener implements MessageListener {
 		// Message stream over, time to process this buffer
 		if ( buff != null ) {
 			
-			Log.d("receive", "buff.message" + buff.message);
+			Log.d("receive", "buff.message: " + buff.message);
 			
 			// Initialize stuff
 			protocol p = new protocol();
-			shareSingleton share = shareSingleton.getInstance();
+			//shareSingleton share = shareSingleton.getInstance();
 			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 			
 			long end = System.currentTimeMillis();
@@ -49,153 +47,117 @@ public class nearbyListener implements MessageListener {
 			String[] parts = buff.message.split(":");
 			int stage = Integer.valueOf(parts[0]);
 			
-			if ( stage == 1 && parts[2].equals("where are you?") ){
-				// Bob only wants to share if Alice is near him so lets run the protocol
-				
-				// Initialize
-				int bits = prefs.getInt("bits", 1024);
-				int policy = Integer.valueOf(prefs.getString("policy", "160000"));
-				int method = prefs.getInt("method", 1);
-				
-				// Find span
-				int[] span = new int[3];
-				span = p.makeSpan(2, p.locSimple(context), policy);
-				
-				// Generate leaves
-				treeQueue leaves = p.genLeaves(span[0], span[2], span[1]);
-				
-				// Generate root
-				tree root = p.buildUp(leaves);
-				Log.d("stats", "The tree has " + root.count() + " nodes");
-				
-				// Find Wall
-				treeQueue wall = root.findWall(leaves.peek(0), leaves.peek(-1), root);
-				Log.d("stats", "User's wall size: " + wall.length);
-				
-				// Find Coefficients
-				BigInteger[] coefficients = p.makeCoefficients(wall, method);
-				
-				// Encrypt Coefficients
-				BigInteger[] encCoe = p.encryptArray(coefficients, 2, context);
-				
-				// Put them in a string for sending
-				StringBuffer txt = new StringBuffer();
-				txt.append(encCoe[0].toString(16)); // The first one should not begin with ":"
-				for (int i = 1; i < encCoe.length; i++){
-					txt.append(":" + encCoe[i].toString(16));
-				}
-				
-				// Extra Stuff
-				BigInteger[] key = p.getKey(1024, 2).publicKey();
-				txt.append(":" + policy);
-				txt.append(":" + bits);
-				txt.append(":" + key[0].toString(16)); // g
-				txt.append(":" + key[1].toString(16)); // n
-				txt.append(":" + method); // Poly method used
-				// Other party needs these values
-				
-				// Send to Alice
-				p.sendFBMessage(sender, txt.toString(), 3, buff.session, context);							
-			}
-					
-
-		
-			
-			switch (stage){
-				case 100: // This is Bob, stage 2										
-					// Set up variables to call p.Bob
-					Location location = p.locSimple(context);
-					int pol = Integer.valueOf( parts[parts.length - 5] );
-			        int bits = Integer.valueOf( parts[parts.length - 4] );
-			        BigInteger g = new BigInteger( parts[parts.length - 3], 16 );
-			        BigInteger n = new BigInteger( parts[parts.length - 2], 16 );
-			        int method = Integer.valueOf( parts[parts.length - 1] );						        
-			        
-			        //Log.d("stage " + stage, "Generate and send Bob's message");
-			        // Call Bob's function generate new message
-					String txt = p.Bob(2, parts, pol, bits, g, n, method, location);
-					//Log.d("xmpp", "txt in Bob: " + txt);
-				
-					// Send Bob's C values
-			    	p.sendFBMessage(sender, txt, 2, 5, context);
-					break;
-				case 2:  // This is Alice, stage 3 (repeat of stage 1)
-					// Check the incoming C's
-					boolean found = p.check(parts, context);
-					share.longitude = found;
-
-					/*
-					// Maybe we shouldn't show this now...
-					if ( !found ) {
-						Intent intent = new Intent(context, answerAct.class);
-						intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-						intent.putExtra("answer", "Bob is not located near you!");
-						intent.putExtra("found", found);
-						context.startActivity(intent);
+			switch (stage){	
+				case 1: // The Polynomial
+					if (parts[2].equals("where are you?")) {
+						// Bob only wants to share if Alice is near him so lets run the protocol
 						
+						// Initialize
+						int bits = Integer.valueOf(prefs.getString("bits", "1024"));
+						int policy = Integer.valueOf(prefs.getString("policy", "160000"));
+						int method = Integer.valueOf(prefs.getString("poly_method", "1"));
+						Log.d("test", "method: " + method + "  policy: " + policy + "  bits: " + bits);
+						
+						// Find span
+						int[] span = new int[3];
+						span = p.makeSpan(2, p.locSimple(context), policy);
+						
+						// Generate leaves
+						treeQueue leaves = p.genLeaves(span[0], span[2], span[1]);
+						
+						// Generate root
+						tree root = p.buildUp(leaves);
+						Log.d("stats", "The tree has " + root.count() + " nodes");
+						
+						// Find Wall
+						treeQueue wall = p.findWall(leaves.peek(0), leaves.peek(-1), root);
+						Log.d("stats", "User's wall size: " + wall.length);
+						
+						// Find Coefficients
+						BigInteger[] coefficients = p.makeCoefficients(wall, method);
+						
+						// Encrypt Coefficients
+						BigInteger[] encCoe = p.encryptArray(coefficients, 2, context);
+						
+						// Put them in a string for sending
+						StringBuffer txt = new StringBuffer();
+						txt.append(encCoe[0].toString(16)); // The first one should not begin with ":"
+						for (int i = 1; i < encCoe.length; i++){
+							txt.append(":" + encCoe[i].toString(16));
+						}
+						
+						// Extra Stuff
+						BigInteger[] key = p.getKey(1024).publicKey();
+						txt.append(":" + policy);
+						txt.append(":" + bits);
+						txt.append(":" + key[0].toString(16)); // g
+						txt.append(":" + key[1].toString(16)); // n
+						txt.append(":" + method); // Poly method used
+						// Other party needs these values
+						
+						// Send to Alice
+						p.sendFBMessage(sender, txt.toString(), 3, buff.session, context);
+						break;
 					}
-					*/
-
-					// Continue the protocol anyway so Bob doesn't catch wise.
-					txt = p.alice(3, share.pol, share.bits, share.method); // txt is used in the above .Bob call
-					Log.d("xmpp", "Done checking continuing protocol");
-					p.sendFBMessage(sender, txt, 3, 6, context);
+				// End of case 1
+			
+				// This is Alice now, recieving the longitude wall from Bob and doing her computation
+				case 3: // The computation
+					// Initialize
+					int bits = Integer.valueOf( parts[parts.length - 4] );
+					int method = Integer.valueOf( parts[parts.length - 1]);
+					BigInteger g = new BigInteger( parts[parts.length - 3], 16 );
+					BigInteger n = new BigInteger( parts[parts.length - 2], 16 );
 					
-					// This is in a thread so the update is not synchronous
-					// Not sure what a good solution is, I would love a toast...
-					//TextView tv = (TextView)share.waiting.findViewById(R.id.text_view);
-					//Log.d("stage" + 3, "tv's text: " + tv.getText().toString());
-					//tv.setText("thing");
-					//tv.setText(tv.getText().toString());
-					//tv.append("Done checking longitude, checking latitude now...\n");
-					//Log.d("stage" + 3, "tv's text: " + tv.getText().toString());
+					// Make Span
+					//int[] span = new int[3];
+					int[] span = p.makeSpan(3, p.locSimple(context), 160934); // 160.934km = 100mi
+					
+					// Generate Leaves
+					//treeQueue leaves = p.genLeaves(span[0], span[2], span[1]);
+					
+					// Generate Alice's leaf.
+					String mapString = new StringBuffer(Integer.toBinaryString(span[1])).toString();
+					tree alice = new tree(span[1], mapString.toCharArray(), null, null, 0);
+					Log.d("checking", "alice: " + alice.value);
+					
+					// Find Path
+					treeQueue path = p.findPath(alice, 16); // User's location leaf node
+					Log.d("stats", "User's path length: " + path.length);
+					
+					// Pull out encCoe
+					// i starting at 1 to skip the session #
+					// encCoe is length -6 to remove protocol parameters and session number
+					BigInteger[] encCoe = new BigInteger[parts.length - 6];
+					for(int i = 1; i < encCoe.length; i++){
+						encCoe[i] = new BigInteger(parts[i], 16);
+					}
+					
+					// Do the actual homomorphic computation
+					Log.d("test", "Homomorphic computation time");
+					BigInteger[] results = p.computation(path, encCoe, bits, g, n, method); 
+					
+					// Put them in a string for sending
+					// Nothing but 
+					StringBuffer txt = new StringBuffer();
+					txt.append(results[0].toString(16));
+					for (int i = 1; i < results.length; i++){
+						txt.append(":" + results[i].toString(16));
+					}
+					
+					// Send that shit dawg
+					p.sendFBMessage(sender, txt.toString(), 4, buff.session, context);
 					break;
+				// End of stage 3 (case 3)
 					
-				case 3: // This is Bob, stage 4 (repeat of stage 2)
-					// Set up variables to call p.Bob
-					// This have all been instantiated in stage 2 (case 1)
-					// This happens to be in this file
-					location = p.locSimple(context);
-					pol = Integer.valueOf( parts[parts.length - 5] );
-			        bits = Integer.valueOf( parts[parts.length - 4] );
-			        g = new BigInteger( parts[parts.length - 3], 16 );
-			        n = new BigInteger( parts[parts.length - 2], 16 );
-			        method = Integer.valueOf( parts[parts.length - 1] );						        
-			        
-			        //Log.d("stage " + stage, "Generate and send Bob's message");
-			        // Call Bob's function generate new message
-					txt = p.Bob(4, parts, pol, bits, g, n, method, location);
-					//Log.d("xmpp", "txt in Bob: " + txt);
+				case 4: // The Check
+					boolean result = p.check(parts, context);
+					Log.d("output", "Same location: " + result);
+					break;
+				// End of stage 4 (case 4)
+					
+			
 				
-					// Send Bob's C values
-			    	p.sendFBMessage(sender, txt, 4, 7, context);
-			    	break;
-			    	
-				case 4: // This is Alice, stage 5 (final check of latitude)
-					// Check the incoming C's
-					// Found only holds the value of longitude || latitude NOT both.
-					// For example, found maybe be true here if the latitude's match but the
-					// longitudes do not.
-					share.latitude =  p.check(parts, context);
-					boolean near = share.latitude && share.longitude;
-					Intent intent = new Intent(context, answerAct.class);
-					intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-					intent.putExtra("found", near);
-					
-					if ( near ) {
-						intent.putExtra("answer", "Bob is near you!");
-					}
-					else {
-						intent.putExtra("answer", "Bob is not located near you!");
-					}
-					
-					end = System.currentTimeMillis();
-					share = shareSingleton.getInstance();
-					long totalProtocol = end - share.start;
-					Log.d("stats", "Total protocol time for Alice: " + totalProtocol + "ms");
-					
-					context.startActivity(intent);
-					break;
 			} // End of switch
 		}							
 	} // end of Process Chat

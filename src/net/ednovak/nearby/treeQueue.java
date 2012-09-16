@@ -1,5 +1,7 @@
 package net.ednovak.nearby;
 
+import android.util.Log;
+
 public class treeQueue {
 		
 	private tree[] arr = new tree[2]; 
@@ -45,5 +47,41 @@ public class treeQueue {
 	
 	public int length(){
 		return end;
+	}
+	
+	public tree findUserLeaf(){
+		tree user = null;
+		for (tree t : arr){
+			if (t.special != null){
+				if (user != null){
+					Log.d("Err", "Found two nodes with special set in one leafQueue");
+				}
+				user = t;
+			}
+		}
+		return user;
+	}
+	
+	// Only pushes the node if it isn't already in the queue
+	// Returns 0 on success, -1 on failure
+	public int uniquePush(tree nTree){
+		for (int i = 0; i < length; i++){
+			if (arr[i].value == nTree.value){
+				return -1;
+			}
+		}
+		Log.d("tree", "Adding this node to the queue: " + nTree.value);
+		this.push(nTree);
+		return 0;
+	}
+	
+	
+	public tree find(int value){
+		for(int i = 0; i < length; i++){
+			if (arr[i].value == value){
+				return arr[i];
+			}
+		}
+		return new tree(0, new char[0], null, null, 0);
 	}
 }

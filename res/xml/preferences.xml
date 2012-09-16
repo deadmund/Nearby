@@ -8,7 +8,7 @@
 	        android:key="poly_method"
 	        android:title="Polynomial Type"
 	        android:summary="Polynomial Style To Use"
-	        android:defaultValue="1"
+	        android:defaultValue="2"
 	        android:entries="@array/poly_method"
 	        android:entryValues="@array/poly_method_values" />
 	    
