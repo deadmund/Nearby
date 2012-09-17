@@ -90,7 +90,7 @@ public class xmppService extends Service {
 		for(int i = 0; i < parts.size(); i++){
 			//Log.d("xmpp", "part: " + parts.get(i));
 			try{
-				Log.d("test", "Sending Message Chunk: " + parts.get(i));
+				//Log.d("test", "Sending Message Chunk: " + parts.get(i));
 				chat.sendMessage(parts.get(i));
 			}
 			catch (XMPPException e){

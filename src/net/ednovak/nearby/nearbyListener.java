@@ -26,14 +26,14 @@ public class nearbyListener implements MessageListener {
 	public void processMessage(Chat chat, Message message) {
 		//Log.d("xmpp", "Chat recieved in thread: " + message.getBody());
 		Log.d("xmpp", "Chat recieved in thread");
-		Log.d("xmpp", "message: " + message.getBody().toString());
+		//Log.d("xmpp", "message: " + message.getBody().toString());
 		
 		buffer buff = parseIncoming(message);
 		
 		// Message stream over, time to process this buffer
 		if ( buff != null ) {
 			
-			Log.d("receive", "buff.message: " + buff.message);
+			//Log.d("receive", "buff.message: " + buff.message);
 			
 			// Initialize stuff
 			protocol p = new protocol();
@@ -137,8 +137,8 @@ public class nearbyListener implements MessageListener {
 					}
 					
 					BigInteger[] encCoe = new BigInteger[parts.length - 7];
-					for(int i = 2; i < encCoe.length; i++){
-						encCoe[i] = new BigInteger(parts[i], 16);
+					for(int i = 0; i < encCoe.length; i++){
+						encCoe[i] = new BigInteger(parts[i+2], 16);
 						Log.d("test", "encCoe[" + i + "]:" + encCoe[i]);
 					}
 					
@@ -161,6 +161,7 @@ public class nearbyListener implements MessageListener {
 				// End of stage 3 (case 3)
 					
 				case 4: // The Check
+					Log.d("test", "checking!");
 					boolean result = p.check(parts, context);
 					Log.d("output", "Same location: " + result);
 					break;
@@ -176,9 +177,7 @@ public class nearbyListener implements MessageListener {
 	// This function avoids collisions by putting buffer objects into an arrayList of buffers
 	// Return buffer if found, returns null otherwise
 	private buffer searchBuff(String session){
-		for (buffer b : buffs){
-			Log.d("xmpp", "b.session: " + b.session + "  session: " + session);
-					
+		for (buffer b : buffs){		
 			if (b.session.equals(session)){
 				return b;
 			}

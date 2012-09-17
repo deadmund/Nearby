@@ -24,7 +24,6 @@ public class protocol {
 	// Homomorphic Addition (E(m1) * E(m2)) % n^2 = (m1 + m2) % n
 	// This function works in the encrypted domain to get clear domain addition
 	public BigInteger homoAdd(BigInteger em1, BigInteger em2, BigInteger n) {
-		Log.d("test", "em1: " + em1.toString() + "  em2: " + em2.toString() + "  n:" + n);
 		return (em1.multiply(em2)).mod(n.multiply(n));
 	}
 
@@ -32,7 +31,6 @@ public class protocol {
 	// This function works in the encrypted domain to get clear text
 	// multiplication
 	public BigInteger homoMult(BigInteger em1, BigInteger m2, BigInteger n) {
-		Log.d("test", "em1: " + em1.toString() + "  m2: " + m2.toString() + "  n:" + n);
 		return em1.modPow(m2, n.multiply(n));
 	}
 
