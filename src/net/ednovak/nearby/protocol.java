@@ -3,6 +3,8 @@ package net.ednovak.nearby;
 import java.math.BigInteger;
 import java.util.Random;
 
+import org.jivesoftware.smack.util.StringUtils;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.location.Location;
@@ -22,6 +24,7 @@ public class protocol {
 	// Homomorphic Addition (E(m1) * E(m2)) % n^2 = (m1 + m2) % n
 	// This function works in the encrypted domain to get clear domain addition
 	public BigInteger homoAdd(BigInteger em1, BigInteger em2, BigInteger n) {
+		Log.d("test", "em1: " + em1.toString() + "  em2: " + em2.toString() + "  n:" + n);
 		return (em1.multiply(em2)).mod(n.multiply(n));
 	}
 
@@ -29,6 +32,7 @@ public class protocol {
 	// This function works in the encrypted domain to get clear text
 	// multiplication
 	public BigInteger homoMult(BigInteger em1, BigInteger m2, BigInteger n) {
+		Log.d("test", "em1: " + em1.toString() + "  m2: " + m2.toString() + "  n:" + n);
 		return em1.modPow(m2, n.multiply(n));
 	}
 
@@ -599,16 +603,16 @@ public class protocol {
 	}
 
 	// Send a FB message
-	public int sendFBMessage(String rec, String message, Context context) {
+	public String sendFBMessage(String rec, String message, Context context) {
 		Random gen = new Random();
-		int session_id = gen.nextInt(10000);
+		String session_id = String.format("%05d", gen.nextInt(9000));
 		xmppService.sendMessage(rec, message, 1, session_id, context);
 		return session_id;
 	}
 	
 	
 	//@Overload
-	public void sendFBMessage(String rec, String message, int stage, int session, Context context){
+	public void sendFBMessage(String rec, String message, int stage, String session, Context context){
 		xmppService.sendMessage(rec, message, stage, session, context);
 	}
 

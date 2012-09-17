@@ -62,7 +62,7 @@ public class xmppService extends Service {
 	// Splits a long string up into several 'packets' so the fb does not filter them
 	// Each packet beginning @@<stage number>:sessionnumber:
 	// and, on the last packet in the stream, a trailing @@
-	private static List<String> make_packets(String msg, int stage, int session, int chunk){
+	private static List<String> make_packets(String msg, int stage, String session, int chunk){
 		//Log.d("xmpp", "Chunk size set to: " + chunk);
 		
 		//Log.d("stage " + stage, "Dividing this string: " + msg);
@@ -85,11 +85,12 @@ public class xmppService extends Service {
 	
 	
 	// Send message that actually does the sending
-	private static void real_send(Chat chat, String msg, int stage, int session, int chunk){
+	private static void real_send(Chat chat, String msg, int stage, String session, int chunk){
 		List<String> parts = make_packets(msg, stage, session, chunk);
 		for(int i = 0; i < parts.size(); i++){
 			//Log.d("xmpp", "part: " + parts.get(i));
 			try{
+				Log.d("test", "Sending Message Chunk: " + parts.get(i));
 				chat.sendMessage(parts.get(i));
 			}
 			catch (XMPPException e){
@@ -101,7 +102,7 @@ public class xmppService extends Service {
 	
 	
 	// Send message exposed to real world
-	public static void sendMessage(String rec, String msg, int stage, int session, final Context context){
+	public static void sendMessage(String rec, String msg, int stage, String session, final Context context){
 		//Log.d("xmpp", "Looking for: " + rec);
 		Collection<RosterEntry> entries = getRoster().getEntries();
 		if (entries != null){

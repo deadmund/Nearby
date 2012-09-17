@@ -18,7 +18,6 @@ public class displayMessageAct extends Activity {
         // We can give this initial session a session number and use that to avoid collision
         
         // Instantiate stuff
-        Random gen = new Random();
         shareSingleton share = shareSingleton.getInstance();
         //share.session = session; /not yet implemented....
         protocol p = new protocol();
@@ -26,8 +25,8 @@ public class displayMessageAct extends Activity {
         
         // Send that initial message!
         String rec = intent.getStringExtra("rec");
-        int session = p.sendFBMessage(rec, "where are you?", this);
-        share.session = session;
+        String session = p.sendFBMessage(rec, "where are you?", this);
+        //share.session = session;
         
     } // End of onCreate
     

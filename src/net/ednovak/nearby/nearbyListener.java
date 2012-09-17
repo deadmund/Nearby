@@ -26,6 +26,7 @@ public class nearbyListener implements MessageListener {
 	public void processMessage(Chat chat, Message message) {
 		//Log.d("xmpp", "Chat recieved in thread: " + message.getBody());
 		Log.d("xmpp", "Chat recieved in thread");
+		Log.d("xmpp", "message: " + message.getBody().toString());
 		
 		buffer buff = parseIncoming(message);
 		
@@ -78,6 +79,7 @@ public class nearbyListener implements MessageListener {
 						
 						// Encrypt Coefficients
 						BigInteger[] encCoe = p.encryptArray(coefficients, 2, context);
+						//Log.d("test", "Bob's encrypted Coe's");
 						
 						// Put them in a string for sending
 						StringBuffer txt = new StringBuffer();
@@ -94,6 +96,8 @@ public class nearbyListener implements MessageListener {
 						txt.append(":" + key[1].toString(16)); // n
 						txt.append(":" + method); // Poly method used
 						// Other party needs these values
+						
+						//Log.d("test", "Message: " + txt.toString());
 						
 						// Send to Alice
 						p.sendFBMessage(sender, txt.toString(), 3, buff.session, context);
@@ -128,10 +132,16 @@ public class nearbyListener implements MessageListener {
 					// Pull out encCoe
 					// i starting at 1 to skip the session #
 					// encCoe is length -6 to remove protocol parameters and session number
-					BigInteger[] encCoe = new BigInteger[parts.length - 6];
-					for(int i = 1; i < encCoe.length; i++){
-						encCoe[i] = new BigInteger(parts[i], 16);
+					for(int i = 0; i < parts.length; i++){
+						Log.d("test", "parts[" + i + "]: " + parts[i]);
 					}
+					
+					BigInteger[] encCoe = new BigInteger[parts.length - 7];
+					for(int i = 2; i < encCoe.length; i++){
+						encCoe[i] = new BigInteger(parts[i], 16);
+						Log.d("test", "encCoe[" + i + "]:" + encCoe[i]);
+					}
+					
 					
 					// Do the actual homomorphic computation
 					Log.d("test", "Homomorphic computation time");
@@ -165,9 +175,11 @@ public class nearbyListener implements MessageListener {
 	// Searches for a buffer by session number
 	// This function avoids collisions by putting buffer objects into an arrayList of buffers
 	// Return buffer if found, returns null otherwise
-	private buffer searchBuff(int session){
+	private buffer searchBuff(String session){
 		for (buffer b : buffs){
-			if (b.session == session){
+			Log.d("xmpp", "b.session: " + b.session + "  session: " + session);
+					
+			if (b.session.equals(session)){
 				return b;
 			}
 		}
@@ -196,14 +208,17 @@ public class nearbyListener implements MessageListener {
 			//String message = packet.getBody();
 			//int stage = Integer.valueOf(packet.getBody().substring(2,3));
 			String[] parts = packet.getBody().split(":");
-			int session = Integer.valueOf(parts[1]);
+			String session = parts[1];
 			buffer buff;
 			buff = searchBuff(session);
 			if (buff == null){ // If the buffer is null we haven't seen this session yet and create a new buffer
 				String sender = xmppService.getRoster().getEntry(packet.getFrom().toString()).getName();
 				buff = new buffer(sender, System.currentTimeMillis(), session);
+				buffs.add(buff);
+				buff.append(packet.getBody().substring(2, 10));
 			}
-			buff.append(packet.getBody().substring(2)); // Remove the begging "@@" in "@@X:"
+			String tmpMess = packet.getBody().substring(10); // Removing the beginning "@@X:sessi:" in message
+			buff.append(tmpMess);
 			lastPacket = packet.getBody().substring( packet.getBody().length() - 2 ).equals("@@"); // Packet ends in "@@"
 			if ( lastPacket ){
 				clearBuff(buff);
