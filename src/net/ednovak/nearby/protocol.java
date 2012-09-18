@@ -439,6 +439,8 @@ public class protocol {
 
 		Paillier paillierE = getKey(bits);
 		paillierE.loadPublicKey(g, n);
+		BigInteger[] pub = paillierE.publicKey();
+		//Log.d("enc", "Homomorphic Computation  g: " + pub[0] + "  n: " + pub[1]);
 
 		if (method == 1) {
 			results = new BigInteger[encCoe.length * coveringSet.length];
@@ -497,10 +499,12 @@ public class protocol {
 	
 	
 	// Encrypts an array of BigIntegers (properly generates key
-	public BigInteger[] encryptArray(BigInteger[] clear, int stage, Context context){
+	public BigInteger[] encryptArray(BigInteger[] clear, Context context){
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-		int bits = prefs.getInt("bits", 1024);
+		int bits = Integer.valueOf(prefs.getString("bits", "1024"));
 		Paillier p = getKey(bits);
+		BigInteger[] priv = p.privateKey();
+		//Log.d("enc", "Encrypting.  g: " + priv[0] + "  lambda: " + priv[1] + "  n:" + priv[2]);
 		BigInteger[] encCoe = new BigInteger[clear.length];
 		for (int i = 0; i < encCoe.length; i++){
 			encCoe[i] = p.Encryption(clear[i]);
@@ -551,30 +555,16 @@ public class protocol {
 
 	// This is the function Alice uses to check Bob's c values
 	// tokens example [sender:@@X:c_1:c_2:c_3:...:c_n]
-	public boolean check(String[] tokens, Context context) {
-		//Log.d("stage 3", "Receiving from Bob! Check his long || lat");
-
-		// Log.d("stage 3", "Here is the String[] I was given to check: " +
-		// tokens);
-		// for (int i = 0; i < tokens.length; i++){
-		// Log.d("stage 3" , "tokens[" + i + "]: " + tokens[i]);
-		// }
-
-		// Convert back to strings base 10
-		for (int i = 0; i < tokens.length; i++) {
-			tokens[i] = new BigInteger(tokens[i], 16).toString();
-		}
-
-		shareSingleton share = shareSingleton.getInstance();
-		Paillier paillierD = new Paillier(share.bits, 64);
-		//paillierD.loadPrivateKey(share.g, share.lambda, share.n);
-
-		// Check the latitude and see if we need to continue
+	public boolean check(String[] tokens, Context context, int bits) {
+		Paillier paillierD = getKey(bits);
+		BigInteger[] priv = paillierD.privateKey();
+		//Log.d("enc", "Decrypting g: " + priv[0] + "  lambda: " + priv[1] + "  n: " + priv[2]);
 
 		long start = System.currentTimeMillis();
 		boolean found = false;
 		for (int i = 0; i < tokens.length; i++) {
-			BigInteger val = new BigInteger(tokens[i]);
+			BigInteger val = new BigInteger(tokens[i], 16);
+			//Log.d("enc", "Decrypting: " + val);
 			String clear = paillierD.Decryption(val).toString();
 			Log.d("ALICE", "unenc: " + clear);
 			if (clear.equals("0")) {

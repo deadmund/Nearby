@@ -78,7 +78,7 @@ public class nearbyListener implements MessageListener {
 						BigInteger[] coefficients = p.makeCoefficients(wall, method);
 						
 						// Encrypt Coefficients
-						BigInteger[] encCoe = p.encryptArray(coefficients, 2, context);
+						BigInteger[] encCoe = p.encryptArray(coefficients, context);
 						//Log.d("test", "Bob's encrypted Coe's");
 						
 						// Put them in a string for sending
@@ -97,7 +97,23 @@ public class nearbyListener implements MessageListener {
 						txt.append(":" + method); // Poly method used
 						// Other party needs these values
 						
-						//Log.d("test", "Message: " + txt.toString());
+						/*
+						// Fake Test!
+						wall = new treeQueue();
+						wall.push(new tree(2845367, new char[0], null, null, 0));
+						wall.push(new tree(6848383, new char[0], null, null, 0));
+						coefficients = p.makeCoefficients(wall, 2);
+						encCoe = p.encryptArray(coefficients, context);
+						
+						txt = new StringBuffer();
+						txt.append(encCoe[0] + ":" + encCoe[1]);
+						txt.append(":" + policy);
+						txt.append(":" + bits);
+						txt.append(":" + key[0].toString(16));
+						txt.append(":" + key[1].toString(16));
+						txt.append(":" + method);
+						*/
+						Log.d("test", "Message: " + txt.toString());
 						
 						// Send to Alice
 						p.sendFBMessage(sender, txt.toString(), 3, buff.session, context);
@@ -126,20 +142,17 @@ public class nearbyListener implements MessageListener {
 					Log.d("checking", "alice: " + alice.value);
 					
 					// Find Path
-					treeQueue path = p.findPath(alice, 16); // User's location leaf node
+					treeQueue path = p.findPath(alice, 4); // User's location leaf node
 					Log.d("stats", "User's path length: " + path.length);
 					
-					// Pull out encCoe
-					// i starting at 1 to skip the session #
-					// encCoe is length -6 to remove protocol parameters and session number
+					// Pull out Encrypted Coefficients
 					for(int i = 0; i < parts.length; i++){
 						Log.d("test", "parts[" + i + "]: " + parts[i]);
 					}
-					
 					BigInteger[] encCoe = new BigInteger[parts.length - 7];
 					for(int i = 0; i < encCoe.length; i++){
 						encCoe[i] = new BigInteger(parts[i+2], 16);
-						Log.d("test", "encCoe[" + i + "]:" + encCoe[i]);
+						//Log.d("test", "encCoe[" + i + "]:" + encCoe[i]);
 					}
 					
 					
@@ -147,8 +160,8 @@ public class nearbyListener implements MessageListener {
 					Log.d("test", "Homomorphic computation time");
 					BigInteger[] results = p.computation(path, encCoe, bits, g, n, method); 
 					
+					
 					// Put them in a string for sending
-					// Nothing but 
 					StringBuffer txt = new StringBuffer();
 					txt.append(results[0].toString(16));
 					for (int i = 1; i < results.length; i++){
@@ -162,7 +175,16 @@ public class nearbyListener implements MessageListener {
 					
 				case 4: // The Check
 					Log.d("test", "checking!");
-					boolean result = p.check(parts, context);
+					
+					// Pull out the C values
+					String[] cValues = new String[parts.length - 2];
+					for(int i = 0; i < cValues.length; i++){
+						cValues[i] = parts[i+2];
+					}
+					
+					// Check the C values
+					bits = Integer.valueOf(prefs.getString("bits", "1024"));
+					boolean result = p.check(cValues, context, bits);
 					Log.d("output", "Same location: " + result);
 					break;
 				// End of stage 4 (case 4)

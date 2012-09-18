@@ -85,7 +85,7 @@ public class tree{
 		}
 
 		else { // This is a branch that goes left (upward)
-			int nValue = value + (4003018 - (int) (Math.pow(2.0, (double) (height+1))));
+			int nValue = value + (4003017 - (int) (Math.pow(2.0, (double) (height))));
 			parent = new tree(nValue, nPath, null, this, height+1);
 		}
 		return parent;
