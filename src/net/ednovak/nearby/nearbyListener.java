@@ -8,6 +8,7 @@ import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.packet.Message;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -49,7 +50,7 @@ public class nearbyListener implements MessageListener {
 			int stage = Integer.valueOf(parts[0]);
 			
 			switch (stage){	
-				case 1: // The Polynomial
+				case 1: // The Polynomial (Case 1, stage 1)
 					if (parts[2].equals("where are you?")) {
 						// Bob only wants to share if Alice is near him so lets run the protocol
 						
@@ -97,22 +98,7 @@ public class nearbyListener implements MessageListener {
 						txt.append(":" + method); // Poly method used
 						// Other party needs these values
 						
-						/*
-						// Fake Test!
-						wall = new treeQueue();
-						wall.push(new tree(2845367, new char[0], null, null, 0));
-						wall.push(new tree(6848383, new char[0], null, null, 0));
-						coefficients = p.makeCoefficients(wall, 2);
-						encCoe = p.encryptArray(coefficients, context);
-						
-						txt = new StringBuffer();
-						txt.append(encCoe[0] + ":" + encCoe[1]);
-						txt.append(":" + policy);
-						txt.append(":" + bits);
-						txt.append(":" + key[0].toString(16));
-						txt.append(":" + key[1].toString(16));
-						txt.append(":" + method);
-						*/
+
 						Log.d("test", "Message: " + txt.toString());
 						
 						// Send to Alice
@@ -122,7 +108,7 @@ public class nearbyListener implements MessageListener {
 				// End of case 1
 			
 				// This is Alice now, recieving the longitude wall from Bob and doing her computation
-				case 3: // The computation
+				case 3: // The computation (case 3, stage 3)
 					// Initialize
 					int bits = Integer.valueOf( parts[parts.length - 4] );
 					int method = Integer.valueOf( parts[parts.length - 1]);
@@ -173,7 +159,7 @@ public class nearbyListener implements MessageListener {
 					break;
 				// End of stage 3 (case 3)
 					
-				case 4: // The Check
+				case 4: // The Check (stage 4, case 4)
 					Log.d("test", "checking!");
 					
 					// Pull out the C values
@@ -184,13 +170,141 @@ public class nearbyListener implements MessageListener {
 					
 					// Check the C values
 					bits = Integer.valueOf(prefs.getString("bits", "1024"));
-					boolean result = p.check(cValues, context, bits);
-					Log.d("output", "Same location: " + result);
-					break;
-				// End of stage 4 (case 4)
+					shareSingleton share = shareSingleton.getInstance();
+					share.foundLon = p.check(cValues, context, bits);
+					Log.d("output", "Same location: " + share.foundLon);
 					
-			
+					// not sure why bits and method give the 'already instantiated' error but policy does not.
+					// Also, if the uses changes their preferences (mid run) there is a problem
+					// BEGIN THE LATITUDE ROUND (stage 5)
+					bits = Integer.valueOf(prefs.getString("bits", "1024"));
+					int policy = Integer.valueOf(prefs.getString("policy", "160000"));
+					method = Integer.valueOf(prefs.getString("poly_method", "1"));
+					
+					// Find Span
+					span = p.makeSpan(5, p.locSimple(context), policy);
+					
+					// Generate Leaves
+					treeQueue leaves = p.genLeaves(span[0], span[2], span[1]);
+					
+					// Find Root
+					tree root = p.buildUp(leaves);
+					
+					// Find Wall
+					treeQueue wall = p.findWall(leaves.peek(0), leaves.peek(-1), root);
+					
+					// Find Coefficients (latitude now)
+					BigInteger[] coefficients = p.makeCoefficients(wall, method);
+					
+					// Encrypt Coefficients
+					encCoe = p.encryptArray(coefficients, context);
+					
+					// Put them in a string for sending
+					txt = new StringBuffer();
+					txt.append(encCoe[0].toString(16));
+					for (int i = 1; i < encCoe.length; i++){
+						txt.append(":" + encCoe[i].toString(16));
+					}
+					
+					// Extra Stuff
+					BigInteger[] key = p.getKey(1024).publicKey();
+					txt.append(":" + policy);
+					txt.append(":" + bits);
+					txt.append(":" + key[0].toString(16)); // g
+					txt.append(":" + key[1].toString(16)); // n
+					txt.append(":" + method); // Poly method used
+					// Other party needs these values
+					
+					// Send To Alice (latitude)
+					p.sendFBMessage(sender, txt.toString(), 6, buff.session, context);
+					break;
+				// End of stage 5 (case 4)
 				
+				// Alice does the latitude computation
+				case 6: //(stage 6, case 6)
+					// Initialize
+					bits = Integer.valueOf( parts[parts.length - 4] );
+					method = Integer.valueOf( parts[parts.length - 1]);
+					g = new BigInteger( parts[parts.length - 3], 16 );
+					n = new BigInteger( parts[parts.length - 2], 16 );
+					
+					// Make Span
+					//int[] span = new int[3];
+					span = p.makeSpan(6, p.locSimple(context), 160934); // 160.934km = 100mi
+					
+					// Generate Leaves
+					//treeQueue leaves = p.genLeaves(span[0], span[2], span[1]);
+					
+					// Generate Alice's leaf.
+					mapString = new StringBuffer(Integer.toBinaryString(span[1])).toString();
+					alice = new tree(span[1], mapString.toCharArray(), null, null, 0);
+					Log.d("checking", "alice: " + alice.value);
+					
+					// Find Path
+					path = p.findPath(alice, 4); // User's location leaf node
+					Log.d("stats", "User's path length: " + path.length);
+					
+					// Pull out Encrypted Coefficients
+					for(int i = 0; i < parts.length; i++){
+						Log.d("test", "parts[" + i + "]: " + parts[i]);
+					}
+					encCoe = new BigInteger[parts.length - 7];
+					for(int i = 0; i < encCoe.length; i++){
+						encCoe[i] = new BigInteger(parts[i+2], 16);
+						//Log.d("test", "encCoe[" + i + "]:" + encCoe[i]);
+					}
+					
+					
+					// Do the actual homomorphic computation
+					Log.d("test", "Homomorphic computation time");
+					results = p.computation(path, encCoe, bits, g, n, method); 
+					
+					
+					// Put them in a string for sending
+					txt = new StringBuffer();
+					txt.append(results[0].toString(16));
+					for (int i = 1; i < results.length; i++){
+						txt.append(":" + results[i].toString(16));
+					}
+					
+					// Send that shit dawg
+					p.sendFBMessage(sender, txt.toString(), 7, buff.session, context);
+					break;
+				// End of stage 6 (case 6)
+					
+				case 7: // Bob checks (case 7, stage 7) final stage
+					
+					Log.d("test", "checking!");
+					
+					// Pull out the C values
+					cValues = new String[parts.length - 2];
+					for(int i = 0; i < cValues.length; i++){
+						cValues[i] = parts[i+2];
+					}
+					
+					// Check the C values
+					bits = Integer.valueOf(prefs.getString("bits", "1024"));
+					boolean latResult = p.check(cValues, context, bits);
+					Log.d("output", "Same location: " + latResult);
+					
+					share = shareSingleton.getInstance();
+					boolean near = latResult && share.foundLon;
+					
+					// Set up the intent
+					Intent intent = new Intent(context, answerAct.class);
+					intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					intent.putExtra("found", near);
+					if (near){
+						intent.putExtra("answer", "This person is near you!");
+					}
+					else{
+						intent.putExtra("answer", "This person is not near you!");
+					}
+					
+					// Start the activity
+					context.startActivity(intent);
+					break;
+					// End of stage 7 (case 7)
 			} // End of switch
 		}							
 	} // end of Process Chat
