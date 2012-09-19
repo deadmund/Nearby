@@ -25,7 +25,7 @@ public class lListener implements LocationListener {
 	    	Double fake_lon = Double.valueOf(prefs.getString("fake_lon", "-76.7113"));
 			lat = fake_lat;
 			lon = fake_lon;
-			Log.d("listener", "Fake lat:lon is now " + lat + ":" + lon);
+			//Log.d("listener", "Fake lat:lon is now " + lat + ":" + lon);
 		}
 	}
 	

@@ -10,6 +10,7 @@ import org.jivesoftware.smack.packet.Message;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.location.Location;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -66,17 +67,19 @@ public class nearbyListener implements MessageListener {
 						
 						// Generate leaves
 						treeQueue leaves = p.genLeaves(span[0], span[2], span[1]);
+						Log.d("bob-stats", "The span size: " + leaves.length);
 						
 						// Generate root
 						tree root = p.buildUp(leaves);
-						Log.d("stats", "The tree has " + root.count() + " nodes");
+						Log.d("bob-stats", "The tree has " + root.count() + " nodes");
 						
 						// Find Wall
 						treeQueue wall = p.findWall(leaves.peek(0), leaves.peek(-1), root);
-						Log.d("stats", "User's wall size: " + wall.length);
+						Log.d("bob-stats", "Wall size: " + wall.length);
 						
 						// Find Coefficients
 						BigInteger[] coefficients = p.makeCoefficients(wall, method);
+						Log.d("bob-stats", "Number of Coefficients: " + coefficients.length);
 						
 						// Encrypt Coefficients
 						BigInteger[] encCoe = p.encryptArray(coefficients, context);
@@ -96,10 +99,9 @@ public class nearbyListener implements MessageListener {
 						txt.append(":" + key[0].toString(16)); // g
 						txt.append(":" + key[1].toString(16)); // n
 						txt.append(":" + method); // Poly method used
-						// Other party needs these values
-						
+						// Other party needs these values						
 
-						Log.d("test", "Message: " + txt.toString());
+						//Log.d("test", "Message: " + txt.toString());
 						
 						// Send to Alice
 						p.sendFBMessage(sender, txt.toString(), 3, buff.session, context);
@@ -125,16 +127,19 @@ public class nearbyListener implements MessageListener {
 					// Generate Alice's leaf.
 					String mapString = new StringBuffer(Integer.toBinaryString(span[1])).toString();
 					tree alice = new tree(span[1], mapString.toCharArray(), null, null, 0);
-					Log.d("checking", "alice: " + alice.value);
+					Log.d("stats-alice", "alice: " + alice.value);
 					
 					// Find Path
-					treeQueue path = p.findPath(alice, 4); // User's location leaf node
-					Log.d("stats", "User's path length: " + path.length);
+					long pathStart = System.currentTimeMillis();
+					treeQueue path = p.findPath(alice, 13); // User's location leaf node
+					long pathEnd = System.currentTimeMillis();
+					Log.d("stats-alice", "Time to find path: " + (pathEnd - pathStart));
+					Log.d("stats-alice", "User's path length: " + path.length);
 					
 					// Pull out Encrypted Coefficients
-					for(int i = 0; i < parts.length; i++){
-						Log.d("test", "parts[" + i + "]: " + parts[i]);
-					}
+					//for(int i = 0; i < parts.length; i++){
+					//	Log.d("test", "parts[" + i + "]: " + parts[i]);
+					//}
 					BigInteger[] encCoe = new BigInteger[parts.length - 7];
 					for(int i = 0; i < encCoe.length; i++){
 						encCoe[i] = new BigInteger(parts[i+2], 16);
@@ -144,8 +149,11 @@ public class nearbyListener implements MessageListener {
 					
 					// Do the actual homomorphic computation
 					Log.d("test", "Homomorphic computation time");
-					BigInteger[] results = p.computation(path, encCoe, bits, g, n, method); 
-					
+					long compStart = System.currentTimeMillis();
+					BigInteger[] results = p.computation(path, encCoe, bits, g, n, method);
+					long compEnd = System.currentTimeMillis();
+					Log.d("stats-alice", "Time to perform homomorphic encryption: " + (compEnd - compStart));
+					Log.d("stats-alice", "Number of results generated: " + results.length);
 					
 					// Put them in a string for sending
 					StringBuffer txt = new StringBuffer();
@@ -241,13 +249,13 @@ public class nearbyListener implements MessageListener {
 					Log.d("checking", "alice: " + alice.value);
 					
 					// Find Path
-					path = p.findPath(alice, 4); // User's location leaf node
+					path = p.findPath(alice, 13); // User's location leaf node
 					Log.d("stats", "User's path length: " + path.length);
 					
 					// Pull out Encrypted Coefficients
-					for(int i = 0; i < parts.length; i++){
-						Log.d("test", "parts[" + i + "]: " + parts[i]);
-					}
+					//for(int i = 0; i < parts.length; i++){
+					//	Log.d("test", "parts[" + i + "]: " + parts[i]);
+					//}
 					encCoe = new BigInteger[parts.length - 7];
 					for(int i = 0; i < encCoe.length; i++){
 						encCoe[i] = new BigInteger(parts[i+2], 16);
@@ -290,21 +298,35 @@ public class nearbyListener implements MessageListener {
 					share = shareSingleton.getInstance();
 					boolean near = latResult && share.foundLon;
 					
+					// Set up location
+					String l = "";
 					// Set up the intent
 					Intent intent = new Intent(context, answerAct.class);
 					intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 					intent.putExtra("found", near);
 					if (near){
 						intent.putExtra("answer", "This person is near you!");
+						l = p.locSimple(context).toString();
 					}
 					else{
 						intent.putExtra("answer", "This person is not near you!");
+						l = "0.0, 0.0";
 					}
 					
 					// Start the activity
 					context.startActivity(intent);
+					
+					p.sendFBMessage(sender, l, 8, buff.session, context);
 					break;
 					// End of stage 7 (case 7)
+					
+				// Alice learns Bob's location
+				case 8: // Stage 8 (case 8)
+					long totalEnd = System.currentTimeMillis();
+					Log.d("stats-alice", "Run is over: " + parts[2]);
+					share = shareSingleton.getInstance(); 
+					Log.d("stats-alice", "Entire protocol took: " + (totalEnd - share.start));
+					
 			} // End of switch
 		}							
 	} // end of Process Chat

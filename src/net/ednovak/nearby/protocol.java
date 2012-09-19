@@ -533,12 +533,12 @@ public class protocol {
 		}
 		
 		// Find the leaves on the edge and build the span
-		Log.d("stage " + stage, "User's leaf value: " + userLeafNumber);
-		Log.d("stage " + stage, "Edge gps value: " + edge);
-		Log.d("stage " + stage, "edge leaf value: " + edgeLeafNumber);
+		//Log.d("stage " + stage, "User's leaf value: " + userLeafNumber);
+		//Log.d("stage " + stage, "Edge gps value: " + edge);
+		//Log.d("stage " + stage, "edge leaf value: " + edgeLeafNumber);
 
 		int spanLength = (Math.abs(edgeLeafNumber - userLeafNumber) * 2) + 1;
-		Log.d("stats", "Alice's leaf node span: " + spanLength);
+		Log.d("stats", "User's leaf node span: " + spanLength);
 
 		int left = userLeafNumber - (spanLength / 2);
 		int right = userLeafNumber + (spanLength / 2);
@@ -566,7 +566,7 @@ public class protocol {
 			BigInteger val = new BigInteger(tokens[i], 16);
 			//Log.d("enc", "Decrypting: " + val);
 			String clear = paillierD.Decryption(val).toString();
-			Log.d("ALICE", "unenc: " + clear);
+			Log.d("prot", "unenc: " + clear);
 			if (clear.equals("0")) {
 				Log.d("hooray!", "It was 0");
 				found = true;
@@ -574,7 +574,7 @@ public class protocol {
 		}
 		long end = System.currentTimeMillis();
 		long total_checkTime = end - start;
-		Log.d("stats", "Time for Alice to check Bob's numbers: "
+		Log.d("stats", "Time for Bob to check Alice's numbers: "
 				+ total_checkTime + "ms");
 
 		return found;
@@ -615,7 +615,7 @@ public class protocol {
 
 		// Try to get location from network if GPS is null
 		if (lastKnownLocation == null) {
-			Log.d("receive", "lastKnown was null");
+			//Log.d("receive", "lastKnown was null");
 			lastKnownLocation = lManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 		}
 
@@ -633,7 +633,7 @@ public class protocol {
 			lastKnownLocation.setLatitude(fake_lat);
 			lastKnownLocation.setLongitude(fake_lon);
 			lastKnownLocation.setTime(System.currentTimeMillis());
-			Log.d("location", "FAKE LOCATION SET");	
+			//Log.d("location", "FAKE LOCATION SET");	
 		}
 
 		// Error logging if no location was obtained through any of these

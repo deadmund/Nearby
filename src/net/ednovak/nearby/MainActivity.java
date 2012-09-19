@@ -211,9 +211,9 @@ public class MainActivity extends Activity {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         Log.d("main", "contains it: " + prefs.contains("fake_locations"));
         boolean it = prefs.getBoolean("fake_locations", false);
-        Log.d("main", "prefs.getBoolean(\"fake_locations\"): " + it);
+        //Log.d("main", "prefs.getBoolean(\"fake_locations\"): " + it);
         if ( it ){
-        	Log.d("main", "Fake locations turned on; plugging the fake one!");
+        	//Log.d("main", "Fake locations turned on; plugging the fake one!");
         	myListener.plugFake(context);
         }
         if ( rec.length() != 0 && rec != null ){
@@ -228,6 +228,7 @@ public class MainActivity extends Activity {
         		
         		intent.putExtra("rec", rec);
         		intent.putExtra("pol", distance);
+        		share.start = System.currentTimeMillis();
         		startActivity(intent);
         	}
     		else { // Don't have a good location lock yet
