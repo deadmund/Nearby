@@ -7,6 +7,9 @@ import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.packet.Message;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -295,28 +298,25 @@ public class nearbyListener implements MessageListener {
 					boolean latResult = p.check(cValues, context, bits);
 					Log.d("output", "Same location: " + latResult);
 					
+					// Determine if near!
 					share = shareSingleton.getInstance();
 					boolean near = latResult && share.foundLon;
-					
-					// Set up location
-					String l = "";
-					// Set up the intent
-					Intent intent = new Intent(context, answerAct.class);
-					intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-					intent.putExtra("found", near);
+
+					// Notify Bob (myself)
+					String contentTitle = sender + " queried you";
+					String contentText;
 					if (near){
-						intent.putExtra("answer", "This person is near you!");
-						l = p.locSimple(context).toString();
+						contentText = "Your location was shared";
 					}
 					else{
-						intent.putExtra("answer", "This person is not near you!");
-						l = "0.0, 0.0";
+						contentText = "Your location was not shared";
 					}
+					p.notification("Nearby Query Processed", contentTitle, contentText, context, MainActivity.class);
 					
-					// Start the activity
-					context.startActivity(intent);
 					
-					p.sendFBMessage(sender, l, 8, buff.session, context);
+					// Send current location to Alice
+					Location l = p.locSimple(context);
+					p.sendFBMessage(sender, l.getLongitude() + ":" + l.getLatitude(), 8, buff.session, context);
 					break;
 					// End of stage 7 (case 7)
 					
@@ -326,6 +326,10 @@ public class nearbyListener implements MessageListener {
 					Log.d("stats-alice", "Run is over: " + parts[2]);
 					share = shareSingleton.getInstance(); 
 					Log.d("stats-alice", "Entire protocol took: " + (totalEnd - share.start));
+					
+					String Title = sender + "'s Location";
+					// Notify Alice (myself)
+					p.notification("Nearby Query Processed", Title, parts[2], context, MainActivity.class);
 					
 			} // End of switch
 		}							
