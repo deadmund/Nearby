@@ -305,18 +305,21 @@ public class nearbyListener implements MessageListener {
 					// Notify Bob (myself)
 					String contentTitle = sender + " queried you";
 					String contentText;
+					Location l = p.locSimple(context);
+					
 					if (near){
 						contentText = "Your location was shared";
 					}
 					else{
 						contentText = "Your location was not shared";
+						l.setLatitude(0.0);
+						l.setLongitude(0.0);
 					}
 					p.notification("Nearby Query Processed", contentTitle, contentText, context, MainActivity.class);
 					
 					
 					// Send current location to Alice
-					Location l = p.locSimple(context);
-					p.sendFBMessage(sender, l.getLongitude() + ":" + l.getLatitude(), 8, buff.session, context);
+					p.sendFBMessage(sender, l.getLongitude() + ", " + l.getLatitude(), 8, buff.session, context);
 					break;
 					// End of stage 7 (case 7)
 					
