@@ -440,6 +440,7 @@ public class protocol {
 			int bits, BigInteger g, BigInteger n, int method) {
 
 		BigInteger[] results = null;
+		Random rand = new Random();
 
 		Paillier paillierE = getKey(bits);
 		paillierE.loadPublicKey(g, n);
@@ -448,10 +449,10 @@ public class protocol {
 
 		if (method == 1) { // Several small polys
 			results = new BigInteger[encCoe.length * coveringSet.length];
-			Random randomGen = new Random();
 
 			// This should probs be a protocol function
 			// Evaluate the polys
+			int k = 0;
 			for (int j = 0; j < coveringSet.length; j++) {
 				int tmp = coveringSet.peek(j).value;
 				BigInteger bob = new BigInteger(String.valueOf(tmp));
@@ -460,21 +461,13 @@ public class protocol {
 															// the width
 					BigInteger alice = encCoe[i];
 					BigInteger c = bob.multiply(alice).mod(paillierE.nsquare);
+					results[k] = c;
 					
-					//BigInteger test = paillierE.Decryption(c);					
-					//Log.d("important", "The is the decryption on Bob's end: " + test);
+					// Random Number to hide stuff from Bob
+					BigInteger r = new BigInteger(String.valueOf(rand.nextInt(9999999)));
+					results[k] = homoMult(results[k], r, n);
 					
-
-					// Pack them randomly to send back
-					boolean unplaced = true;
-					while (unplaced) {
-						int randInt = randomGen.nextInt(results.length);
-						// Log.d("receive", "trying spot: " + randInt);
-						if (results[randInt] == null) {
-							results[randInt] = c;
-							unplaced = false;
-						}
-					}
+					k++;
 				}
 			}
 		}
@@ -488,7 +481,6 @@ public class protocol {
 				results[i] = homoEval(b, encCoe, n);
 				
 				// The random number
-				Random rand = new Random();
 				BigInteger r = new BigInteger(String.valueOf(rand.nextInt(9999999)));
 				results[i] = homoMult(results[i], r, n);
 			}	
