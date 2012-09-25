@@ -1,10 +1,8 @@
 package net.ednovak.nearby;
 
-import java.math.BigInteger;
 
 public class shareSingleton {
 	private static shareSingleton instance = null;
-	public int pol;
 	public double lon;
 	public double lat;
 	public String rec;

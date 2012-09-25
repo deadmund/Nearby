@@ -17,10 +17,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.SeekBar;
-import android.widget.SeekBar.OnSeekBarChangeListener;
-import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -47,50 +43,6 @@ public class MainActivity extends Activity {
         }
         catch (Exception e){
         	// Well nevermind then!
-        }
-
-        // Seek bar
-        SeekBar sk = (SeekBar)findViewById(R.id.seekBar);
-        final TextView tv = (TextView)findViewById(R.id.seekbar_text);
-        
-        sk.setOnSeekBarChangeListener(new OnSeekBarChangeListener(){
-        	
-        	public void onStopTrackingTouch(SeekBar sk){
-        		// Nothing yet
-        	}
-        	
-        	public void onStartTrackingTouch(SeekBar sk){
-        		// Nothing yet
-        	}
-        	
-        	public void onProgressChanged(SeekBar sk, int progress, boolean isUser){
-        		int value = (int)((29.9 * progress) + 10);
-        		value = Math.round(value / 10) * 10;
-        		tv.setText(Integer.toString(value) + " meters");
-        	}
-        });
-
-        // Other user ID
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String message_type = prefs.getString("message_type", "fb");
-        if ( message_type.equals("fb") ){
-        	EditText et = new EditText(this);
-        	other_user = et;
-        	et.setHint("Facebook Friend's Name");        	
-        	LinearLayout ll = (LinearLayout)findViewById(R.id.ll);
-        	ll.addView(et, 3);
-        }
-        
-        else if ( message_type.equals("sms") ) {
-        	EditText et = new EditText(this);
-        	other_user = et;
-        	et.setHint("Phone Number");
-        	LinearLayout ll = (LinearLayout)findViewById(R.id.ll);
-        	ll.addView(et, 3);
-        }
-        
-        else {
-        	Log.d("main", "Bad option choice " + message_type);
         }
         
         // Grab reference to chat button
@@ -164,18 +116,6 @@ public class MainActivity extends Activity {
     @Override
     public void onResume(){
     	super.onResume();
-        // Other user ID
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String message_type = prefs.getString("message_type", "fb");
-        if ( message_type.equals("fb") ){
-        	other_user.setHint("Facebook Friend's Name");
-        }
-        else if ( message_type.equals("sms") ) {
-        	other_user.setHint("Phone Number");
-        }    
-        else {
-        	Log.d("main", "Bad option choice " + message_type);
-        }
     }
     
     
@@ -195,16 +135,9 @@ public class MainActivity extends Activity {
         shareSingleton share = shareSingleton.getInstance();
         share.start = System.currentTimeMillis();
         
-        // User's policy
-        SeekBar sk = (SeekBar)findViewById(R.id.seekBar);
-        int distance = sk.getProgress();
-        distance = (int)((29.9 * distance) + 10);
-        distance = Math.round(distance / 10) * 10;
-        share.pol = distance; // need this in the service receive
-        
         // recipient number / name
-        EditText editText = other_user;
-        String rec = editText.getText().toString();
+        EditText otherUser = (EditText) findViewById(R.id.other_user);
+        String rec = otherUser.getText().toString();
         share.rec = rec; // need this in the service receive
         
         Context context = getApplicationContext();
@@ -227,7 +160,6 @@ public class MainActivity extends Activity {
         		share.lat = l.getLatitude();
         		
         		intent.putExtra("rec", rec);
-        		intent.putExtra("pol", distance);
         		share.start = System.currentTimeMillis();
         		startActivity(intent);
         	}

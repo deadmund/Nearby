@@ -20,14 +20,6 @@
 	        android:entries="@array/encryption"
 	        android:entryValues="@array/encryption" />
 	    
-	    <ListPreference
-	        android:key="message_type"
-	        android:title="Message Type"
-	        android:summary="Type of messages to use for communication"
-	        android:defaultValue="fb"
-	        android:entries="@array/messages"
-	        android:entryValues="@array/messages_values" />
-	    
 	    <EditTextPreference
 	        android:key="chunk"
   	        android:title="Chunk Size" 
@@ -37,7 +29,7 @@
 	    <EditTextPreference
 	        android:key="policy"
 	        android:title="Policy"
-	        android:summary="Maximum distance at which you will share GPS coordinates"
+	        android:summary="Maximum distance at which you will share GPS coordinates (meters)"
 	        android:defaultValue="30" />
 	    
 	    <EditTextPreference
