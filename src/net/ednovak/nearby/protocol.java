@@ -1,9 +1,9 @@
 package net.ednovak.nearby;
 
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Random;
-
-import org.jivesoftware.smack.util.StringUtils;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -443,10 +443,10 @@ public class protocol {
 
 		Paillier paillierE = getKey(bits);
 		paillierE.loadPublicKey(g, n);
-		BigInteger[] pub = paillierE.publicKey();
+		//BigInteger[] pub = paillierE.publicKey();
 		//Log.d("enc", "Homomorphic Computation  g: " + pub[0] + "  n: " + pub[1]);
 
-		if (method == 1) {
+		if (method == 1) { // Several small polys
 			results = new BigInteger[encCoe.length * coveringSet.length];
 			Random randomGen = new Random();
 
@@ -479,16 +479,22 @@ public class protocol {
 			}
 		}
 
-		else if (method == 2) {
+		else if (method == 2) { // On large poly
 			results = new BigInteger[coveringSet.length];
 			for (int i = 0; i < coveringSet.length; i++) {
 				BigInteger b = new BigInteger(String.valueOf(coveringSet
 						.peek(i).value));
 				// Log.d("bobCalc", "Evaluating " + b);
 				results[i] = homoEval(b, encCoe, n);
-			}
-			return results;
+				
+				// The random number
+				Random rand = new Random();
+				BigInteger r = new BigInteger(String.valueOf(rand.nextInt(9999999)));
+				results[i] = homoMult(results[i], r, n);
+			}	
 		}
+		// Shuffle the results
+		//Collections.shuffle(Arrays.asList(results));
 		return results;
 	}
 	
