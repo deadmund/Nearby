@@ -19,8 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="@dimen/padding_medium"
-        android:hint="Facebook Friend's Name" />
-      
+        android:hint="Facebook Friend's Name" />      
     
 	<Button android:id="@+id/bt_query"
         android:layout_weight="1"

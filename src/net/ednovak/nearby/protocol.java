@@ -493,8 +493,9 @@ public class protocol {
 				results[i] = homoMult(results[i], r, n);
 			}	
 		}
+		
 		// Shuffle the results
-		//Collections.shuffle(Arrays.asList(results));
+		Collections.shuffle(Arrays.asList(results));
 		return results;
 	}
 	
