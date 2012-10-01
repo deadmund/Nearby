@@ -566,7 +566,7 @@ public class protocol {
 		long start = System.currentTimeMillis();
 		boolean found = false;
 		for (int i = 0; i < tokens.length; i++) {
-			BigInteger val = new BigInteger(tokens[i], 16);
+			BigInteger val = new BigInteger(tokens[i], 32);
 			//Log.d("enc", "Decrypting: " + val);
 			String clear = paillierD.Decryption(val).toString();
 			Log.d("prot", "unenc: " + clear);

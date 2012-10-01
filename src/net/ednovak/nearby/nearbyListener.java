@@ -88,19 +88,21 @@ public class nearbyListener implements MessageListener {
 						BigInteger[] encCoe = p.encryptArray(coefficients, context);
 						//Log.d("test", "Bob's encrypted Coe's");
 						
+						Log.d("curious", "The largest radix allowed: " + Character.MAX_RADIX);
+						
 						// Put them in a string for sending
 						StringBuffer txt = new StringBuffer();
-						txt.append(encCoe[0].toString(16)); // The first one should not begin with ":"
+						txt.append(encCoe[0].toString(32)); // The first one should not begin with ":"
 						for (int i = 1; i < encCoe.length; i++){
-							txt.append(":" + encCoe[i].toString(16));
+							txt.append(":" + encCoe[i].toString(32));
 						}
 						
 						// Extra Stuff
 						BigInteger[] key = p.getKey(1024).publicKey();
 						txt.append(":" + policy);
 						txt.append(":" + bits);
-						txt.append(":" + key[0].toString(16)); // g
-						txt.append(":" + key[1].toString(16)); // n
+						txt.append(":" + key[0].toString(32)); // g
+						txt.append(":" + key[1].toString(32)); // n
 						txt.append(":" + method); // Poly method used
 						// Other party needs these values						
 
@@ -117,8 +119,8 @@ public class nearbyListener implements MessageListener {
 					// Initialize
 					int bits = Integer.valueOf( parts[parts.length - 4] );
 					int method = Integer.valueOf( parts[parts.length - 1]);
-					BigInteger g = new BigInteger( parts[parts.length - 3], 16 );
-					BigInteger n = new BigInteger( parts[parts.length - 2], 16 );
+					BigInteger g = new BigInteger( parts[parts.length - 3], 32 );
+					BigInteger n = new BigInteger( parts[parts.length - 2], 32 );
 					
 					// Make Span
 					//int[] span = new int[3];
@@ -145,7 +147,7 @@ public class nearbyListener implements MessageListener {
 					//}
 					BigInteger[] encCoe = new BigInteger[parts.length - 7];
 					for(int i = 0; i < encCoe.length; i++){
-						encCoe[i] = new BigInteger(parts[i+2], 16);
+						encCoe[i] = new BigInteger(parts[i+2], 32);
 						//Log.d("test", "encCoe[" + i + "]:" + encCoe[i]);
 					}
 					
@@ -160,9 +162,9 @@ public class nearbyListener implements MessageListener {
 					
 					// Put them in a string for sending
 					StringBuffer txt = new StringBuffer();
-					txt.append(results[0].toString(16));
+					txt.append(results[0].toString(32));
 					for (int i = 1; i < results.length; i++){
-						txt.append(":" + results[i].toString(16));
+						txt.append(":" + results[i].toString(32));
 					}
 					
 					// Send that shit dawg
@@ -212,17 +214,17 @@ public class nearbyListener implements MessageListener {
 					
 					// Put them in a string for sending
 					txt = new StringBuffer();
-					txt.append(encCoe[0].toString(16));
+					txt.append(encCoe[0].toString(32));
 					for (int i = 1; i < encCoe.length; i++){
-						txt.append(":" + encCoe[i].toString(16));
+						txt.append(":" + encCoe[i].toString(32));
 					}
 					
 					// Extra Stuff
 					BigInteger[] key = p.getKey(1024).publicKey();
 					txt.append(":" + policy);
 					txt.append(":" + bits);
-					txt.append(":" + key[0].toString(16)); // g
-					txt.append(":" + key[1].toString(16)); // n
+					txt.append(":" + key[0].toString(32)); // g
+					txt.append(":" + key[1].toString(32)); // n
 					txt.append(":" + method); // Poly method used
 					// Other party needs these values
 					
@@ -236,8 +238,8 @@ public class nearbyListener implements MessageListener {
 					// Initialize
 					bits = Integer.valueOf( parts[parts.length - 4] );
 					method = Integer.valueOf( parts[parts.length - 1]);
-					g = new BigInteger( parts[parts.length - 3], 16 );
-					n = new BigInteger( parts[parts.length - 2], 16 );
+					g = new BigInteger( parts[parts.length - 3], 32 );
+					n = new BigInteger( parts[parts.length - 2], 32 );
 					
 					// Make Span
 					//int[] span = new int[3];
@@ -261,7 +263,7 @@ public class nearbyListener implements MessageListener {
 					//}
 					encCoe = new BigInteger[parts.length - 7];
 					for(int i = 0; i < encCoe.length; i++){
-						encCoe[i] = new BigInteger(parts[i+2], 16);
+						encCoe[i] = new BigInteger(parts[i+2], 32);
 						//Log.d("test", "encCoe[" + i + "]:" + encCoe[i]);
 					}
 					
@@ -273,9 +275,9 @@ public class nearbyListener implements MessageListener {
 					
 					// Put them in a string for sending
 					txt = new StringBuffer();
-					txt.append(results[0].toString(16));
+					txt.append(results[0].toString(32));
 					for (int i = 1; i < results.length; i++){
-						txt.append(":" + results[i].toString(16));
+						txt.append(":" + results[i].toString(32));
 					}
 					
 					// Send that shit dawg
@@ -319,7 +321,7 @@ public class nearbyListener implements MessageListener {
 					
 					
 					// Send current location to Alice
-					p.sendFBMessage(sender, l.getLongitude() + ", " + l.getLatitude(), 8, buff.session, context);
+					p.sendFBMessage(sender, l.getLatitude() + ", " + l.getLongitude(), 8, buff.session, context);
 					break;
 					// End of stage 7 (case 7)
 					
