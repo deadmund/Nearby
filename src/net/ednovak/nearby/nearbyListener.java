@@ -113,10 +113,11 @@ public class nearbyListener implements MessageListener {
 				// This is Alice now, recieving the longitude wall from Bob and doing her computation
 				case 3: // The computation (case 3, stage 3)
 					// Initialize
+					int policy = Integer.valueOf( parts[parts.length - 5] );
 					int bits = Integer.valueOf( parts[parts.length - 4] );
-					int method = Integer.valueOf( parts[parts.length - 1]);
 					BigInteger g = new BigInteger( parts[parts.length - 3], 32 );
 					BigInteger n = new BigInteger( parts[parts.length - 2], 32 );
+					int method = Integer.valueOf( parts[parts.length - 1]);
 					
 					// Make Span
 					//int[] span = new int[3];
@@ -132,7 +133,7 @@ public class nearbyListener implements MessageListener {
 					
 					// Find Path
 					long pathStart = System.currentTimeMillis();
-					treeQueue path = p.findPath(alice, 13); // User's location leaf node
+					treeQueue path = p.findPath(alice, p.getPathLength(policy)); // User's location leaf node
 					long pathEnd = System.currentTimeMillis();
 					Log.d("stats-alice", "Time to find path: " + (pathEnd - pathStart));
 					Log.d("stats-alice", "User's path length: " + path.length);
@@ -187,7 +188,7 @@ public class nearbyListener implements MessageListener {
 					// Also, if the uses changes their preferences (mid run) there is a problem
 					// BEGIN THE LATITUDE ROUND (stage 5)
 					bits = Integer.valueOf(prefs.getString("bits", "1024"));
-					int policy = Integer.valueOf(prefs.getString("policy", "160000"));
+					policy = Integer.valueOf(prefs.getString("policy", "160000"));
 					method = Integer.valueOf(prefs.getString("poly_method", "1"));
 					
 					// Find Span
@@ -240,10 +241,11 @@ public class nearbyListener implements MessageListener {
 				// Alice does the latitude computation
 				case 6: //(stage 6, case 6)
 					// Initialize
+					policy = Integer.valueOf( parts[parts.length - 5] );
 					bits = Integer.valueOf( parts[parts.length - 4] );
-					method = Integer.valueOf( parts[parts.length - 1]);
 					g = new BigInteger( parts[parts.length - 3], 32 );
 					n = new BigInteger( parts[parts.length - 2], 32 );
+					method = Integer.valueOf( parts[parts.length - 1]);
 					
 					// Make Span
 					//int[] span = new int[3];
@@ -256,14 +258,10 @@ public class nearbyListener implements MessageListener {
 					mapString = new StringBuffer(Integer.toBinaryString(span[1])).toString();
 					alice = new tree(span[1], mapString.toCharArray(), null, null, 0, "lat");
 					Log.d("checking", "alice: " + alice.value);
-					Log.d("stats-alice", "alice path:");
-					for (int i = 0; i < alice.path.length; i++){
-						Log.d("stats-alice", "" + alice.path[i]);
-					}
 					
 					// Find Path
-					path = p.findPath(alice, 13); // User's location leaf node
-					//Log.d("stats", "User's path length: " + path.length);
+					path = p.findPath(alice, p.getPathLength(policy)); // User's location leaf node
+					Log.d("stats", "User's path length: " + path.length);
 					//for(int i = 0; i < path.length; i++){
 					//	Log.d("path", "" + path.peek(i).value);
 					//}

@@ -311,7 +311,7 @@ public class protocol {
 		treeQueue top = new treeQueue();
 		treeQueue bottom = leaves;
 		
-		while (top.length != 1 ){ // I PUT THIS BUG HERE!
+		while (top.length != 1 ){
 			top = buildRow(bottom);	
 			bottom = top;
 		}
@@ -661,5 +661,12 @@ public class protocol {
 		
 		// 4
 		mNM.notify(1, notification);
+	}
+	
+	
+	public int getPathLength(int policy){
+		double top = Math.log((double)policy / 10.0);
+		double real = ((top / Math.log(2)) + 1)* 2;
+		return Math.min(28, (int)real);
 	}
 }
