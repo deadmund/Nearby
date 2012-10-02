@@ -77,7 +77,7 @@ public class protocol {
 
 	// Creates the leaf nodes from a left and right longitude value
 	// X is the leaf that the user is at
-	public treeQueue genLeaves(int left, int right, int x) {
+	public treeQueue genLeaves(int left, int right, int x, String type) {
 		// left, right, and x are leaf node values (integers)
 		System.out.println("Creating the leaves");
 		treeQueue leaves = new treeQueue();
@@ -88,7 +88,7 @@ public class protocol {
 					.toString(); // R is 0, L is 1;
 			// System.out.println(cur + " => " + mapString); // char of binary
 			// string from this int ()
-			leaves.push(new tree(cur, mapString.toCharArray(), null, null, 0));
+			leaves.push(new tree(cur, mapString.toCharArray(), null, null, 0, type));
 			if (cur == x) {
 				leaves.peek(-1).special = "User!";
 				user = leaves.peek(-1);
@@ -311,11 +311,9 @@ public class protocol {
 		treeQueue top = new treeQueue();
 		treeQueue bottom = leaves;
 		
-		int count = 0;
-		while (top.length != 1 && count < 12){
+		while (top.length != 1 ){ // I PUT THIS BUG HERE!
 			top = buildRow(bottom);	
 			bottom = top;
-			count++;
 		}
 		
 		return top.peek(0);

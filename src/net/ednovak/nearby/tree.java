@@ -1,6 +1,5 @@
 package net.ednovak.nearby;
 
-import android.util.Log;
 
 public class tree{
 
@@ -12,16 +11,36 @@ public class tree{
 	private tree parent; // Root node has null for parent
 	public String treeType;
 	public int height;
+	public String type;
 	
-	public tree(int newValue, char[] newPath, tree newLeft, tree newRight, int nHeight){
+	// The tree class assumes that 4003017 is our magic number but this number is only magic for
+	// longitude trees.  I think this is causing a bug for latitude trees.
+	private int magic;
+	
+	public tree(int newValue, char[] newPath, tree newLeft, tree newRight, int nHeight, String nType){
 		value = newValue; 
 		path = newPath;
 		special = null; 
 		left = newLeft; 
 		right = newRight;
 		height = nHeight;
+		type = nType;
 		
-		//treeType = nTreeType;
+		if (type.equals("lat")){
+			magic = 4003003;  // Assume longitude
+		}
+		else if (type.equals("lon")){
+			magic = 4003017;
+		}
+	}
+	
+	public void setType(String type){
+		if (type.equals("lat")){
+			magic = 4003003;
+		}
+		else if (type.equals("lon")){
+			magic = 4003017;
+		}
 	}
 	
 	
@@ -35,11 +54,12 @@ public class tree{
 	// The slight difference is a rounding error.  If you look at longitudeToLeaf and latitudeToLeaf
 	// You'll see they use slightly different constants and that the constants are not exactly 2:1 
 	// yet the Magnitude of degrees is exactly 2:1.  As a result, and to simply programming, I'm choosing to
-	// consider a leaf anything more than 4003017.  This means there are bugs around 90 and -90 latitude
+	// consider a leaf anything less than 4003017.  This means there are bugs around 90 and -90 latitude
 	// fortunately this is at the poles.  Also, there are bugs there anyway because the protocol does not recognize
-	// that -180 and 180 are right next to each other.  So we have problems at the extremes.  Fortunatley, again
+	// that -180 and 180 are right next to each other.  So we have problems at the extremes.  Fortunately, again
 	// -180 and 180 is in the middle of the pacific ocean.
-	// Used to find Alice's rep set
+	
+	// Used to find wall set
 	public tree rightLeaf(){
 		tree cur = this;
 		while (cur.right != null){
@@ -47,7 +67,7 @@ public class tree{
 		}
 		
 		// This only holds for the old longtitude values! 
-		if (cur.value > 4003017){
+		if (cur.value > magic){
 			return null;
 			//System.out.println("This 'leaf' is not really a leaf.");
 		}
@@ -60,7 +80,7 @@ public class tree{
 			cur = cur.left;
 		}
 		// Same problem here!!
-		if (cur.value > 4003017){
+		if (cur.value > magic){
 			return null;
 			//System.out.println("This 'leaf' is not really a leaf.");
 		}
@@ -80,13 +100,13 @@ public class tree{
 		}
 
 		if (this.upRightward()) { // This is a branch that goes right (upward)
-			int nValue = value + 4003017; // Max num of leaf nodes (longitude only)
-			parent = new tree(nValue, nPath, this, null, height+1);
+			int nValue = value + magic; // Max num of leaf nodes (longitude only)
+			parent = new tree(nValue, nPath, this, null, height+1, type);
 		}
 
 		else { // This is a branch that goes left (upward)
-			int nValue = value + (4003017 - (int) (Math.pow(2.0, (double) (height))));
-			parent = new tree(nValue, nPath, null, this, height+1);
+			int nValue = value + (magic - (int) (Math.pow(2.0, (double) (height))));
+			parent = new tree(nValue, nPath, null, this, height+1, type);
 		}
 		return parent;
 	}

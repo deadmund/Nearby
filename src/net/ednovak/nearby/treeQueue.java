@@ -82,6 +82,6 @@ public class treeQueue {
 				return arr[i];
 			}
 		}
-		return new tree(0, new char[0], null, null, 0);
+		return new tree(0, new char[0], null, null, 0, "lon");
 	}
 }

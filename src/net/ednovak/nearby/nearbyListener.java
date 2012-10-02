@@ -7,11 +7,7 @@ import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.packet.Message;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.preference.PreferenceManager;
@@ -69,7 +65,7 @@ public class nearbyListener implements MessageListener {
 						span = p.makeSpan(2, p.locSimple(context), policy);
 						
 						// Generate leaves
-						treeQueue leaves = p.genLeaves(span[0], span[2], span[1]);
+						treeQueue leaves = p.genLeaves(span[0], span[2], span[1], "lon");
 						Log.d("bob-stats", "The span size: " + leaves.length);
 						
 						// Generate root
@@ -131,8 +127,8 @@ public class nearbyListener implements MessageListener {
 					
 					// Generate Alice's leaf.
 					String mapString = new StringBuffer(Integer.toBinaryString(span[1])).toString();
-					tree alice = new tree(span[1], mapString.toCharArray(), null, null, 0);
-					Log.d("stats-alice", "alice: " + alice.value);
+					tree alice = new tree(span[1], mapString.toCharArray(), null, null, 0, "lon");
+					Log.d("stats-alice", "alice value: " + alice.value);
 					
 					// Find Path
 					long pathStart = System.currentTimeMillis();
@@ -198,13 +194,21 @@ public class nearbyListener implements MessageListener {
 					span = p.makeSpan(5, p.locSimple(context), policy);
 					
 					// Generate Leaves
-					treeQueue leaves = p.genLeaves(span[0], span[2], span[1]);
+					treeQueue leaves = p.genLeaves(span[0], span[2], span[1], "lat");
+					
+					// Check Bob's Location
+					Log.d("checking", "Bob's latitude value: " + span[1]);
 					
 					// Find Root
 					tree root = p.buildUp(leaves);
 					
 					// Find Wall
 					treeQueue wall = p.findWall(leaves.peek(0), leaves.peek(-1), root);
+					
+					Log.d("wall", "The leaves in the wall");
+					for(int i = 0; i < wall.length; i++){
+						Log.d("wall", "" + wall.peek(i).value);
+					}
 					
 					// Find Coefficients (latitude now)
 					BigInteger[] coefficients = p.makeCoefficients(wall, method);
@@ -248,14 +252,21 @@ public class nearbyListener implements MessageListener {
 					// Generate Leaves
 					//treeQueue leaves = p.genLeaves(span[0], span[2], span[1]);
 					
-					// Generate Alice's leaf.
+					// Generate Alice's latitude leaf.
 					mapString = new StringBuffer(Integer.toBinaryString(span[1])).toString();
-					alice = new tree(span[1], mapString.toCharArray(), null, null, 0);
+					alice = new tree(span[1], mapString.toCharArray(), null, null, 0, "lat");
 					Log.d("checking", "alice: " + alice.value);
+					Log.d("stats-alice", "alice path:");
+					for (int i = 0; i < alice.path.length; i++){
+						Log.d("stats-alice", "" + alice.path[i]);
+					}
 					
 					// Find Path
 					path = p.findPath(alice, 13); // User's location leaf node
-					Log.d("stats", "User's path length: " + path.length);
+					//Log.d("stats", "User's path length: " + path.length);
+					//for(int i = 0; i < path.length; i++){
+					//	Log.d("path", "" + path.peek(i).value);
+					//}
 					
 					// Pull out Encrypted Coefficients
 					//for(int i = 0; i < parts.length; i++){
