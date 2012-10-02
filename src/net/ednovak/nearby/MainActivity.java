@@ -25,7 +25,6 @@ public class MainActivity extends Activity {
 	public final static String EXTRA_MESSAGE = "net.ednovak.nearby.MESSAGE";
 	private lListener myListener = new lListener();
 	private LocationManager lManager;
-	private EditText other_user;
 	private boolean bound = false;
 	private ToggleButton chatButton;
 
@@ -56,7 +55,8 @@ public class MainActivity extends Activity {
     	case 1:
     		if ( resultCode == RESULT_OK){
     			String name = intent.getStringExtra("other_user");
-    			other_user.setText(name);
+    			EditText rec = (EditText) findViewById(R.id.other_user);
+    			rec.setText(name);
     			break;
     		}
     	}
