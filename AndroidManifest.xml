@@ -20,11 +20,6 @@
             </intent-filter>
         </activity>
         
-        <receiver android:name=".smsReceive">
-			<intent-filter android:priority="1000">
-				<action android:name="android.provider.Telephony.SMS_RECEIVED" />
-			</intent-filter>
-		</receiver>
 
       
         <activity android:name=".displayMessageAct" />
@@ -39,8 +34,6 @@
         
             
     </application>
-    <uses-permission android:name="android.permission.SEND_SMS"></uses-permission>
-	<uses-permission android:name="android.permission.RECEIVE_SMS"></uses-permission>
 	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 	<uses-permission android:name="android.permission.INTERNET" />
 

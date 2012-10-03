@@ -1,5 +1,7 @@
 package net.ednovak.nearby;
 
+import java.math.BigInteger;
+
 
 public class shareSingleton {
 	private static shareSingleton instance = null;
@@ -17,7 +19,11 @@ public class shareSingleton {
 	// Alice uses these values to store whether or not the longitude / latitude matches
 	// This allows us to wait until stage 4 to respond to user
 	public boolean longitude = false;
-	public boolean latitude = false;
+	
+	// This is the final key used by Alice and Bob to privately share the location info
+	public BigInteger[] last;
+	
+	
 	
 	protected shareSingleton(){
 		// Only to defeat instantiation
