@@ -337,23 +337,41 @@ public class nearbyListener implements MessageListener {
 					}
 					p.notification("Nearby Query Processed", contentTitle, contentText, context, MainActivity.class);
 					
-					Log.d("stats-alice", "Parts");
-					for (int i = 0; i < parts.length; i++){
-						Log.d("stats-alice", parts[i]);
-					}
-					
 					// Encrypt location
 					g = new BigInteger(parts[parts.length - 2], 32);
 					n = new BigInteger(parts[parts.length - 1], 32);
 					last = new Paillier();
 					last.loadPublicKey(g, n);
-					BigInteger lat = last.Encryption(new BigInteger(String.valueOf( (int)(l.getLatitude()*100) )));
-					BigInteger lon = last.Encryption(new BigInteger(String.valueOf( (int)(l.getLongitude()*100) )));
-					String lastLat = lat.toString(32);
-					String lastLon = lon.toString(32);
+					
+					double[] orig = {l.getLatitude(), l.getLongitude()};
+					String[] sendingLocation = new String[2];
+					for (int i = 0; i < orig.length; i++){
+						orig[i] = orig[i]*10000; // Multiply by 100 to capture some decimals
+						orig[i] = Math.abs(orig[i]); // Get the absolute value to remove negative
+					    sendingLocation[i] = last.Encryption(new BigInteger(String.valueOf( (int)orig[i] ))).toString(32);
+					}
+					
+					// Build stringBuffer (the message body)
+					txt = new StringBuffer();
+					txt.append(sendingLocation[0]);
+					txt.append(":" + sendingLocation[1]);
+					
+					// Latitude sign
+					String sign = "+";
+					if (l.getLatitude() < 0){
+						sign = "-";
+					}
+					txt.append(":" + sign);
+					
+					// Longitude sign
+					sign = "+";
+					if (l.getLongitude() < 0){
+						sign = "-";
+					}
+					txt.append(":" + sign);
 					
 					// Send current location to Alice
-					p.sendFBMessage(sender, lastLat + ":" + lastLon, 8, buff.session, context);
+					p.sendFBMessage(sender, txt.toString(), 8, buff.session, context);
 					break;
 					// End of stage 7 (case 7)
 					
@@ -365,21 +383,23 @@ public class nearbyListener implements MessageListener {
 						Log.d("stats-alice", parts[i]);
 					}
 					
-					//Decrypt
+					//Decrypt and parse
 					last = new Paillier();
 					share = shareSingleton.getInstance();
 					last.loadPrivateKey(share.last[0], share.last[1], share.last[2]);
-					String ans_lat = last.Decryption(new BigInteger(parts[2], 32)).toString();
-					String ans_lon = last.Decryption(new BigInteger(parts[3], 32)).toString();
+					double lat = last.Decryption(new BigInteger(parts[2], 32)).doubleValue();
+					double lon = last.Decryption(new BigInteger(parts[3], 32)).doubleValue();
+					String latString = parts[4] + (lat/10000);
+					String lonString = parts[5] + (lon/10000);
 					
 					// Done, present to user.
 					long totalEnd = System.currentTimeMillis();
-					Log.d("stats-alice", "Run is over: " + ans_lat + ":" + ans_lon);
+					Log.d("stats-alice", "Run is over: " + latString + ":" + lonString);
 					Log.d("stats-alice", "Entire protocol took: " + (totalEnd - share.start));
 					
 					String Title = sender + "'s Location";
 					// Notify Alice (myself)
-					p.notification("Nearby Query Processed", Title, ans_lat + ":" + ans_lon, context, MainActivity.class);
+					p.notification("Nearby Query Processed", Title, latString + ":" + lonString, context, MainActivity.class);
 					
 			} // End of switch
 		}							
