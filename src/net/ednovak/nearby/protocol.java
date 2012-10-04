@@ -440,7 +440,7 @@ public class protocol {
 		BigInteger[] results = null;
 		Random rand = new Random();
 
-		Paillier paillierE = getKey(bits);
+		Paillier paillierE = new Paillier(false);
 		paillierE.loadPublicKey(g, n);
 		//BigInteger[] pub = paillierE.publicKey();
 		//Log.d("enc", "Homomorphic Computation  g: " + pub[0] + "  n: " + pub[1]);

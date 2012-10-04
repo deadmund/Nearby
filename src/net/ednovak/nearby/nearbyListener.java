@@ -290,9 +290,9 @@ public class nearbyListener implements MessageListener {
 					}
 					
 					// Generate a public / private pair for Bob to use
-					Paillier last = new Paillier();
 					share = shareSingleton.getInstance();
-					share.last = last.privateKey();
+					share.pKey = null; // Force the creation of a new key
+					Paillier last = p.getKey(1024);
 					
 					BigInteger[] pub = last.publicKey();
 					txt.append(":" + pub[0].toString(32)); // g
@@ -340,7 +340,7 @@ public class nearbyListener implements MessageListener {
 					// Encrypt location
 					g = new BigInteger(parts[parts.length - 2], 32);
 					n = new BigInteger(parts[parts.length - 1], 32);
-					last = new Paillier();
+					last = p.getKey(1024);
 					last.loadPublicKey(g, n);
 					
 					double[] orig = {l.getLatitude(), l.getLongitude()};
@@ -384,9 +384,7 @@ public class nearbyListener implements MessageListener {
 					}
 					
 					//Decrypt and parse
-					last = new Paillier();
-					share = shareSingleton.getInstance();
-					last.loadPrivateKey(share.last[0], share.last[1], share.last[2]);
+					last = p.getKey(1024);
 					double lat = last.Decryption(new BigInteger(parts[2], 32)).doubleValue();
 					double lon = last.Decryption(new BigInteger(parts[3], 32)).doubleValue();
 					String latString = parts[4] + (lat/10000);
@@ -395,6 +393,7 @@ public class nearbyListener implements MessageListener {
 					// Done, present to user.
 					long totalEnd = System.currentTimeMillis();
 					Log.d("stats-alice", "Run is over: " + latString + ":" + lonString);
+					share = shareSingleton.getInstance();
 					Log.d("stats-alice", "Entire protocol took: " + (totalEnd - share.start));
 					
 					String Title = sender + "'s Location";

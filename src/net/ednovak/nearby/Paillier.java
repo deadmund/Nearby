@@ -15,8 +15,9 @@ package net.ednovak.nearby;
 * this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-import java.math.*;
-import java.util.*;
+import java.math.BigInteger;
+import java.util.Random;
+
 
 /**
 * Paillier Cryptosystem <br><br>
@@ -71,6 +72,18 @@ public class Paillier {
 	}
 	
 	
+	// So we can create an empty paillier key.  This is used to access methods like encryption
+	// without wasting time generating a key
+	public Paillier(boolean genKey){
+		if (genKey){
+			KeyGeneration(1024, 64);
+		}
+		else{
+			// Do Nothing!
+		}
+		
+	}
+	
 	// To load a new public key yay!
 	public void loadPublicKey(BigInteger newG, BigInteger newN){
 		g = newG;
@@ -92,6 +105,7 @@ public class Paillier {
 	* @param certainty The probability that the new BigInteger represents a prime number will exceed (1 - 2^(-certainty)). The execution time of this constructor is proportional to the value of this parameter.
 	*/
 	public void KeyGeneration(int bitLengthVal, int certainty) {
+		//Log.d("crypt", "I am creating a new key!");		
 		bitLength = bitLengthVal;
 		/*Constructs two randomly generated positive BigIntegers that are probably prime, with the specified bitLength and certainty.*/
 		p = new BigInteger(bitLength / 2, certainty, new Random());
