@@ -554,11 +554,11 @@ public class protocol {
 	// Alice for stage 1 || 3
 
 
-	// This is the function Alice uses to check Bob's c values
+	// This is the function Bob uses to check Alice's C values
 	// tokens example [sender:@@X:c_1:c_2:c_3:...:c_n]
 	public boolean check(String[] tokens, Context context, int bits) {
 		Paillier paillierD = getKey(bits);
-		BigInteger[] priv = paillierD.privateKey();
+		//BigInteger[] priv = paillierD.privateKey();
 		//Log.d("enc", "Decrypting g: " + priv[0] + "  lambda: " + priv[1] + "  n: " + priv[2]);
 
 		long start = System.currentTimeMillis();
@@ -571,6 +571,7 @@ public class protocol {
 			if (clear.equals("0")) {
 				Log.d("hooray!", "It was 0");
 				found = true;
+				break;
 			}
 		}
 		long end = System.currentTimeMillis();
