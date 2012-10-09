@@ -15,11 +15,17 @@
         android:text="@string/hello_world"
         tools:context=".MainActivity" />  
         
+	<ImageView android:id="@+id/query"
+        android:contentDescription="@string/query"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/query" />
+        
     <EditText android:id="@+id/other_user"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="@dimen/padding_medium"
-        android:hint="Facebook Friend's Name" />      
+        android:hint="@string/other_user_hint" />      
     
 	<Button android:id="@+id/bt_query"
         android:layout_weight="1"
