@@ -1,9 +1,11 @@
 package net.ednovak.nearby;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.location.Location;
@@ -25,7 +27,7 @@ public class MainActivity extends Activity {
 	public final static String EXTRA_MESSAGE = "net.ednovak.nearby.MESSAGE";
 	private lListener myListener = new lListener();
 	private LocationManager lManager;
-	private boolean bound = false;
+	private logInReceiver rec;
 	private ToggleButton chatButton;
 
     @Override
@@ -84,7 +86,7 @@ public class MainActivity extends Activity {
     			return true;
     			
     		case R.id.names:
-    			if (bound && xmppService.in){
+    			if (xmppService.in){
     				startActivityForResult(new Intent(this, names.class), 1);
     				return true;
     			}
@@ -98,7 +100,7 @@ public class MainActivity extends Activity {
     	    	return true;
     	    	
     		case R.id.test_message: // Test sending messages on FB
-    			if (bound && xmppService.in){
+    			if (xmppService.in){
     				startActivity(new Intent(this, messageTest.class));
     				return true;
     			}
@@ -116,6 +118,15 @@ public class MainActivity extends Activity {
     @Override
     public void onResume(){
     	super.onResume();
+    	
+    	// To connect the onRecieve
+    	IntentFilter logInFilter;
+    	logInFilter = new IntentFilter(xmppService.LOGIN_UPDATE);
+    	rec = new logInReceiver();
+    	registerReceiver(rec, logInFilter);
+    	
+    	//The example has a call here: startxmppService();
+    	
     }
     
     
@@ -123,9 +134,10 @@ public class MainActivity extends Activity {
     @Override
     public void onDestroy(){
     	super.onDestroy();
-    	if ( bound ){
+    	if ( xmppService.in ){
     		unbindService(mConnection);
     	}
+    	unregisterReceiver(rec);
     }
     
     
@@ -177,16 +189,11 @@ public class MainActivity extends Activity {
     private ServiceConnection mConnection = new ServiceConnection() {
     	@Override
     	public void onServiceConnected(ComponentName className, IBinder service) {
-    		//LocalBinder binder = (LocalBinder) service;
-    		//share.serv = binder.getService();
-    		bound = true;
-    		chatButton.setChecked(true);
+    		// Nada!
     	}
     	
     	@Override
     	public void onServiceDisconnected(ComponentName name){
-    		Log.d("main", "turning it off");
-    		bound = false;
     		chatButton.setChecked(false);
     	}
     };
@@ -195,15 +202,15 @@ public class MainActivity extends Activity {
     // Toggle Button at the bottom
     public void fbChatConnect(View view){
     	
-    	if (bound){
+    	if (xmppService.in){
     		Log.d("main", "Turning service off");
     		unbindService(mConnection);
     		stopService(new Intent(this, xmppService.class));
-    		bound = false;
-    		((ToggleButton)view).setChecked(false);
+    		chatButton.setChecked(false);
     	}
     	
     	else {
+    		chatButton.setChecked(false);
     		Log.d("main", "turning service on");
     		Intent bindIntent = new Intent(this, xmppService.class);
     		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
@@ -212,6 +219,17 @@ public class MainActivity extends Activity {
     		bindIntent.putExtra("user", user);
     		bindIntent.putExtra("pass", pass);
     		bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);
+    		
     	}
     }
+
+
+    // For some reason this is defined in the activity class.  I though it worked differently in the owl project
+	public class logInReceiver extends BroadcastReceiver{
+		@Override
+		public void onReceive(Context context, Intent intent){
+			boolean light = intent.getBooleanExtra("connection", false);
+			chatButton.setChecked(light);
+		}
+	}
 }
