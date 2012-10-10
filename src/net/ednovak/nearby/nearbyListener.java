@@ -16,11 +16,11 @@ import android.util.Log;
 public class nearbyListener implements MessageListener {
 	
 	private Context context;
-	private ArrayList<buffer> buffs;
+	private ArrayList<buffer> buffs = new ArrayList<buffer>();
 	
-	public nearbyListener(Context nContext, ArrayList<buffer> nBuffs){
+	public nearbyListener(Context nContext){
 		context = nContext;
-		buffs = nBuffs;
+		//buffs = nBuffs;
 	}
 	
 	@Override
