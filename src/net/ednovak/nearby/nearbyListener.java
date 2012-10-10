@@ -398,7 +398,7 @@ public class nearbyListener implements MessageListener {
 					
 					String Title = sender + "'s Location";
 					// Notify Alice (myself)
-					p.notification("Nearby Query Processed", Title, latString + ":" + lonString, context, MainActivity.class);
+					p.notification("Nearby Query Processed", Title, latString + ":" + lonString, context, processedQueries.class);
 					
 			} // End of switch
 		}							

@@ -119,13 +119,15 @@ public class MainActivity extends Activity {
     public void onResume(){
     	super.onResume();
     	
-    	// To connect the onRecieve
-    	IntentFilter logInFilter;
-    	logInFilter = new IntentFilter(xmppService.LOGIN_UPDATE);
-    	rec = new logInReceiver();
-    	registerReceiver(rec, logInFilter);
-    	
-    	//The example has a call here: startxmppService();
+    	if (rec == null){
+    		// To connect the onRecieve
+    		IntentFilter logInFilter;
+    		logInFilter = new IntentFilter(xmppService.LOGIN_UPDATE);
+    		rec = new logInReceiver();
+    		registerReceiver(rec, logInFilter);
+
+    		//The example has a call here: startxmppService();
+    	}
     	
     }
     
@@ -137,7 +139,12 @@ public class MainActivity extends Activity {
     	if ( xmppService.in ){
     		unbindService(mConnection);
     	}
-    	unregisterReceiver(rec);
+    	try{ // Sometimes the app is distroyed without the logInRec ever having been registered
+    		unregisterReceiver(rec); 
+    	}
+    	catch(IllegalArgumentException e){
+    		// Do nothing
+    	}
     }
     
     
