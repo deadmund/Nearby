@@ -56,7 +56,7 @@ public class xmppService extends Service {
 		String user = intent.getStringExtra("user");
 		String pass = intent.getStringExtra("pass");
 		
-        Runnable r = new xmppThread(user, pass, this);
+        Runnable r = new xmppThread(user, pass, getApplicationContext());
         new Thread(r).start();
         //Toast.makeText(this, "thread created and ran", Toast.LENGTH_LONG).show();
         

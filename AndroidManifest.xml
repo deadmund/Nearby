@@ -12,6 +12,7 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".MainActivity"
+            android:launchMode="singleTop"
             android:label="@string/title_activity_main" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -31,6 +32,8 @@
             <!--  android:theme="@style/preferences"/> -->
         <activity android:name=".names" />
         <service android:name=".xmppService" />
+        <activity android:name=".processedQueries" 
+            android:launchMode="singleTop" />
         
         
             

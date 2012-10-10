@@ -647,7 +647,7 @@ public class protocol {
 		return lastKnownLocation;
 	}
 	
-	public void notification(String ticker, String title, String content, Context context, Class<?> cls){
+	public void notification(String ticker, String title, String content, Context context, Intent notificationIntent){
 		
 		// 1
 		NotificationManager mNM = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -656,8 +656,7 @@ public class protocol {
 		Notification notification = new Notification(R.drawable.ic_launcher, ticker, System.currentTimeMillis());
 		
 		// 3
-		Intent notificationIntent = new Intent(context, cls);
-		PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent, 0);
+		PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 		notification.setLatestEventInfo(context, title, content, contentIntent);
 		
 		// 4

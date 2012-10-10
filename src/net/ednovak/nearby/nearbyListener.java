@@ -8,6 +8,7 @@ import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.packet.Message;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.preference.PreferenceManager;
@@ -48,6 +49,7 @@ public class nearbyListener implements MessageListener {
 			String sender = buff.sender;
 			String[] parts = buff.message.split(":");
 			int stage = Integer.valueOf(parts[0]);
+			shareSingleton share;
 			
 			switch (stage){	
 				case 1: // The Polynomial (Case 1, stage 1)
@@ -59,6 +61,8 @@ public class nearbyListener implements MessageListener {
 						int policy = Integer.valueOf(prefs.getString("policy", "160000"));
 						int method = Integer.valueOf(prefs.getString("poly_method", "1"));
 						Log.d("test", "method: " + method + "  policy: " + policy + "  bits: " + bits);
+						//share = shareSingleton.getInstance();
+						//share.pKey = null; // Make sure it's null at beginning of protocol
 						
 						// Find span
 						int[] span = new int[3];
@@ -73,8 +77,7 @@ public class nearbyListener implements MessageListener {
 						Log.d("bob-stats", "The tree has " + root.count() + " nodes");
 						
 						// Find Wall
-						treeQueue wall = p.findWall(leaves.peek(0), leaves.peek(-1), root);
-						Log.d("bob-stats", "Wall size: " + wall.length);
+						treeQueue wall = p.findWall(leaves.peek(0), leaves.peek(-1), root);	
 						
 						// Find Coefficients
 						BigInteger[] coefficients = p.makeCoefficients(wall, method);
@@ -180,7 +183,7 @@ public class nearbyListener implements MessageListener {
 					
 					// Check the C values
 					bits = Integer.valueOf(prefs.getString("bits", "1024"));
-					shareSingleton share = shareSingleton.getInstance();
+					share = shareSingleton.getInstance();
 					share.foundLon = p.check(cValues, context, bits);
 					Log.d("output", "Same location: " + share.foundLon);
 					
@@ -206,10 +209,10 @@ public class nearbyListener implements MessageListener {
 					// Find Wall
 					treeQueue wall = p.findWall(leaves.peek(0), leaves.peek(-1), root);
 					
-					Log.d("wall", "The leaves in the wall");
-					for(int i = 0; i < wall.length; i++){
-						Log.d("wall", "" + wall.peek(i).value);
-					}
+					//Log.d("wall", "The leaves in the  wall");
+					//for(int i = 0; i < wall.length; i++){
+					//	Log.d("wall", "" + wall.peek(i).value);
+					//}
 					
 					// Find Coefficients (latitude now)
 					BigInteger[] coefficients = p.makeCoefficients(wall, method);
@@ -261,7 +264,7 @@ public class nearbyListener implements MessageListener {
 					
 					// Find Path
 					path = p.findPath(alice, p.getPathLength(policy)); // User's location leaf node
-					Log.d("stats", "User's path length: " + path.length);
+					Log.d("stats", "Alice's latitude path length: " + path.length);
 					//for(int i = 0; i < path.length; i++){
 					//	Log.d("path", "" + path.peek(i).value);
 					//}
@@ -291,8 +294,9 @@ public class nearbyListener implements MessageListener {
 					
 					// Generate a public / private pair for Bob to use
 					share = shareSingleton.getInstance();
-					share.pKey = null; // Force the creation of a new key
-					Paillier last = p.getKey(1024);
+					share.pKey = null; // Throw away the protocol key
+					
+					Paillier last = p.getKey(1024); // Generate the coordinates key
 					
 					BigInteger[] pub = last.publicKey();
 					txt.append(":" + pub[0].toString(32)); // g
@@ -318,8 +322,10 @@ public class nearbyListener implements MessageListener {
 					boolean latResult = p.check(cValues, context, bits);
 					Log.d("output", "Same location: " + latResult);
 					
-					// Determine if near!
 					share = shareSingleton.getInstance();
+					share.pKey = null; // Throw away the key.  This query is done with it
+					
+					// Determine if near!
 					boolean near = latResult && share.foundLon;
 
 					// Notify Bob (myself)
@@ -335,7 +341,9 @@ public class nearbyListener implements MessageListener {
 						l.setLatitude(0.0);
 						l.setLongitude(0.0);
 					}
-					p.notification("Nearby Query Processed", contentTitle, contentText, context, MainActivity.class);
+					
+					Intent intent = new Intent(context, MainActivity.class);
+					p.notification("Nearby Query Processed", contentTitle, contentText, context, intent);
 					
 					// Encrypt location
 					g = new BigInteger(parts[parts.length - 2], 32);
@@ -350,6 +358,8 @@ public class nearbyListener implements MessageListener {
 						orig[i] = Math.abs(orig[i]); // Get the absolute value to remove negative
 					    sendingLocation[i] = last.Encryption(new BigInteger(String.valueOf( (int)orig[i] ))).toString(32);
 					}
+					
+					share.pKey = null; // Bob is done with this (GPS coordinates) key, throw it away
 					
 					// Build stringBuffer (the message body)
 					txt = new StringBuffer();
@@ -378,15 +388,15 @@ public class nearbyListener implements MessageListener {
 				// Alice learns Bob's location
 				case 8: // Stage 8 (case 8)
 					
-					Log.d("stats-alice", "Parts");
-					for (int i = 0; i < parts.length; i++){
-						Log.d("stats-alice", parts[i]);
-					}
-					
 					//Decrypt and parse
 					last = p.getKey(1024);
 					double lat = last.Decryption(new BigInteger(parts[2], 32)).doubleValue();
 					double lon = last.Decryption(new BigInteger(parts[3], 32)).doubleValue();
+					
+					// Clear key
+					share = shareSingleton.getInstance();
+					share.pKey = null; // Alice is done with this last (GPS coordinates) key, throw it away
+					
 					String latString = parts[4] + (lat/10000);
 					String lonString = parts[5] + (lon/10000);
 					
@@ -396,9 +406,23 @@ public class nearbyListener implements MessageListener {
 					share = shareSingleton.getInstance();
 					Log.d("stats-alice", "Entire protocol took: " + (totalEnd - share.start));
 					
-					String Title = sender + "'s Location";
+					Intent i = new Intent(context, processedQueries.class);
+					i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					i.putExtra("lat", latString);
+					i.putExtra("lon", lonString);
+					i.putExtra("name", sender);
+					context.startActivity(i);
+					
+					/*
 					// Notify Alice (myself)
-					p.notification("Nearby Query Processed", Title, latString + ":" + lonString, context, processedQueries.class);
+					Intent notificationIntent = new Intent(context, processedQueries.class);
+					notificationIntent.putExtra("lat", latString);
+					notificationIntent.putExtra("lon", lonString);
+					notificationIntent.putExtra("name", sender);
+					notificationIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+					String Title = sender + "'s Location";
+					p.notification("Nearby Query Processed", Title, latString + ":" + lonString, context, notificationIntent);
+					*/
 					
 			} // End of switch
 		}							
