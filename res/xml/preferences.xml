@@ -60,7 +60,7 @@
 			<EditTextPreference
 			    android:key="fake_lon"
 			    android:title="Fake Longitude"
-			    android:defaultValue="76.7113"
+			    android:defaultValue="-76.7113"
 			    android:dependency="fake_locations" />		    
 		    
 	    
