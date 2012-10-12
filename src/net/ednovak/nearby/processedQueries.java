@@ -27,14 +27,10 @@ public class processedQueries extends ListActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_processed_queries);
 		
-		Log.d("processed", "Anything at all");
-		
-		Intent i = getIntent();
-		
+		Intent i = getIntent();		
 		String lat = i.getStringExtra("lat");
 		String lon = i.getStringExtra("lon");
-		String name = i.getStringExtra("name");
-		
+		String name = i.getStringExtra("name");		
 		
 		ListView list = (ListView)findViewById(android.R.id.list);
 		//data.add(name + ": " + lat + ", " + lon);

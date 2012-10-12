@@ -664,9 +664,12 @@ public class protocol {
 	}
 	
 	
+	// The policy here is the MAX distance away that the use will allow
+	// Alice may be 'policy' meters from Bob East or West (N or S for latitude) therefore we should 
+	// find the height to cover twice this policy
 	public int getPathLength(int policy){
-		double top = Math.log((double)policy / 10.0);
-		double real = ((top / Math.log(2)) + 1)* 2;
-		return Math.min(28, (int)real);
+		double top = Math.log((double)policy * 2.0 / 10.0);
+		double real = top / Math.log(2);
+		return Math.min(15, (int)Math.round(real)+1);
 	}
 }
