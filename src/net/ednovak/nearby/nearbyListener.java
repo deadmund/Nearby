@@ -49,11 +49,13 @@ public class nearbyListener implements MessageListener {
 			String sender = buff.sender;
 			String[] parts = buff.message.split(":");
 			int stage = Integer.valueOf(parts[0]);
-			shareSingleton share;
+			shareSingleton share = shareSingleton.getInstance();
+			long checkpoint;
 			
 			switch (stage){	
 				case 1: // The Polynomial (Case 1, stage 1)
 					if (parts[2].equals("where are you?")) {
+						share.start = System.currentTimeMillis();
 						// Bob only wants to share if Alice is near him so lets run the protocol
 						
 						// Initialize
@@ -64,6 +66,9 @@ public class nearbyListener implements MessageListener {
 						//share = shareSingleton.getInstance();
 						//share.pKey = null; // Make sure it's null at beginning of protocol
 						
+						
+						long findWallLon = System.currentTimeMillis();
+						Log.d("checkpoint", "Starting finding wall set "+ (findWallLon - share.start));
 						// Find span
 						int[] span = new int[3];
 						span = p.makeSpan(2, p.locSimple(context), policy);
@@ -78,10 +83,20 @@ public class nearbyListener implements MessageListener {
 						
 						// Find Wall
 						treeQueue wall = p.findWall(leaves.peek(0), leaves.peek(-1), root);	
+						long findWallLonEnd = System.currentTimeMillis();
+						Log.d("checkpoint", "Finding wall set finished " + (findWallLonEnd - share.start));
+						Log.d("stats-bob", "Time to find wall set " + (findWallLonEnd - findWallLon));
+						
 						
 						// Find Coefficients
+						long findCoefficientsLon = System.currentTimeMillis();
+						Log.d("checkpoint", "Finding coefficients " + (findCoefficientsLon - share.start));
 						BigInteger[] coefficients = p.makeCoefficients(wall, method);
+						long findCoefficientsLonEnd = System.currentTimeMillis();
+						Log.d("checkpoint", "Finished finding coefficients " + (findCoefficientsLonEnd - share.start));
+						Log.d("stats-bob", "Time to find coefficients " + (findCoefficientsLonEnd - findCoefficientsLon));
 						Log.d("bob-stats", "Number of Coefficients: " + coefficients.length);
+						
 						
 						// Encrypt Coefficients
 						BigInteger[] encCoe = p.encryptArray(coefficients, context);
@@ -116,6 +131,7 @@ public class nearbyListener implements MessageListener {
 				// This is Alice now, recieving the longitude wall from Bob and doing her computation
 				case 3: // The computation (case 3, stage 3)
 					// Initialize
+					Log.d("checkpoint", "Alice has received longitude coefficients "+ (System.currentTimeMillis() - share.start));
 					int policy = Integer.valueOf( parts[parts.length - 5] );
 					int bits = Integer.valueOf( parts[parts.length - 4] );
 					BigInteger g = new BigInteger( parts[parts.length - 3], 32 );
@@ -151,12 +167,13 @@ public class nearbyListener implements MessageListener {
 						//Log.d("test", "encCoe[" + i + "]:" + encCoe[i]);
 					}
 					
-					
 					// Do the actual homomorphic computation
 					Log.d("test", "Homomorphic computation time");
 					long compStart = System.currentTimeMillis();
+					Log.d("checkpoint", "Starting homomorphic computation "+ (System.currentTimeMillis() - share.start));
 					BigInteger[] results = p.computation(path, encCoe, bits, g, n, method);
 					long compEnd = System.currentTimeMillis();
+					Log.d("checkpoint", "Homomorphic computation finished "+ (System.currentTimeMillis() - share.start));
 					Log.d("stats-alice", "Time to perform homomorphic encryption: " + (compEnd - compStart));
 					Log.d("stats-alice", "Number of results generated: " + results.length);
 					
@@ -184,7 +201,13 @@ public class nearbyListener implements MessageListener {
 					// Check the C values
 					bits = Integer.valueOf(prefs.getString("bits", "1024"));
 					share = shareSingleton.getInstance();
+					
+					long checkLonStart = System.currentTimeMillis();
+					Log.d("checkpoint", "Starting to check values " + (checkLonStart - share.start));
 					share.foundLon = p.check(cValues, context, bits);
+					long checkLonEnd = System.currentTimeMillis();
+					Log.d("checkpoint", "Finished Checking " + (checkLonEnd - share.start));
+					Log.d("checkpoint", "time to check " + (checkLonEnd - checkLonStart));
 					Log.d("output", "Same location: " + share.foundLon);
 					
 					// not sure why bits and method give the 'already instantiated' error but policy does not.
@@ -194,6 +217,8 @@ public class nearbyListener implements MessageListener {
 					policy = Integer.valueOf(prefs.getString("policy", "160000"));
 					method = Integer.valueOf(prefs.getString("poly_method", "1"));
 					
+					long findWallLatStart = System.currentTimeMillis();
+					Log.d("checkpoint", "Starting finding the wall set latitude " + (findWallLatStart - share.start));
 					// Find Span
 					span = p.makeSpan(5, p.locSimple(context), policy);
 					
@@ -208,7 +233,9 @@ public class nearbyListener implements MessageListener {
 					
 					// Find Wall
 					treeQueue wall = p.findWall(leaves.peek(0), leaves.peek(-1), root);
-					
+					long findWallLatEnd = System.currentTimeMillis();
+					Log.d("checkpoint", "Finding lat wall set finished " + (findWallLatEnd - share.start));
+					Log.d("stats-bob", "time to find wall set lat: " + (findWallLatEnd - findWallLatStart));
 					//Log.d("wall", "The leaves in the  wall");
 					//for(int i = 0; i < wall.length; i++){
 					//	Log.d("wall", "" + wall.peek(i).value);
@@ -216,6 +243,7 @@ public class nearbyListener implements MessageListener {
 					
 					// Find Coefficients (latitude now)
 					BigInteger[] coefficients = p.makeCoefficients(wall, method);
+					Log.d("checkpoint", "Done finding lat coefficients " + (System.currentTimeMillis() - share.start));					
 					
 					// Encrypt Coefficients
 					encCoe = p.encryptArray(coefficients, context);
@@ -244,6 +272,7 @@ public class nearbyListener implements MessageListener {
 				// Alice does the latitude computation
 				case 6: //(stage 6, case 6)
 					// Initialize
+					Log.d("checkpoint", "Alice has received latitude coefficients " + (System.currentTimeMillis() - share.start));
 					policy = Integer.valueOf( parts[parts.length - 5] );
 					bits = Integer.valueOf( parts[parts.length - 4] );
 					g = new BigInteger( parts[parts.length - 3], 32 );
@@ -282,7 +311,13 @@ public class nearbyListener implements MessageListener {
 					
 					// Do the actual homomorphic computation
 					Log.d("test", "Homomorphic computation time");
-					results = p.computation(path, encCoe, bits, g, n, method); 
+					long compStartLat = System.currentTimeMillis();
+					Log.d("checkpoint", "Starting homomorphic computation latitude "+ (System.currentTimeMillis() - share.start));
+					results = p.computation(path, encCoe, bits, g, n, method);
+					long compEndLat = System.currentTimeMillis();
+					Log.d("checkpoint", "Homomorphic computation latitude finished "+ (System.currentTimeMillis() - share.start));
+					Log.d("stats-alice", "Time to perform homomorphic encryption: " + (compEndLat - compStartLat));
+					Log.d("stats-alice", "Number of results generated: " + results.length);
 					
 					
 					// Put them in a string for sending
@@ -319,10 +354,15 @@ public class nearbyListener implements MessageListener {
 					
 					// Check the C values
 					bits = Integer.valueOf(prefs.getString("bits", "1024"));
+					long checkLatStart = System.currentTimeMillis();
+					Log.d("checkpoint", "Starting to check the lat values: " + (checkLatStart - share.start));
 					boolean latResult = p.check(cValues, context, bits);
 					Log.d("output", "Same location: " + latResult);
+					long checkLatEnd = System.currentTimeMillis();
+					Log.d("checkpoint", "Finished checking lat values " + (checkLatEnd - share.start));
+					Log.d("bob-stats", "Time to check values " + (checkLatEnd - checkLatStart));
+					long tmpBegin = System.currentTimeMillis();
 					
-					share = shareSingleton.getInstance();
 					share.pKey = null; // Throw away the key.  This query is done with it
 					
 					// Determine if near!
@@ -348,9 +388,11 @@ public class nearbyListener implements MessageListener {
 					// Encrypt location
 					g = new BigInteger(parts[parts.length - 2], 32);
 					n = new BigInteger(parts[parts.length - 1], 32);
-					last = p.getKey(1024);
+					//last = p.getKey(1024);
+					last = new Paillier(false, bits, 64);
 					last.loadPublicKey(g, n);
 					
+					long tmpEnd = System.currentTimeMillis();
 					double[] orig = {l.getLatitude(), l.getLongitude()};
 					String[] sendingLocation = new String[2];
 					for (int i = 0; i < orig.length; i++){
@@ -358,6 +400,8 @@ public class nearbyListener implements MessageListener {
 						orig[i] = Math.abs(orig[i]); // Get the absolute value to remove negative
 					    sendingLocation[i] = last.Encryption(new BigInteger(String.valueOf( (int)orig[i] ))).toString(32);
 					}
+					Log.d("checkpoint", "Encrypted Location, sending to Alice now... " + (System.currentTimeMillis() - share.start));					
+					Log.d("checkpoint", "Time between checking and beginning encryption " + (tmpEnd - tmpBegin));
 					
 					share.pKey = null; // Bob is done with this (GPS coordinates) key, throw it away
 					
@@ -389,6 +433,7 @@ public class nearbyListener implements MessageListener {
 				case 8: // Stage 8 (case 8)
 					
 					//Decrypt and parse
+					Log.d("ckeckpoint", "Starting Decryption of location " + (System.currentTimeMillis() - share.start));
 					last = p.getKey(1024);
 					double lat = last.Decryption(new BigInteger(parts[2], 32)).doubleValue();
 					double lon = last.Decryption(new BigInteger(parts[3], 32)).doubleValue();

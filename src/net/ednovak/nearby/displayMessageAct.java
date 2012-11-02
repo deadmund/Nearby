@@ -25,6 +25,9 @@ public class displayMessageAct extends Activity {
         
         // Send that initial message!
         String rec = intent.getStringExtra("rec");
+        
+        // Start the protocol
+        share.start = System.currentTimeMillis();
         String session = p.sendFBMessage(rec, "where are you?", this);
         //share.session = session;
         

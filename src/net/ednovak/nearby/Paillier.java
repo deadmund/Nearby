@@ -74,11 +74,12 @@ public class Paillier {
 	
 	// So we can create an empty paillier key.  This is used to access methods like encryption
 	// without wasting time generating a key
-	public Paillier(boolean genKey){
+	public Paillier(boolean genKey, int bits, int certainty){
 		if (genKey){
-			KeyGeneration(1024, 64);
+			KeyGeneration(bits, certainty);
 		}
 		else{
+			bitLength = bits;
 			// Do Nothing!
 		}
 		
