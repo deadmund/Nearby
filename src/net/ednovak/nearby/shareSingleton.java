@@ -16,6 +16,8 @@ public class shareSingleton {
 	public Paillier pKey;
 	public boolean foundLon;
 	
+	public double messageTestStart = 0;
+	
 	// Alice uses these values to store whether or not the longitude / latitude matches
 	// This allows us to wait until stage 4 to respond to user
 	public boolean longitude = false;

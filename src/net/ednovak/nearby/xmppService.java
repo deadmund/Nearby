@@ -198,13 +198,16 @@ public class xmppService extends Service {
 	    		//Toast.makeText(context, "Logged Into Facebook", Toast.LENGTH_SHORT).show();
 	    		in = true;
 	    		conn = connection;
-	    		announceLogin(in);
 	    		
 	    	} // End of try block
 	    	catch (XMPPException e){
+	    		in = false;
 	    		Log.d("chat", "Caught Exception");
 	    		Log.d("chat", e.toString());
 	    	}  
+			
+    		announceLogin(in);
+    		
 			
 			// Listen for incoming Messages
 			ChatManager cManager = connection.getChatManager();

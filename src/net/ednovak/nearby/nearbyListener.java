@@ -53,7 +53,7 @@ public class nearbyListener implements MessageListener {
 			long checkpoint;
 			
 			switch (stage){	
-				case 1: // The Polynomial (Case 1, stage 1)
+				case 1: // The Polynomial (Case 1, stage 1), Bob recieving query from Alice
 					if (parts[2].equals("where are you?")) {
 						share.start = System.currentTimeMillis();
 						// Bob only wants to share if Alice is near him so lets run the protocol
@@ -468,6 +468,16 @@ public class nearbyListener implements MessageListener {
 					String Title = sender + "'s Location";
 					p.notification("Nearby Query Processed", Title, latString + ":" + lonString, context, notificationIntent);
 					*/
+					
+					
+				case 10: // this is used by the message test activity
+					Log.d("nearbyListener:processMessage", "recieved test, sending back reply");
+					p.sendFBMessage(sender, parts[2], 11, buff.session, context);
+					
+				case 11:
+					share = shareSingleton.getInstance();
+					double now = System.currentTimeMillis();
+					Log.d("nearbyListener:processMessage", "Time spent: " + (now - share.messageTestStart)); 
 					
 			} // End of switch
 		}							
