@@ -159,14 +159,15 @@ public class MainActivity extends Activity {
         String rec = otherUser.getText().toString();
         share.rec = rec; // need this in the service receive
         
-        Context context = getApplicationContext();
+        //Context context = getApplicationContext();
+        Context ctx = view.getContext();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         Log.d("main", "contains it: " + prefs.contains("fake_locations"));
         boolean it = prefs.getBoolean("fake_locations", false);
         //Log.d("main", "prefs.getBoolean(\"fake_locations\"): " + it);
         if ( it ){
         	//Log.d("main", "Fake locations turned on; plugging the fake one!");
-        	myListener.plugFake(context);
+        	myListener.plugFake(ctx);
         }
         if ( rec.length() != 0 && rec != null ){
         	if ( !myListener.listening() ){
@@ -175,19 +176,18 @@ public class MainActivity extends Activity {
         		// allows me to access these values in the on receive later
         		protocol p = new protocol();
         		Location l = p.locSimple(this);
-        		share.lon = l.getLongitude();
+        		share.lon = l.getLongitude(); // Storing Alice's location, Alice initiates queries
         		share.lat = l.getLatitude();
         		
         		intent.putExtra("rec", rec);
-        		share.start = System.currentTimeMillis();
         		startActivity(intent);
         	}
     		else { // Don't have a good location lock yet
-    			Toast.makeText(context, "Still waiting for a lock on your location", Toast.LENGTH_SHORT).show();
+    			Toast.makeText(ctx, "Still waiting for a lock on your location", Toast.LENGTH_SHORT).show();
     		}
         }
         else { // Don't have the phone number entered!
-        	Toast.makeText(context, "You need to provide a recipient", Toast.LENGTH_SHORT).show();
+        	Toast.makeText(ctx, "You need to provide a recipient", Toast.LENGTH_SHORT).show();
         }
     }
     

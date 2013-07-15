@@ -47,7 +47,7 @@ public class messageTest extends Activity{
 		protocol p = new protocol();
 		shareSingleton share = shareSingleton.getInstance();
 		share.messageTestStart = System.currentTimeMillis();
-		p.sendFBMessage(rec, message, 10, "5", view.getContext());
+		p.sendFBMessage(rec, message, 150, "5", view.getContext());
 		
 	}
 }

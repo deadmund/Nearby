@@ -1,8 +1,7 @@
 package net.ednovak.nearby;
 
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Random;
 
 import android.app.Notification;
@@ -433,59 +432,60 @@ public class protocol {
 		}
 	}
 
-	// Does Bob's calculations
-	public BigInteger[] computation(treeQueue coveringSet, BigInteger[] encCoe,
+	// Does the polynomial evaluation
+	public ArrayList<BigInteger> computation(treeQueue coveringSet, BigInteger[] encCoe, int[] heights,
 			int bits, BigInteger g, BigInteger n, int method) {
 
-		BigInteger[] results = null;
+		ArrayList<BigInteger> results = null;
 		Random rand = new Random();
 
 		Paillier paillierE = new Paillier(false, bits, 64);
-		paillierE.loadPublicKey(g, n);
+		paillierE.loadPublicKey(g, n); // puts g and n into the state of PaillierE
 		//BigInteger[] pub = paillierE.publicKey();
 		//Log.d("enc", "Homomorphic Computation  g: " + pub[0] + "  n: " + pub[1]);
 
+		Log.d("protocol:computation", "STarting the computation now");
 		if (method == 1) { // Several small polys
-			results = new BigInteger[encCoe.length * coveringSet.length];
-
-			// This should probs be a protocol function
-			// Evaluate the polys
-			int k = 0;
-			for (int j = 0; j < coveringSet.length; j++) {
-				int tmp = coveringSet.peek(j).value;
-				BigInteger bob = new BigInteger(String.valueOf(tmp));
-				bob = paillierE.Encryption(bob);
-				for (int i = 0; i < encCoe.length; i++) { // The last token is
-															// the width
-					BigInteger alice = encCoe[i];
-					BigInteger c = bob.multiply(alice).mod(paillierE.nsquare);
-					results[k] = c;
+			results = new ArrayList<BigInteger>();
+			
+			for(int i = 0; i < heights.length; i++){
+				int h = heights[i];
+				
+				for(int j = 0; j < coveringSet.length; j++){
+					tree pSetNode = coveringSet.peek(j);
 					
-					// Random Number to hide stuff from Bob
-					BigInteger r = new BigInteger(String.valueOf(rand.nextInt(9999999)));
-					results[k] = homoMult(results[k], r, n);
-					
-					k++;
+					//Log.d("computation:method1", "pSetNode.height: " + pSetNode.height +"  h: " + h);
+					if (pSetNode.height == h){
+						//Log.d("computation:method1", "match");
+						BigInteger pSetVal = paillierE.Encryption(new BigInteger(String.valueOf(pSetNode.value)));
+						BigInteger c = pSetVal.multiply(encCoe[i]).mod(paillierE.nsquare);
+						results.add(c);
+						
+						//Log.d("protocol:method1", "Multiplied " + pSetVal + " at height" + pSetNode.height + " x " + encCoe[i]);
+					}
 				}
 			}
 		}
 
 		else if (method == 2) { // On large poly
-			results = new BigInteger[coveringSet.length];
+			results = new ArrayList<BigInteger>();
 			for (int i = 0; i < coveringSet.length; i++) {
 				BigInteger b = new BigInteger(String.valueOf(coveringSet
 						.peek(i).value));
 				// Log.d("bobCalc", "Evaluating " + b);
-				results[i] = homoEval(b, encCoe, n);
 				
-				// The random number
+				BigInteger tmp = homoEval(b, encCoe, n);
+				
 				BigInteger r = new BigInteger(String.valueOf(rand.nextInt(9999999)));
-				results[i] = homoMult(results[i], r, n);
-			}	
+				tmp = homoMult(tmp, r, n);
+				
+				results.add(tmp);
+			}
+			
 		}
 		
 		// Shuffle the results
-		Collections.shuffle(Arrays.asList(results));
+		//Collections.shuffle(Arrays.asList(results));
 		return results;
 	}
 	
