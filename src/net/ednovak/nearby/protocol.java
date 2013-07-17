@@ -112,7 +112,7 @@ public class protocol {
 		// I am assuming the Earth is a perfect sphere with radius 6371. Even
 		// though
 		// it is not.
-		return (int) Math.round((latitude / 0.000044966242717));
+		return (int) Math.round((latitude / 0.000179864323842));
 	}
 
 	// Converts a longitude to a leaf node value
@@ -444,7 +444,7 @@ public class protocol {
 		//BigInteger[] pub = paillierE.publicKey();
 		//Log.d("enc", "Homomorphic Computation  g: " + pub[0] + "  n: " + pub[1]);
 
-		Log.d("protocol:computation", "STarting the computation now");
+		//Log.d("protocol:computation", "STarting the computation now");
 		if (method == 1) { // Several small polys
 			results = new ArrayList<BigInteger>();
 			
@@ -458,7 +458,7 @@ public class protocol {
 					if (pSetNode.height == h){
 						//Log.d("computation:method1", "match");
 						BigInteger pSetVal = paillierE.Encryption(new BigInteger(String.valueOf(pSetNode.value)));
-						BigInteger c = pSetVal.multiply(encCoe[i]).mod(paillierE.nsquare);
+						BigInteger c = (pSetVal.multiply(encCoe[i])).mod(paillierE.nsquare);
 						results.add(c);
 						
 						//Log.d("protocol:method1", "Multiplied " + pSetVal + " at height" + pSetNode.height + " x " + encCoe[i]);
@@ -504,7 +504,7 @@ public class protocol {
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		int bits = Integer.valueOf(prefs.getString("bits", "1024"));
 		Paillier p = getKey(bits);
-		BigInteger[] priv = p.privateKey();
+		//BigInteger[] priv = p.privateKey();
 		//Log.d("enc", "Encrypting.  g: " + priv[0] + "  lambda: " + priv[1] + "  n:" + priv[2]);
 		BigInteger[] encCoe = new BigInteger[clear.length];
 		for (int i = 0; i < encCoe.length; i++){
@@ -539,14 +539,14 @@ public class protocol {
 		//Log.d("stage " + stage, "edge leaf value: " + edgeLeafNumber);
 
 		int spanLength = (Math.abs(edgeLeafNumber - userLeafNumber) * 2) + 1;
-		Log.d("stats", "User's leaf node span: " + spanLength);
+		//Log.d("stats", "User's leaf node span: " + spanLength);
 
 		int left = userLeafNumber - (spanLength / 2);
 		int right = userLeafNumber + (spanLength / 2);
 
-		Log.d("stage " + stage, "User's leaf nodes go from " + left + " to "
-				+ right + ".  That's: " + spanLength + " nodes.  Their node is: "
-				+ userLeafNumber);
+		//Log.d("stage " + stage, "User's leaf nodes go from " + left + " to "
+		//		+ right + ".  That's: " + spanLength + " nodes.  Their node is: "
+		//		+ userLeafNumber);
 		
 		return new int[] {left, userLeafNumber, right};
 	}
@@ -566,7 +566,8 @@ public class protocol {
 		for (int i = 0; i < tokens.length; i++) {
 			BigInteger val = new BigInteger(tokens[i], 32);
 			//Log.d("enc", "Decrypting: " + val);
-			String clear = paillierD.Decryption(val).toString();
+			//Log.d("protocol:check", "paillierD.n: " + paillierD.n);
+			String clear = (paillierD.Decryption(val)).mod(paillierD.n).toString();
 			Log.d("prot", "unenc: " + clear);
 			if (clear.equals("0")) {
 				Log.d("hooray!", "It was 0");

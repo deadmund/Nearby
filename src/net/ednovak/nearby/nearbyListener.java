@@ -56,6 +56,7 @@ public class nearbyListener implements MessageListener {
 				case 1: // The Polynomial (Case 1, stage 1), Bob receiving query from Alice
 					if (parts[2].equals("where are you?")) {
 						share.start = System.currentTimeMillis(); // This is on Bob
+						Log.d("c", "Recieved query from Alice");
 						// Bob only wants to share if Alice is near him so lets run the protocol
 						
 						// Initialize
@@ -84,6 +85,7 @@ public class nearbyListener implements MessageListener {
 						// Find Wall
 						treeQueue wall = p.findWall(leaves.peek(0), leaves.peek(-1), root);
 						long findWallLonEnd = System.currentTimeMillis();
+						Log.d("nearbyListener:case1", "Wall set length: " + wall.length);
 						//log.d("b checkpoint", "Finding wall set finished " + (findWallLonEnd - share.start));
 						//log.d("b checkpoint", "Time to find wall set " + (findWallLonEnd - findWallLon));
 						
@@ -99,6 +101,9 @@ public class nearbyListener implements MessageListener {
 						
 						
 						// Encrypt Coefficients
+						// Make sure the key is cleared:
+						share = shareSingleton.getInstance();
+						share.pKey = null;
 						BigInteger[] encCoe = p.encryptArray(coefficients, context);
 						//Log.d("test", "Bob's encrypted Coe's");
 						
@@ -106,6 +111,8 @@ public class nearbyListener implements MessageListener {
 						
 						// Put them in a string for sending
 						StringBuffer txt = new StringBuffer();
+						//Log.d("c", "EncCoe[0]: " + encCoe[0]);
+						//Log.d("c", "EncCoe[0] base 32: " + encCoe[0].toString(32));
 						txt.append(encCoe[0].toString(32)); // The first one should not begin with ":"
 						txt.append(":"+wall.peek(0).height);
 						for (int i = 1; i < encCoe.length; i++){
@@ -134,6 +141,7 @@ public class nearbyListener implements MessageListener {
 				case 3: // The computation (case 3, stage 3)
 					// Initialize
 					//log.d("a checkpoint", "Alice has received longitude coefficients "+ (System.currentTimeMillis() - share.start));
+					Log.d("c", "Recieved Coefficents from Bob");
 
 					int policy = Integer.valueOf( parts[parts.length - 5] );
 					int bits = Integer.valueOf( parts[parts.length - 4] ); //encryption strength
@@ -204,6 +212,7 @@ public class nearbyListener implements MessageListener {
 					
 				case 4: // The Check (stage 4, case 4)
 					//log.d("test", "checking!");
+					Log.d("c", "Checking Alice's Evaluations");
 					
 					// Pull out the C values
 					String[] cValues = new String[parts.length - 2];
@@ -288,6 +297,7 @@ public class nearbyListener implements MessageListener {
 				case 6: //(stage 6, case 6)
 					// Initialize
 					//log.d("checkpoint", "Alice has received latitude coefficients " + (System.currentTimeMillis() - share.start));
+					Log.d("c", "Recieved latitude coefficients");
 					policy = Integer.valueOf( parts[parts.length - 5] );
 					bits = Integer.valueOf( parts[parts.length - 4] );
 					g = new BigInteger( parts[parts.length - 3], 32 );
@@ -360,8 +370,7 @@ public class nearbyListener implements MessageListener {
 				// End of stage 6 (case 6)
 					
 				case 7: // Bob checks (case 7, stage 7) final stage
-					
-					//log.d("test", "checking!");
+					Log.d("c", "Checking Alice's latitude evaluations");
 					
 					// Pull out the C values
 					cValues = new String[parts.length - 4];
@@ -450,7 +459,7 @@ public class nearbyListener implements MessageListener {
 					
 				// Alice learns Bob's location
 				case 8: // Stage 8 (case 8)
-					
+					Log.d("c", "Recieved Bob's location");
 					//Decrypt and parse
 					//log.d("ckeckpoint", "Starting Decryption of location " + (System.currentTimeMillis() - share.start));
 					last = p.getKey(1024);
