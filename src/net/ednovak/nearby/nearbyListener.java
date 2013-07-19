@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Location;
+import android.net.TrafficStats;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -461,13 +462,19 @@ public class nearbyListener implements MessageListener {
 				case 8: // Stage 8 (case 8)
 					Log.d("c", "Recieved Bob's location");
 					//Decrypt and parse
+					
+					share = shareSingleton.getInstance();
 					//log.d("ckeckpoint", "Starting Decryption of location " + (System.currentTimeMillis() - share.start));
+					long totalRX = TrafficStats.getTotalRxBytes() - share.rxstart; 
+					long totalTX = TrafficStats.getTotalTxBytes() - share.txstart;
+					Log.d("nearbyListener:case8", "totalRX: " + totalRX + "  totalTX: " + totalTX);
+					
+					
 					last = p.getKey(1024);
 					double lat = last.Decryption(new BigInteger(parts[2], 32)).doubleValue();
 					double lon = last.Decryption(new BigInteger(parts[3], 32)).doubleValue();
 					
 					// Clear key
-					share = shareSingleton.getInstance();
 					share.pKey = null; // Alice is done with this last (GPS coordinates) key, throw it away
 					
 					String latString = parts[4] + (lat/10000);
