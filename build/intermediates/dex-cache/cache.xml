@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/libs/asmack-issue15.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="efe50d580dfd40a54ec9eee4f2c1b315056c5bd8">
+        <dex dex="/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/build/intermediates/pre-dexed/debug/asmack-issue15-7dc2f99e37309d1ee039f98a9b2ebabbbb9847cf.jar" />
+    </item>
+    <item
+        jar="/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.3/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="2c91c949a45a21cdecf26e03951e46c7beec9ad8">
+        <dex dex="/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/build/intermediates/pre-dexed/debug/classes-164abceb8f02f78a1c706dc2562c3ff992ebef8d.jar" />
+    </item>
+    <item
+        jar="/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.3/jars/libs/internal_impl-21.0.3.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="01ec05bfbafcc07646ba813000bf2ef11742dd03">
+        <dex dex="/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/build/intermediates/pre-dexed/debug/internal_impl-21.0.3-3d5bf284597b66ccee411ba99040deab7ceefe1f.jar" />
+    </item>
+    <item
+        jar="/scratch/ejnovak.scratch/android-sdk/extras/android/m2repository/com/android/support/support-annotations/21.0.3/support-annotations-21.0.3.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="4b74cefe1f0c1b819e7260c8627a14674e37fd35">
+        <dex dex="/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/build/intermediates/pre-dexed/debug/support-annotations-21.0.3-470c822c37ded3c1b343f80507db90324d418ee8.jar" />
+    </item>
+
+</items>

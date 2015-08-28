@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- From: file:/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/src/main/res/values/arrays.xml -->
+    <eat-comment/>
+    <string-array name="encryption">
+        <item>256</item>
+        <item>512</item>
+        <item>1024</item>
+        <item>2048</item>
+    </string-array>
+    <string-array name="encryption_values">
+        <item>256</item>
+        <item>512</item>
+        <item>1024</item>
+        <item>2048</item>
+    </string-array>
+    <string-array name="messages">
+        <item>SMS Messages</item>
+        <item>Facebook Messages</item>
+    </string-array>
+    <string-array name="messages_values">
+        <item>sms</item>
+        <item>fb</item>
+    </string-array>
+    <string-array name="poly_method">
+        <item>Many small polynomials</item>
+        <item>One large polynomial</item>
+    </string-array>
+    <string-array name="poly_method_values">
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    <!-- From: file:/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/src/main/res/values/dimens.xml -->
+    <eat-comment/>
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="padding_large">16dp</dimen>
+    <dimen name="padding_medium">8dp</dimen>
+    <dimen name="padding_small">8dp</dimen>
+    <!-- From: file:/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/src/main/res/values/colors.xml -->
+    <eat-comment/>
+    <drawable name="black">#000000</drawable>
+    <drawable name="white">#ffffff</drawable>
+    <!-- From: file:/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/src/main/res/values/strings.xml -->
+    <eat-comment/>
+    <string name="action_settings">Settings</string>
+    <string name="app_name">Nearby</string>
+    <string name="bit_strength">Bit Strength (power of 2)</string>
+    <string name="butt_query">Query</string>
+    <string name="certainty">Random Prime Certainty</string>
+    <string name="hello">Hello World</string>
+    <string name="hello_world">Enter the name of a Facebook friend to query their location.</string>
+    <string name="menu_settings">Settings</string>
+    <string name="mess">Test Messages</string>
+    <string name="message">Integer to Encrypt</string>
+    <string name="names">FB Names List</string>
+    <string name="other_user_hint">Facebook Friend\'s Name</string>
+    <string name="query">Query</string>
+    <string name="request">Request</string>
+    <string name="s10">10 meters</string>
+    <string name="settings">Settings</string>
+    <string name="test">Test</string>
+    <string name="test_enc">Test Encryption</string>
+    <string name="test_waiting">Enter parameters and test encryption speed!</string>
+    <string name="title_activity_bloom_filter_test">BloomFilterTest</string>
+    <string name="title_activity_main">Nearby</string>
+    <string name="upload">Upload Something</string>
+    <string name="wait">Just a moment please…</string>
+    <string name="waiting">waiting</string>
+    <!-- From: file:/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/src/main/res/values/styles.xml -->
+    <eat-comment/>
+    <style name="AppTheme" parent="android:Theme.Light"/>
+    <style name="preferences">
+        <item name="android:background">#000000</item>
+        <item name="android:foreground">#FFFFFF</item>
+    </style>
+</resources>

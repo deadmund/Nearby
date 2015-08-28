@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+	<PreferenceCategory
+	    android:title="protocol"
+	    android:key="category1" >
+	    
+	    <ListPreference
+	        android:key="poly_method"
+	        android:title="Polynomial Type"
+	        android:summary="Polynomial Style To Use"
+	        android:defaultValue="2"
+	        android:entries="@array/poly_method"
+	        android:entryValues="@array/poly_method_values" />
+	    
+	    <ListPreference
+	        android:key="encryption_strength"
+	        android:title="Encryption Strength"
+	        android:summary="Strength of Encyption (in bits)"
+	        android:defaultValue="1024"
+	        android:entries="@array/encryption"
+	        android:entryValues="@array/encryption" />
+	    
+	    <EditTextPreference
+	        android:key="chunk"
+  	        android:title="Chunk Size" 
+	        android:summary="Size of the chunks that messages are broken into"
+	        android:defaultValue="500" />
+	    
+	    <EditTextPreference
+	        android:key="policy"
+	        android:title="Policy"
+	        android:summary="Maximum distance at which you will share GPS coordinates (meters)"
+	        android:defaultValue="30" />
+	    
+	    <EditTextPreference
+	        android:key="fb_user"
+	        android:summary="Used to send FB messages"
+	        android:defaultValue="None"
+	        android:title="Facebook Username" />
+	    
+		<EditTextPreference
+		    android:key="fb_pass"
+	        android:summary="Used to send FB messages"
+	        android:defaultValue="None"
+	        android:title="Facebook Password"
+	        android:password="true" />
+		
+		<CheckBoxPreference
+		    android:key="fake_locations"
+		    android:title="Allow Fake Locations"
+		    android:summary="Input fake location"
+		    android:defaultValue="false" />
+		
+			<EditTextPreference 
+			    android:key="fake_lat"
+			    android:title="Fake Latitude"
+			    android:defaultValue="37.2708"
+			    android:dependency="fake_locations" />
+			
+			<EditTextPreference
+			    android:key="fake_lon"
+			    android:title="Fake Longitude"
+			    android:defaultValue="-76.7113"
+			    android:dependency="fake_locations" />		    
+		    
+	    
+	</PreferenceCategory>
+</PreferenceScreen><!-- From: file:/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/src/main/res/xml/preferences.xml -->

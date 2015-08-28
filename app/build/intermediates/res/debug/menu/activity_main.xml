@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <item android:id="@+id/settings"
+        android:title="@string/settings" />
+    
+    <item android:id="@+id/names"
+        android:title="@string/names" />
+    
+    <item android:id="@+id/test_encryption"
+        android:title="@string/test_enc" />
+    
+    <item android:id="@+id/test_message"
+        android:title="@string/mess" />
+
+    <item android:id="@+id/bf_test"
+        android:title="Bloom Filter Test"/>
+        
+</menu>
+<!-- From: file:/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/src/main/res/menu/activity_main.xml -->

@@ -1,0 +1,53 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >   
+    
+    <EditText
+        android:id="@+id/message"
+        android:layout_weight="3"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:hint="Message..." />
+    
+    <EditText
+        android:id="@+id/length"
+        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:hint="Random Message Length" />
+    
+	<Button 
+	    android:id="@+id/gen_message_butt"
+        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:text="Generate Random Message"
+        android:onClick="genMessage" />
+	
+	<EditText
+	    android:id="@+id/rec"
+       	android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:hint="Facebook Friend's Name" />
+	
+
+    
+	<Button android:id="@+id/send_message_butt"
+        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:text="Send Message"
+        android:onClick="sendMessage" />  
+    
+    <TextView android:id="@+id/output"
+       	android:layout_weight="4"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:text=""
+        android:gravity="left" />
+    
+</LinearLayout>
+<!-- From: file:/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/src/main/res/layout/activity_message_test.xml -->
