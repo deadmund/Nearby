@@ -90,7 +90,7 @@ activity#net.ednovak.nearby.messageTest
 ADDED from AndroidManifest.xml:35:9
 	android:name
 		ADDED from AndroidManifest.xml:35:19
-activity#net.ednovak.nearby.settings
+activity#net.ednovak.nearby.Preferences
 ADDED from AndroidManifest.xml:36:9
 	android:name
 		ADDED from AndroidManifest.xml:36:19

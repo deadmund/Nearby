@@ -8,61 +8,56 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.nio.charset.Charset;
+
 public class MainActivity extends Activity {
-	
-	public final static String EXTRA_MESSAGE = "net.ednovak.nearby.MESSAGE";
-	private lListener myListener = new lListener();
+    private final static String TAG = MainActivity.class.getName();
+
 	private LocationManager lManager;
-	private logInReceiver rec;
-	private ToggleButton chatButton;
+    private Context ctx;
+    protected Socket s;
+    protected OutputStream sockOut;
+    protected InputStream sockIn;
+    public static final int BYTE_COUNT = 64;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ctx = getApplicationContext();
         
         // Location listener stuff
         lManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10000, myListener);
-        // Turn on the following for a physical phone, turn it off for emulated device
-        try {
-        	lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 10000, myListener);
-        }
-        catch (Exception e){
-        	// Well nevermind then!
-        }
-        
-        // Grab reference to chat button
-        chatButton = (ToggleButton)findViewById(R.id.fb_chat);
-    } // End of onCreate
-    
-    
-    // To update name based on names activity (startActivityForResult
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent){
-    	switch (requestCode) {
-    	case 1:
-    		if ( resultCode == RESULT_OK){
-    			String name = intent.getStringExtra("other_user");
-    			EditText rec = (EditText) findViewById(R.id.other_user);
-    			rec.setText(name);
-    			break;
-    		}
-    	}
-    	
+
+        NearPriLocationListener myListener = NearPriLocationListener.getInstance(ctx);
+        // Get location updates from both GPS and NETWORK_PROVIDER (which is WiFi and cell signal)
+        lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, Integer.MAX_VALUE, myListener);
+        lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, Integer.MAX_VALUE, myListener);
+
+
+        // Connect to server as Bob!
+        connect();
     }
     
     
@@ -82,18 +77,14 @@ public class MainActivity extends Activity {
     	Log.d("main", "Selected: " + item.toString());
     	switch ( item.getItemId() ){
     		case R.id.settings:
-    			startActivity(new Intent(this, settings.class));
+    			startActivity(new Intent(this, Preferences.class));
     			return true;
-    			
-    		case R.id.names:
-    			if (xmppService.in){
-    				startActivityForResult(new Intent(this, names.class), 1);
-    				return true;
-    			}
-    			else{
-					Toast.makeText(this, "You must be logged into Facebook", Toast.LENGTH_SHORT).show();
-					return false;
-    			}
+
+            case R.id.reconnect:
+                closeSocket();
+                connect();
+                return true;
+
     			
     		case R.id.test_encryption:
     	    	startActivity(new Intent(this, paillierTest.class));
@@ -122,17 +113,6 @@ public class MainActivity extends Activity {
     @Override
     public void onResume(){
     	super.onResume();
-    	
-    	if (rec == null){
-    		// To connect the onRecieve
-    		IntentFilter logInFilter;
-    		logInFilter = new IntentFilter(xmppService.LOGIN_UPDATE);
-    		rec = new logInReceiver();
-    		registerReceiver(rec, logInFilter);
-
-    		//The example has a call here: startxmppService();
-    	}
-    	
     }
     
     
@@ -140,107 +120,162 @@ public class MainActivity extends Activity {
     @Override
     public void onDestroy(){
     	super.onDestroy();
-    	if ( xmppService.in ){
-    		unbindService(mConnection);
-    	}
-    	try{ // Sometimes the app is distroyed without the logInRec ever having been registered
-    		unregisterReceiver(rec); 
-    	}
-    	catch(IllegalArgumentException e){
-    		// Do nothing
-    	}
+    }
+
+
+    public void connect(){
+        // tmp server address and ip address
+
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String SERVER_IP = "ec2-52-89-134-220.us-west-2.compute.amazonaws.com";
+                int SERVER_PORT = 5555;
+
+                try {
+                    // Create Socket
+                    InetAddress serverAddr = InetAddress.getByName(SERVER_IP);
+                    s = new Socket(serverAddr, SERVER_PORT);
+
+                    // Wire up streams for input and output in other functions / threads
+                    sockOut = s.getOutputStream();
+                    sockIn = s.getInputStream();
+
+                    // Create thread to handle socket input
+                    // Make sure to do this before sending the 'b' (below)
+                    // so that we can pickup / read the response from the server!
+                    Thread t = new Thread(new ServerHandler());
+                    t.start();
+
+                    writeSocket("b:");
+                }
+                catch(Exception e){
+                    Log.d(TAG, "Something went wrong with the dumb socket!");
+                    e.printStackTrace();
+                    closeSocket();
+                }
+            }
+        });
+        t.start();
     }
     
     
     // Query Button
     public void query(View view) {
-        Intent intent = new Intent(this, displayMessageAct.class);
-        shareSingleton share = shareSingleton.getInstance();
-        share.start = System.currentTimeMillis();
-        
-        // recipient number / name
-        EditText otherUser = (EditText) findViewById(R.id.other_user);
-        String rec = otherUser.getText().toString();
-        share.rec = rec; // need this in the service receive
-        
-        //Context context = getApplicationContext();
-        Context ctx = view.getContext();
+        // Get Location
+
+        NearPriLocationListener ll = NearPriLocationListener.getInstance(ctx);
+        String tmp = "lon: " + ll.lon + "  lat: " + ll.lat;
+        Toast.makeText(ctx, tmp, Toast.LENGTH_SHORT).show();
+        //Log.d(TAG, tmp);
+
+        // Start a query with Bob!  I'm not alice
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        Log.d("main", "contains it: " + prefs.contains("fake_locations"));
-        boolean it = prefs.getBoolean("fake_locations", false);
-        //Log.d("main", "prefs.getBoolean(\"fake_locations\"): " + it);
-        if ( it ){
-        	//Log.d("main", "Fake locations turned on; plugging the fake one!");
-        	myListener.plugFake(ctx);
-        }
-        if ( rec.length() != 0 && rec != null ){
-        	if ( !myListener.listening() ){
-        		lManager.removeUpdates(myListener);
-        		// I used to pass stuff in over the intent but using the shareSingleton is
-        		// allows me to access these values in the on receive later
-        		protocol p = new protocol();
-        		Location l = p.locSimple(this);
-        		share.lon = l.getLongitude(); // Storing Alice's location, Alice initiates queries
-        		share.lat = l.getLatitude();
-        		
-        		intent.putExtra("rec", rec);
-        		startActivity(intent);
-        	}
-    		else { // Don't have a good location lock yet
-    			Toast.makeText(ctx, "Still waiting for a lock on your location", Toast.LENGTH_SHORT).show();
-    		}
-        }
-        else { // Don't have the phone number entered!
-        	Toast.makeText(ctx, "You need to provide a recipient", Toast.LENGTH_SHORT).show();
-        }
-    }
-    
-    
-    // To bind to service
-    private ServiceConnection mConnection = new ServiceConnection() {
-    	@Override
-    	public void onServiceConnected(ComponentName className, IBinder service) {
-    		// Nada!
-    	}
-    	
-    	@Override
-    	public void onServiceDisconnected(ComponentName name){
-    		chatButton.setChecked(false);
-    	}
-    };
-    
-    
-    // Toggle Button at the bottom
-    public void fbChatConnect(View view){
-    	
-    	if (xmppService.in){
-    		Log.d("main", "Turning service off");
-    		unbindService(mConnection);
-    		stopService(new Intent(this, xmppService.class));
-    		chatButton.setChecked(false);
-    	}
-    	
-    	else {
-    		chatButton.setChecked(false);
-    		chatButton.setText("Logging In...");
-    		Log.d("main", "turning service on");
-    		Intent bindIntent = new Intent(this, xmppService.class);
-    		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-    		String user = sp.getString("fb_user", "None");
-    		String pass = sp.getString("fb_pass", "None");
-    		bindIntent.putExtra("user", user);
-    		bindIntent.putExtra("pass", pass);
-    		bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);   		
-    	}
+        String IP = prefs.getString("bob_ip", "0.0.0.0");
+        String msg = "a:" + IP;
+        writeSocket(msg);
+
     }
 
 
-    // For some reason this is defined in the activity class.  I though it worked differently in the owl project
-	public class logInReceiver extends BroadcastReceiver{
-		@Override
-		public void onReceive(Context context, Intent intent){
-			boolean light = intent.getBooleanExtra("connection", false);
-			chatButton.setChecked(light);
-		}
-	}
+    private void closeSocket(){
+        if(s != null) {
+            while (!s.isClosed()) {
+                try {
+                    s.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+        sockOut = null;
+        sockIn = null;
+        Log.d(TAG, "Socket closed");
+    }
+
+    private void writeSocket(String msg){
+        StringBuilder sb = new StringBuilder(msg);
+        while(sb.length() < BYTE_COUNT){
+            sb.append("@");
+        }
+
+        try {
+            sockOut.write(sb.toString().getBytes());
+            Log.d(TAG, "Sent " + sb.toString());
+        } catch (IOException e){
+            e.printStackTrace();
+            closeSocket();
+        } catch(NullPointerException e1){
+            e1.printStackTrace();
+            Toast.makeText(ctx, "Please reconnect to server", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+    private class ServerHandler implements Runnable{
+
+        public ServerHandler(){
+
+        }
+
+
+        private int readLoop(byte[] buffer){
+            int sumBytes = 0;
+            while(sumBytes < BYTE_COUNT){
+                int newAmount;
+                try {
+                    newAmount = sockIn.read(buffer, sumBytes, buffer.length - sumBytes);
+                } catch (IOException e){
+                    e.printStackTrace();
+                    return -1;
+                }
+                sumBytes += newAmount;
+                if(newAmount < 0){
+                    return -1;
+                }
+                if(newAmount < BYTE_COUNT){
+                    Log.d(TAG, "Only read " + newAmount + " bytes instead of " + BYTE_COUNT + "! Reading more.");
+                }
+            }
+            return sumBytes;
+        }
+
+        @Override public void run(){
+            while(true) {
+                byte[] buffer = new byte[BYTE_COUNT];
+                int total = readLoop(buffer);
+                if(total == -1){
+                    break;
+                }
+
+
+                String data = new String(buffer, Charset.forName("UTF-8"));
+                data = data.replace("@","");
+                Log.d(TAG, "Data Received: " + data);
+
+
+                // Just a temporary test thingy
+                if (data.equals("ack-a")) {
+                    Log.d(TAG, "Sending \'Hello Bob!\' to other device");
+                    writeSocket("Hello Bob!");
+                }
+
+
+                if (data.equals("ack-b")) {
+                    Log.d(TAG, "Idling as Bob");
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    writeSocket("b:2");
+                }
+
+
+                if (data.equals("Hello Bob!")) {
+                    writeSocket("Hello Alice!");
+                }
+            }
+            closeSocket();
+        }
+    }
 }

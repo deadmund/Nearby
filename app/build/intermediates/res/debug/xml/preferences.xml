@@ -61,8 +61,14 @@
 			    android:key="fake_lon"
 			    android:title="Fake Longitude"
 			    android:defaultValue="-76.7113"
-			    android:dependency="fake_locations" />		    
-		    
+			    android:dependency="fake_locations" />
+
+		<EditTextPreference
+			android:key="bob_ip"
+			android:title="Bob's IP"
+			android:summary="Ip address of Bob to send queries to"
+			android:defaultValue="0.0.0.0" />
+
 	    
 	</PreferenceCategory>
 </PreferenceScreen><!-- From: file:/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/src/main/res/xml/preferences.xml -->

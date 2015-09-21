@@ -6,8 +6,8 @@ android {
 
     defaultConfig {
         applicationId "net.ednovak.nearby"
-        minSdkVersion 8
-        targetSdkVersion 8
+        minSdkVersion 9
+        targetSdkVersion 9
     }
 
     buildTypes {

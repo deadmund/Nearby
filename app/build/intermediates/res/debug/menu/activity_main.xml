@@ -15,6 +15,9 @@
 
     <item android:id="@+id/bf_test"
         android:title="Bloom Filter Test"/>
+
+    <item android:id="@+id/reconnect"
+        android:title="Reconnect to Server"/>
         
 </menu>
 <!-- From: file:/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/src/main/res/menu/activity_main.xml -->

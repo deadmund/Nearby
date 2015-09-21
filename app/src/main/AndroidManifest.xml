@@ -33,7 +33,7 @@
         <activity android:name=".answerAct" />
         <activity android:name=".paillierTest" />
         <activity android:name=".messageTest" />
-        <activity android:name=".settings" />
+        <activity android:name=".Preferences" />
         <!-- android:theme="@style/preferences"/> -->
         <activity android:name=".names" />
 

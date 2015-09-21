@@ -1,46 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" 
-    android:gravity="center_horizontal"
-    android:id="@+id/ll">   
+    android:orientation="vertical"
+    android:id="@+id/ll">
     
-    <TextView android:id="@+id/text_view"
-       	android:layout_weight="1"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:padding="@dimen/padding_medium"
-        android:text="@string/hello_world"
-        tools:context=".MainActivity" />  
+    <TextView android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="30dp"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="10dp"
+        android:text="Near-Pri" />
         
 	<ImageView android:id="@+id/query"
+        android:layout_below="@id/title"
         android:contentDescription="@string/query"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
         android:src="@drawable/query" />
-        
-    <EditText android:id="@+id/other_user"
-        android:layout_width="match_parent"
+
+    <TextView android:id="@+id/explaintext"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="@dimen/padding_medium"
-        android:hint="@string/other_user_hint" />      
-    
+        android:layout_centerHorizontal="true"
+        android:text="Use the button below to send a query (as Alice) to the other device running this app."
+        android:layout_margin="20dp"
+        android:layout_below="@id/query"/>
+
 	<Button android:id="@+id/bt_query"
-        android:layout_weight="1"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:text="@string/butt_query"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="20dp"
         android:onClick="query" />
 	
-	<ToggleButton android:id="@+id/fb_chat"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:textOn="Logged In"
-	    android:textOff="FB Chat"
-	    android:onClick="fbChatConnect" />
 
-	
-
-</LinearLayout>
+</RelativeLayout>
