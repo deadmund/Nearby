@@ -54,13 +54,13 @@
 			<EditTextPreference 
 			    android:key="fake_lat"
 			    android:title="Fake Latitude"
-			    android:defaultValue="37.2708"
+			    android:defaultValue="37.2704431"
 			    android:dependency="fake_locations" />
 			
 			<EditTextPreference
 			    android:key="fake_lon"
 			    android:title="Fake Longitude"
-			    android:defaultValue="-76.7113"
+			    android:defaultValue="-76.7120411"
 			    android:dependency="fake_locations" />
 
 		<EditTextPreference

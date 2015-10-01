@@ -13,22 +13,27 @@ public class NearPriLocationListener implements LocationListener {
 	private final static String TAG = NearPriLocationListener.class.getName();
 
 	// Start with invalid location so I know if there is a problem!
-	public double lon = -190.0; // Normally -180, 180
-	public double lat = -190.0; // Normally -90, 90
-	private double bestAccuracySoFar = Double.MAX_VALUE;
-	private long lastUpdateTS = Long.MAX_VALUE;
+	private NPLocation bestLoc = new NPLocation();
 	private Context ctx = null;
+	private SharedPreferences sharedPrefs;
 
 	// Let's make this a singleton!
 	private static NearPriLocationListener instance = null;
-	private NearPriLocationListener(){
+
+	private NearPriLocationListener(Context newCtx){
 		// Block normal instantiation
+		bestLoc.setLongitude(-190.0);
+		bestLoc.setLatitude(-190.0);
+		bestLoc.setAccuracy(Float.MAX_VALUE);
+
+        ctx = newCtx;
+        sharedPrefs = PreferenceManager.getDefaultSharedPreferences(ctx);
 	}
+
 	// Provide singleton getInstance (that can be called static)
 	public static NearPriLocationListener getInstance(Context newCtx){
 		if(instance == null){
-			instance = new NearPriLocationListener();
-			instance.ctx = newCtx;
+			instance = new NearPriLocationListener(newCtx);
 		}
 		return instance;
 	}
@@ -36,25 +41,24 @@ public class NearPriLocationListener implements LocationListener {
 
 	
 	@Override
-	public void onLocationChanged(Location location) { // The callback
-		if (location.hasAccuracy()){
-			double newAcc = location.getAccuracy();
+	public void onLocationChanged(Location newLocation) { // The callback
+		if (newLocation.hasAccuracy()){
 
-			if(newAcc < bestAccuracySoFar){ // If we have a better estimate
-				updateCurrent(location);
-				Log.d(TAG, "New best accuracy: " + bestAccuracySoFar);
+			if(newLocation.getAccuracy() < bestLoc.getAccuracy()){ // If we have a better estimate
+				updateCurrent(newLocation); // Now the bestLoc is the new location
+				Log.d(TAG, "New best accuracy: " + bestLoc.getAccuracy());
 				if(ctx != null){
-					Toast.makeText(ctx, "Current Location Accuracy: " + bestAccuracySoFar + "m", Toast.LENGTH_SHORT).show();
+					Toast.makeText(ctx, "Current Location Accuracy: " + bestLoc.getAccuracy() + "m", Toast.LENGTH_SHORT).show();
 				}
-				bestAccuracySoFar = newAcc;
 			}
 
-			else if(NearPriLib.getTimeSince(lastUpdateTS) > 5000) { // If it's been more than five seconds
-				updateCurrent(location);
+			else if(NearPriLib.getTimeSince(bestLoc.getTime()) > 5000) { // If it's been more than five seconds
+				updateCurrent(newLocation);
 			}
 
-			else if(lon == -190.0 || lat == -190.0) { // If we literally have no idea yet
-				updateCurrent(location);
+			// Update with something if we have no idea yet
+			else if(bestLoc.getLatitude() == -190.0 || bestLoc.getLongitude() == -190.0) {
+				updateCurrent(newLocation);
 			}
 		}
 	}
@@ -62,12 +66,21 @@ public class NearPriLocationListener implements LocationListener {
 	
 	private void updateCurrent(Location loc){
 		// For the 'still listening function (maybe not used)
-		lon = loc.getLongitude();
-		lat = loc.getLatitude();
+		NPLocation tmp = new NPLocation(loc);
+		bestLoc = tmp;
 
-		lastUpdateTS = System.currentTimeMillis();
+		Log.d(TAG, "Location updated.  Lon: " + bestLoc.getLongitude() + "  lat: "+ bestLoc.getLatitude());
+	}
 
-		Log.d(TAG, "Location updated.  Lon: " + lon + "  lat: "+ lat);
+	public NPLocation getLocationCopy(){
+		if(fakeAllowed()){
+			Log.d(TAG, "Sending fake location!");
+			return getFake();
+		}
+		else {
+			NPLocation locationCopy = new NPLocation(bestLoc);
+			return locationCopy;
+		}
 	}
 
 	@Override
@@ -84,13 +97,23 @@ public class NearPriLocationListener implements LocationListener {
 	}
 
 
-	public void plugFake(Context context){
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-		if ( prefs.getBoolean("fake_locations", false) ){
-			Double fake_lat = Double.valueOf(prefs.getString("fake_lat", "37.2708"));
-			Double fake_lon = Double.valueOf(prefs.getString("fake_lon", "-76.7113"));
-			lat = fake_lat;
-			lon = fake_lon;
+	public NPLocation getFake(){
+		if(fakeAllowed()){
+			double lat = Double.valueOf(sharedPrefs.getString("fake_lat", "37.2704431"));
+			double lon = Double.valueOf(sharedPrefs.getString("fake_lon", "-76.7120411"));
+
+			NPLocation newLoc = new NPLocation();
+			newLoc.setLatitude(lat);
+			newLoc.setLongitude(lon);
+
+			return newLoc;
 		}
+		throw new IllegalStateException("Fake locations not allowed in app preferences!");
 	}
+
+	private boolean fakeAllowed(){
+		boolean allowed = sharedPrefs.getBoolean("fake_locations", false);
+		return allowed;
+	}
+
 }

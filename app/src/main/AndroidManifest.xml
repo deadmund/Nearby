@@ -29,23 +29,14 @@
                 <action android:name="net.ednovak.Nearby.xmppService.LOGIN_UPDATE" />
             </intent-filter>
         </activity>
-        <activity android:name=".displayMessageAct" />
-        <activity android:name=".answerAct" />
-        <activity android:name=".paillierTest" />
-        <activity android:name=".messageTest" />
+        <activity android:name=".AnswerActivity" />
+        <activity android:name=".PaillierTest" />
         <activity android:name=".Preferences" />
         <!-- android:theme="@style/preferences"/> -->
-        <activity android:name=".names" />
-
-        <service android:name=".xmppService" />
 
         <activity
-            android:name=".processedQueries"
+            android:name=".ViewLocation"
             android:launchMode="singleTop" />
-        <activity
-            android:name=".BloomFilterTest"
-            android:label="@string/title_activity_bloom_filter_test" >
-        </activity>
     </application>
 
 </manifest>

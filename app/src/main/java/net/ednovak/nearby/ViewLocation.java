@@ -17,7 +17,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class processedQueries extends ListActivity {
+public class ViewLocation extends ListActivity {
 	
 	private static ArrayList<String> data = new ArrayList<String>();
 	

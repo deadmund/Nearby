@@ -8,7 +8,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
-public class paillierTest extends Activity{
+public class PaillierTest extends Activity{
 	
 	@Override
     public void onCreate(Bundle savedInstanceState) {

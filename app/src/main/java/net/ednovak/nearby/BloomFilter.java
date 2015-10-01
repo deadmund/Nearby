@@ -313,6 +313,21 @@ public class BloomFilter<E> implements Serializable {
     }
 
     /**
+     * Returns all the locations (outputs of the hashes) for the given element
+     * @param element is an element to find the locations of
+     * @return an int[] of the locations
+     */
+    public int[] getIndicies(E element){
+        byte[] b = element.toString().getBytes(charset);
+        int[] hashes = createHashes(b, k);
+        int[] ans = new int[hashes.length];
+        for(int i = 0; i < ans.length; i++){
+            ans[i] = Math.abs(hashes[i] % bitSetSize);
+        }
+        return ans;
+    }
+
+    /**
      * Adds all elements from a Collection to the Bloom filter.
      * @param c Collection of elements.
      */
@@ -439,5 +454,19 @@ public class BloomFilter<E> implements Serializable {
      */
     public double getBitsPerElement() {
         return this.bitSetSize / (double)numberOfAddedElements;
+    }
+
+
+    public String getBitString(){
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < bitSetSize; i++){
+            if(bitset.get(i)){
+                sb.append("1");
+            }
+            else{
+                sb.append("0");
+            }
+        }
+        return sb.toString();
     }
 }

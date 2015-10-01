@@ -63,7 +63,7 @@
     <string name="test_enc">Test Encryption</string>
     <string name="test_waiting">Enter parameters and test encryption speed!</string>
     <string name="title_activity_bloom_filter_test">BloomFilterTest</string>
-    <string name="title_activity_main">Nearby</string>
+    <string name="title_activity_main">Near-Pri</string>
     <string name="upload">Upload Something</string>
     <string name="wait">Just a moment please…</string>
     <string name="waiting">waiting</string>

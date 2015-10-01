@@ -6,7 +6,7 @@ import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class answerAct extends Activity{
+public class AnswerActivity extends Activity{
 	
     @Override
     public void onCreate(Bundle savedInstanceState){

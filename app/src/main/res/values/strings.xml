@@ -3,7 +3,7 @@
     <string name="app_name">Near-Pri</string>
     <string name="hello_world">Enter the name of a Facebook friend to query their location.</string>
     <string name="menu_settings">Settings</string>
-    <string name="title_activity_main">Nearby</string>
+    <string name="title_activity_main">Near-Pri</string>
     <string name="butt_query">Query</string>
     <string name="wait">Just a moment please&#8230;</string>
     <string name="waiting">waiting</string>

@@ -1,17 +1,11 @@
 package net.ednovak.nearby;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
@@ -19,12 +13,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -58,6 +49,8 @@ public class MainActivity extends Activity {
 
         // Connect to server as Bob!
         connect();
+
+        testCode();
     }
     
     
@@ -87,23 +80,9 @@ public class MainActivity extends Activity {
 
     			
     		case R.id.test_encryption:
-    	    	startActivity(new Intent(this, paillierTest.class));
+    	    	startActivity(new Intent(this, PaillierTest.class));
     	    	return true;
-    	    	
-    		case R.id.test_message: // Test sending messages on FB
-    			if (xmppService.in){
-    				startActivity(new Intent(this, messageTest.class));
-    				return true;
-    			}
-    			else{
-					Toast.makeText(this, "You must be logged into Facebook", Toast.LENGTH_SHORT).show();
-					return false;
-    			}
 
-            case R.id.bf_test:
-                Intent i = new Intent(this, BloomFilterTest.class);
-                startActivity(i);
-                return true;
     		
     		default:
     			return super.onOptionsItemSelected(item);
@@ -165,7 +144,7 @@ public class MainActivity extends Activity {
         // Get Location
 
         NearPriLocationListener ll = NearPriLocationListener.getInstance(ctx);
-        String tmp = "lon: " + ll.lon + "  lat: " + ll.lat;
+        String tmp = "lon: " + ll.getLocationCopy().getLongitude() + "  lat: " + ll.getLocationCopy().getLatitude();
         Toast.makeText(ctx, tmp, Toast.LENGTH_SHORT).show();
         //Log.d(TAG, tmp);
 
@@ -175,10 +154,13 @@ public class MainActivity extends Activity {
         String msg = "a:" + IP;
         writeSocket(msg);
 
+
     }
 
 
     private void closeSocket(){
+        Protocol p = Protocol.getInstance(ctx);
+        p.reset();
         if(s != null) {
             while (!s.isClosed()) {
                 try {
@@ -200,7 +182,8 @@ public class MainActivity extends Activity {
 
         try {
             sockOut.write(sb.toString().getBytes());
-            Log.d(TAG, "Sent " + sb.toString());
+            Log.d(TAG, "Data Sent: " + msg);
+            //Log.d(TAG, "Sent " + sb.toString());
         } catch (IOException e){
             e.printStackTrace();
             closeSocket();
@@ -252,30 +235,35 @@ public class MainActivity extends Activity {
                 data = data.replace("@","");
                 Log.d(TAG, "Data Received: " + data);
 
-
-                // Just a temporary test thingy
-                if (data.equals("ack-a")) {
-                    Log.d(TAG, "Sending \'Hello Bob!\' to other device");
-                    writeSocket("Hello Bob!");
-                }
-
-
+                // Some testing, "non-protocol" communication
                 if (data.equals("ack-b")) {
-                    Log.d(TAG, "Idling as Bob");
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    writeSocket("b:2");
+                    Log.d(TAG, "Confirmed that I'm Bob");
                 }
 
-
-                if (data.equals("Hello Bob!")) {
+                else if (data.equals("Hello Bob!")) {
                     writeSocket("Hello Alice!");
+                }
+
+                else {
+                    Protocol p = Protocol.getInstance(ctx);
+                    String answer = p.handleMsg(data, ctx);
+                    if(answer != null){
+                        writeSocket(answer);
+                    }
+                    else {
+                        // Couldn't handle this message, disconnect
+                        Log.d(TAG, "Protocol had no data to send!");
+                        return;
+                    }
                 }
             }
             closeSocket();
         }
+    }
+
+
+    private void testCode(){
+
+
     }
 }
