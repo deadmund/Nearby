@@ -74,7 +74,7 @@ public class NearPriLocationListener implements LocationListener {
 
 	public NPLocation getLocationCopy(){
 		if(fakeAllowed()){
-			Log.d(TAG, "Sending fake location!");
+			Log.d(TAG, "Fake location accessed!");
 			return getFake();
 		}
 		else {

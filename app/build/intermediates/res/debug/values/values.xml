@@ -64,12 +64,13 @@
     <string name="test_waiting">Enter parameters and test encryption speed!</string>
     <string name="title_activity_bloom_filter_test">BloomFilterTest</string>
     <string name="title_activity_main">Near-Pri</string>
+    <string name="title_activity_main2">Main2Activity</string>
     <string name="upload">Upload Something</string>
     <string name="wait">Just a moment please…</string>
     <string name="waiting">waiting</string>
     <!-- From: file:/scratch/ejnovak.scratch/AndroidstudioProjects/nearpri/app/src/main/res/values/styles.xml -->
     <eat-comment/>
-    <style name="AppTheme" parent="android:Theme.Light"/>
+    <style name="AppTheme" parent="android:Theme.Holo.Light"/>
     <style name="preferences">
         <item name="android:background">#000000</item>
         <item name="android:foreground">#FFFFFF</item>

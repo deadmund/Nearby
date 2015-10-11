@@ -14,22 +14,36 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import net.yishanhe.mobilesc.ot.BaseOTR;
+import net.yishanhe.mobilesc.ot.BaseOTS;
+import net.yishanhe.mobilesc.ot.Util;
+import net.yishanhe.mobilesc.rsaOT.BasePrimeOTR;
+
+import org.spongycastle.jce.ECNamedCurveTable;
+import org.spongycastle.jce.spec.ECParameterSpec;
+import org.spongycastle.math.ec.ECPoint;
+
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.charset.Charset;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 
 public class MainActivity extends Activity {
     private final static String TAG = MainActivity.class.getName();
 
 	private LocationManager lManager;
     private Context ctx;
-    protected Socket s;
-    protected OutputStream sockOut;
-    protected InputStream sockIn;
-    public static final int BYTE_COUNT = 64;
+    protected NearPriSocket s;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -38,6 +52,7 @@ public class MainActivity extends Activity {
 
         ctx = getApplicationContext();
         
+
         // Location listener stuff
         lManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
@@ -74,14 +89,12 @@ public class MainActivity extends Activity {
     			return true;
 
             case R.id.reconnect:
-                closeSocket();
+                if(s != null) {
+                    s.closeSocket();
+                }
+                s = null;
                 connect();
                 return true;
-
-    			
-    		case R.id.test_encryption:
-    	    	startActivity(new Intent(this, PaillierTest.class));
-    	    	return true;
 
     		
     		default:
@@ -104,34 +117,21 @@ public class MainActivity extends Activity {
 
     public void connect(){
         // tmp server address and ip address
-
-        Thread t = new Thread(new Runnable() {
+        Thread t = new Thread(new Runnable(){
             @Override
-            public void run() {
-                String SERVER_IP = "ec2-52-89-134-220.us-west-2.compute.amazonaws.com";
-                int SERVER_PORT = 5555;
-
+            public void run(){
+                Protocol p = Protocol.getInstance(ctx);
+                p.reset();
                 try {
-                    // Create Socket
-                    InetAddress serverAddr = InetAddress.getByName(SERVER_IP);
-                    s = new Socket(serverAddr, SERVER_PORT);
+                    InetAddress addr = NearPriSocket.getAddressFromHost(NearPriSocket.SERVER_HOST);
+                    int port = NearPriSocket.SERVER_PORT;
+                    s = new NearPriSocket(addr, port);
+                    Log.d(TAG, "Connected, yay!");
 
-                    // Wire up streams for input and output in other functions / threads
-                    sockOut = s.getOutputStream();
-                    sockIn = s.getInputStream();
-
-                    // Create thread to handle socket input
-                    // Make sure to do this before sending the 'b' (below)
-                    // so that we can pickup / read the response from the server!
-                    Thread t = new Thread(new ServerHandler());
-                    t.start();
-
-                    writeSocket("b:");
-                }
-                catch(Exception e){
-                    Log.d(TAG, "Something went wrong with the dumb socket!");
+                    Thread t2 = new Thread(new ServerHandler());
+                    t2.start();
+                } catch (IOException e){
                     e.printStackTrace();
-                    closeSocket();
                 }
             }
         });
@@ -152,118 +152,45 @@ public class MainActivity extends Activity {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         String IP = prefs.getString("bob_ip", "0.0.0.0");
         String msg = "a:" + IP;
-        writeSocket(msg);
-
-
-    }
-
-
-    private void closeSocket(){
-        Protocol p = Protocol.getInstance(ctx);
-        p.reset();
         if(s != null) {
-            while (!s.isClosed()) {
-                try {
-                    s.close();
-                } catch (IOException e) {
-                }
-            }
+            s.writeSocket(msg.getBytes());
+        } else{
+            Toast.makeText(ctx, "Please reconnect to the server", Toast.LENGTH_SHORT).show();
         }
-        sockOut = null;
-        sockIn = null;
-        Log.d(TAG, "Socket closed");
     }
 
-    private void writeSocket(String msg){
-        StringBuilder sb = new StringBuilder(msg);
-        while(sb.length() < BYTE_COUNT){
-            sb.append("@");
-        }
 
-        try {
-            sockOut.write(sb.toString().getBytes());
-            Log.d(TAG, "Data Sent: " + msg);
-            //Log.d(TAG, "Sent " + sb.toString());
-        } catch (IOException e){
-            e.printStackTrace();
-            closeSocket();
-        } catch(NullPointerException e1){
-            e1.printStackTrace();
-            Toast.makeText(ctx, "Please reconnect to server", Toast.LENGTH_SHORT).show();
-        }
 
-    }
 
     private class ServerHandler implements Runnable{
 
-        public ServerHandler(){
-
-        }
-
-
-        private int readLoop(byte[] buffer){
-            int sumBytes = 0;
-            while(sumBytes < BYTE_COUNT){
-                int newAmount;
-                try {
-                    newAmount = sockIn.read(buffer, sumBytes, buffer.length - sumBytes);
-                } catch (IOException e){
-                    e.printStackTrace();
-                    return -1;
-                }
-                sumBytes += newAmount;
-                if(newAmount < 0){
-                    return -1;
-                }
-                if(newAmount < BYTE_COUNT){
-                    Log.d(TAG, "Only read " + newAmount + " bytes instead of " + BYTE_COUNT + "! Reading more.");
-                }
-            }
-            return sumBytes;
-        }
-
-        @Override public void run(){
+        @Override
+        public void run(){
             while(true) {
-                byte[] buffer = new byte[BYTE_COUNT];
-                int total = readLoop(buffer);
-                if(total == -1){
+                try {
+                    byte[] newData = s.readSocket();
+
+                    if (newData == null) {
+                        break;
+                    }
+                    Protocol p = Protocol.getInstance(ctx);
+                    byte[] ans = p.handleMsg(newData, ctx);
+                    if (ans == null) {
+                        break;
+                    }
+                    s.writeSocket(ans);
+                } catch (NullPointerException e) {
+                    e.printStackTrace();
                     break;
                 }
-
-
-                String data = new String(buffer, Charset.forName("UTF-8"));
-                data = data.replace("@","");
-                Log.d(TAG, "Data Received: " + data);
-
-                // Some testing, "non-protocol" communication
-                if (data.equals("ack-b")) {
-                    Log.d(TAG, "Confirmed that I'm Bob");
-                }
-
-                else if (data.equals("Hello Bob!")) {
-                    writeSocket("Hello Alice!");
-                }
-
-                else {
-                    Protocol p = Protocol.getInstance(ctx);
-                    String answer = p.handleMsg(data, ctx);
-                    if(answer != null){
-                        writeSocket(answer);
-                    }
-                    else {
-                        // Couldn't handle this message, disconnect
-                        Log.d(TAG, "Protocol had no data to send!");
-                        return;
-                    }
-                }
             }
-            closeSocket();
+            if(s != null){
+                s.closeSocket();
+            }
+            s = null;
         }
     }
 
-
-    private void testCode(){
-
-
+    private void testCode() {
     }
 }

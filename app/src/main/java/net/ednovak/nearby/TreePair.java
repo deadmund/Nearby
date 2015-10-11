@@ -6,6 +6,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -159,6 +160,18 @@ public class TreePair {
             cur = cur.createParent();
             ans.add(cur);
         }
+        return ans;
+    }
+
+    public ArrayList<TreeNode> getSuperPathSet(int type, int height){
+        ArrayList<TreeNode> ans = new ArrayList<TreeNode>();
+        TreeLeaf[] selLeaves = new TreeLeaf[leaves.get(type).size()];
+        leaves.get(type).toArray(selLeaves);
+
+        for(int i = 0; i < selLeaves.length; i++){
+            ans.addAll(getPathSet(selLeaves[i], height));
+        }
+
         return ans;
     }
 

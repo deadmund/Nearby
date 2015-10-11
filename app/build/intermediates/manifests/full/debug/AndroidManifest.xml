@@ -5,15 +5,14 @@
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="9"
-        android:targetSdkVersion="9" />
+        android:minSdkVersion="14"
+        android:targetSdkVersion="21" />
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
-
-    <android:uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <android:uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <android:uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:icon="@drawable/ic_launcher"
@@ -31,23 +30,14 @@
                 <action android:name="net.ednovak.Nearby.xmppService.LOGIN_UPDATE" />
             </intent-filter>
         </activity>
-        <activity android:name="net.ednovak.nearby.displayMessageAct" />
-        <activity android:name="net.ednovak.nearby.answerAct" />
-        <activity android:name="net.ednovak.nearby.paillierTest" />
-        <activity android:name="net.ednovak.nearby.messageTest" />
+        <activity android:name="net.ednovak.nearby.AnswerActivity" />
+        <activity android:name="net.ednovak.nearby.PaillierTest" />
         <activity android:name="net.ednovak.nearby.Preferences" />
         <!-- android:theme="@style/preferences"/> -->
-        <activity android:name="net.ednovak.nearby.names" />
-
-        <service android:name="net.ednovak.nearby.xmppService" />
 
         <activity
-            android:name="net.ednovak.nearby.processedQueries"
+            android:name="net.ednovak.nearby.ViewLocation"
             android:launchMode="singleTop" />
-        <activity
-            android:name="net.ednovak.nearby.BloomFilterTest"
-            android:label="@string/title_activity_bloom_filter_test" >
-        </activity>
     </application>
 
 </manifest>

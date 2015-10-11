@@ -6,8 +6,8 @@ android {
 
     defaultConfig {
         applicationId "net.ednovak.nearby"
-        minSdkVersion 9
-        targetSdkVersion 9
+        minSdkVersion 14
+        targetSdkVersion 21
     }
 
     buildTypes {
@@ -21,4 +21,6 @@ android {
 dependencies {
     compile 'com.android.support:support-v4:21.0.3'
     compile files('libs/asmack-issue15.jar')
+    compile files('libs/core-1.51.0.0.jar')
+    compile files('libs/prov-1.51.0.0.jar')
 }

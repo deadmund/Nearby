@@ -23,6 +23,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.BitSet;
 import java.util.Collection;
+import java.util.Random;
 
 /**
  * Implementation of a Bloom-filter, as described here:
@@ -317,7 +318,7 @@ public class BloomFilter<E> implements Serializable {
      * @param element is an element to find the locations of
      * @return an int[] of the locations
      */
-    public int[] getIndicies(E element){
+    public int[] getIndices(E element){
         byte[] b = element.toString().getBytes(charset);
         int[] hashes = createHashes(b, k);
         int[] ans = new int[hashes.length];
@@ -387,6 +388,14 @@ public class BloomFilter<E> implements Serializable {
      */
     public boolean getBit(int bit) {
         return bitset.get(bit);
+    }
+
+    public int getBitInt(int bit) {
+        if (getBit(bit)) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
     /**
@@ -468,5 +477,10 @@ public class BloomFilter<E> implements Serializable {
             }
         }
         return sb.toString();
+    }
+
+    public int randomIndex(){
+        Random r = new Random();
+        return r.nextInt(size());
     }
 }

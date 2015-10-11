@@ -36,49 +36,41 @@ public final class R {
         public static final int white=0x7f020007;
     }
     public static final class id {
-        public static final int action_settings=0x7f0a001b;
-        public static final int addButt=0x7f0a0002;
-        public static final int bf_test=0x7f0a0019;
-        public static final int bit_strength=0x7f0a0010;
-        public static final int bt_query=0x7f0a0007;
-        public static final int certainty=0x7f0a0011;
-        public static final int enc_test=0x7f0a0012;
-        public static final int explaintext=0x7f0a0006;
-        public static final int gen_message_butt=0x7f0a000a;
-        public static final int length=0x7f0a0009;
-        public static final int ll=0x7f0a0003;
-        public static final int mainListView=0x7f0a000e;
-        public static final int message=0x7f0a0008;
-        public static final int names=0x7f0a0016;
-        public static final int numberToAdd=0x7f0a0001;
-        public static final int output=0x7f0a000d;
-        public static final int query=0x7f0a0005;
-        public static final int rec=0x7f0a000b;
-        public static final int reconnect=0x7f0a001a;
-        public static final int rowTextView=0x7f0a0014;
-        public static final int send_message_butt=0x7f0a000c;
-        public static final int settings=0x7f0a0015;
-        public static final int test_encryption=0x7f0a0017;
-        public static final int test_message=0x7f0a0018;
-        public static final int text=0x7f0a0000;
-        public static final int text_view=0x7f0a000f;
-        public static final int title=0x7f0a0004;
-        public static final int waiting=0x7f0a0013;
+        public static final int action_settings=0x7f0a0014;
+        public static final int bit_strength=0x7f0a000d;
+        public static final int bt_query=0x7f0a0004;
+        public static final int certainty=0x7f0a000e;
+        public static final int enc_test=0x7f0a000f;
+        public static final int explaintext=0x7f0a0003;
+        public static final int gen_message_butt=0x7f0a0007;
+        public static final int length=0x7f0a0006;
+        public static final int ll=0x7f0a0000;
+        public static final int mainListView=0x7f0a000b;
+        public static final int message=0x7f0a0005;
+        public static final int output=0x7f0a000a;
+        public static final int query=0x7f0a0002;
+        public static final int rec=0x7f0a0008;
+        public static final int reconnect=0x7f0a0013;
+        public static final int rowTextView=0x7f0a0011;
+        public static final int send_message_butt=0x7f0a0009;
+        public static final int settings=0x7f0a0012;
+        public static final int text_view=0x7f0a000c;
+        public static final int title=0x7f0a0001;
+        public static final int waiting=0x7f0a0010;
     }
     public static final class layout {
-        public static final int activity_bloom_filter_test=0x7f030000;
-        public static final int activity_main=0x7f030001;
-        public static final int activity_message_test=0x7f030002;
-        public static final int activity_names=0x7f030003;
-        public static final int activity_processed_queries=0x7f030004;
-        public static final int activity_test=0x7f030005;
-        public static final int activity_wait=0x7f030006;
-        public static final int simplerow=0x7f030007;
-        public static final int smallfont=0x7f030008;
+        public static final int activity_main=0x7f030000;
+        public static final int activity_message_test=0x7f030001;
+        public static final int activity_names=0x7f030002;
+        public static final int activity_processed_queries=0x7f030003;
+        public static final int activity_test=0x7f030004;
+        public static final int activity_wait=0x7f030005;
+        public static final int simplerow=0x7f030006;
+        public static final int smallfont=0x7f030007;
     }
     public static final class menu {
         public static final int activity_main=0x7f090000;
-        public static final int menu_bloom_filter_test=0x7f090001;
+        public static final int menu_main2=0x7f090001;
     }
     public static final class string {
         public static final int action_settings=0x7f070000;
@@ -102,9 +94,10 @@ public final class R {
         public static final int test_waiting=0x7f070012;
         public static final int title_activity_bloom_filter_test=0x7f070013;
         public static final int title_activity_main=0x7f070014;
-        public static final int upload=0x7f070015;
-        public static final int wait=0x7f070016;
-        public static final int waiting=0x7f070017;
+        public static final int title_activity_main2=0x7f070015;
+        public static final int upload=0x7f070016;
+        public static final int wait=0x7f070017;
+        public static final int waiting=0x7f070018;
     }
     public static final class style {
         public static final int AppTheme=0x7f080000;
