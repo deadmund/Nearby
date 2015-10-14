@@ -18,7 +18,9 @@ import java.util.Random;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.NetworkRequest;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -47,12 +49,13 @@ public class Protocol {
     // Bloomfilter c = bits per element, n = number of elements, k=number of hashes
     final private BloomFilter<Integer>[] bobBF1 = new BloomFilter[]{new BloomFilter(2, halfSize, k), new BloomFilter(2, halfSize, k)};
     final private BloomFilter<Integer>[] bobBF0 = new BloomFilter[]{new BloomFilter(2, halfSize, k), new BloomFilter(2, halfSize, k)};
-    final private BloomFilter<Integer>[] aliceBF = new BloomFilter[] {new BloomFilter(2, halfSize, k), new BloomFilter(2, halfSize, k)};
-
+    final private BloomFilter<Integer>[] aliceBF = new BloomFilter[]{new BloomFilter(2, halfSize, k), new BloomFilter(2, halfSize, k)};
 
     private ArrayList<TreeNode>[] wallSet = new ArrayList[2];
     private ArrayList<TreeNode>[] pathSet = new ArrayList[2];
     private ArrayList<TreeNode>[] superPathSet = new ArrayList[2];
+
+    private int curTree = 0;
 
     private BasePrimeOTR bob; // Bob
     private BasePrimeOTS alice; // Alice
@@ -75,6 +78,24 @@ public class Protocol {
     private static OutputStream sockOut;
 
     private static Context ctx;
+    private static Handler h;
+
+
+
+    // Constructor does nothing! This is probably a design flaw :P
+    // Make this a singleton class
+    private Protocol(Context newCtx, Handler newH) {
+        ctx = newCtx;
+        h = newH;
+        initProtoCallMap();
+    }
+
+    public static Protocol getInstance(Context newCtx, Handler h){
+        if(instance == null){
+            instance = new Protocol(newCtx, h);
+        }
+        return instance;
+    }
 
 
 	// Hashmap from state integer to function using ProtocolMethod interface
@@ -84,16 +105,6 @@ public class Protocol {
 		public byte[] execute(byte[] data);
 	}
 
-	//treeQueue leaves; // The span
-	TreeLeaf user; // Location of the user (leaf node)
-
-	// Constructor does nothing! This is probably a design flaw :P
-	// Make this a singleton class
-	private Protocol(Context newCtx) {
-        ctx = newCtx;
-        initProtoCallMap();
-
-    }
 
     private void dumpBFFPRs(){
         // Check BF's FPR
@@ -117,17 +128,10 @@ public class Protocol {
         }
     }
 
-    public void reset(){
+    public void resetState(){
         curState = 0;
     }
-
-	public static Protocol getInstance(Context newCtx){
-		if(instance == null){
-			instance = new Protocol(newCtx);
-		}
-		return instance;
-	}
-
+    public void resetTree() { curTree = 0; }
 
 	public byte[] handleMsg(byte[] data, Context ctx) {
 		ProtocolMethod pm = protoCall.get(curState);
@@ -162,12 +166,13 @@ public class Protocol {
 		protoCall.put(0, new ProtocolMethod() {
             @Override
             public byte[] execute(byte[] input) {
+
                 String data = new String(input, Charset.forName("UTF-8"));
                 data = data.trim();
                 if (data.equals("ack-a")) { // Then this is alice
                     // I am now alice and I query Bob for his location (he tells me if we're nearby)
 
-                    NearPriLocationListener NPll = NearPriLocationListener.getInstance(ctx);
+                    NPLocationListener NPll = NPLocationListener.getInstance(ctx);
                     NPLocation loc = NPll.getLocationCopy();
 
                     TreePair tp = new TreePair(loc, ctx);
@@ -177,6 +182,11 @@ public class Protocol {
                             aliceBF[i].add(pathSet[i].get(j).getValue());
                         }
                     }
+                    Log.d(TAG, "curTree: " + curTree);
+                    Log.d(TAG, "pathSet[0][0].value: " + pathSet[0].get(0).getValue());
+                    Log.d(TAG, "pathSet[1][0].value: " + pathSet[1].get(0).getValue());
+                    Log.d(TAG, "Path set size: " + pathSet[curTree].size());
+                    NPLib.dump("Path set: ", pathSet[curTree], ",");
 
                     KeyPairGenerator keyPairG = null;
                     try{
@@ -190,9 +200,12 @@ public class Protocol {
                         Log.d(TAG, "Key generation failed!");
                         return null;
                     }
+                    long start = System.currentTimeMillis();
                     KeyPair keyPair = keyPairG.generateKeyPair();
                     alicePub = (DSAPublicKey)keyPair.getPublic();
                     alicePriv = (DSAPrivateKey)keyPair.getPrivate();
+                    long dur = NPLib.getTimeSince(start);
+                    Log.d(TAG, "Took " + dur + "ms to generate keys");
 
                     BigInteger p = alicePub.getParams().getP();
                     BigInteger q = alicePub.getParams().getG();
@@ -221,7 +234,7 @@ public class Protocol {
                     BigInteger g = new BigInteger(bits[2]);
                     int N = Integer.valueOf(bits[3]);
 
-                    NearPriLib.dump("p, q, g, and N from Alice: ", bits, ",");
+                    NPLib.dump("p, q, g, and N from Alice: ", bits, ",");
                     MessageDigest md = null;
                     try{
                         md = MessageDigest.getInstance("SHA1");
@@ -231,7 +244,7 @@ public class Protocol {
 
                     SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(ctx);
                     policy = Integer.valueOf(sharedPrefs.getString("policy", "35"));
-                    NPLocation loc = NearPriLocationListener.getInstance(ctx).getLocationCopy();
+                    NPLocation loc = NPLocationListener.getInstance(ctx).getLocationCopy();
 
                     // one lat and one lon tree
                     TreePair tp = new TreePair(loc, ctx);
@@ -252,14 +265,15 @@ public class Protocol {
                         addToBF(bobBF1[i], wallSet[i]);
                         addToBF(bobBF0[i], superPathSet[i]);
                     }
-                    Log.d(TAG, "Latitude wallSet size: " + wallSet[0].size());
+                    Log.d(TAG, "wallSet size: " + wallSet[curTree].size());
+                    NPLib.dump("Wall set: ", wallSet[curTree], ",");
 
 
 
                     dumpBFFPRs();
 
                     // Create selection and subset indicies
-                    int l = wallSet[0].size();
+                    int l = wallSet[curTree].size();
                     selection = new OTSelection(2 * k * l);
                     selection.flipHalf();
                     // There are k hashes and the length of bob's wall set is l
@@ -285,19 +299,25 @@ public class Protocol {
                     // Also, my table doesn't show it, but the order of the BFX_Y's should
                     // be random as well
 
+                    // I might be able to reduce the length of the table / sel vector
+                    // The adversary must effectivley guess k = 2 out of 4*k*l bits that must
+                    // be 1 and an additional k = 2 out of the same 4*k*l that must be zero
+                    // The remaining bits can be 0 or 1 and cannot be checked
+                    // but these reamining bits act to confuse Alice about Bob's location
+
                     ArrayList<BFSpot> reals = new ArrayList<BFSpot>();
                     // Add the value 1 spots (from bobBF1)
                     for (int i = 0; i < l; i++) { // Because I have a nested function, I do only l here
-                        TreeNode cur = wallSet[0].get(i);
-                        int[] indices = bobBF1[0].getIndices(cur.getValue());
-                        NearPriLib.dump("Indices of node " + i + " (" + cur.getValue() + "): ", indices, ",");
-                        addSpots(reals, indices, 1, TreePair.TYPE_LAT, i);
+                        TreeNode cur = wallSet[curTree].get(i);
+                        int[] indices = bobBF1[curTree].getIndices(cur.getValue());
+                        NPLib.dump("Indices of node " + i + " (" + cur.getValue() + "): ", indices, ",");
+                        addSpots(reals, indices, 1, curTree, i);
                     }
 
                     // Add the value 0 spots (from bobBF0)
                     for (int i = 0; i < k*l; i++){
-                        int index = getRandIndexOf(bobBF0[0], false);
-                        reals.add(new BFSpot(index, 0, TreePair.TYPE_LAT));
+                        int index = getRandIndexOf(bobBF0[curTree], false);
+                        reals.add(new BFSpot(index, 0, curTree));
                     }
 
                     // Shuffle the reals
@@ -312,10 +332,10 @@ public class Protocol {
                             spots.add(reals.get(curRealIndex));
                             curRealIndex++;
 
-                            spots.add(new BFSpot(bobBF1[0].randomIndex(), BFSpot.TYPE_FAKE, BFSpot.TYPE_FAKE));
+                            spots.add(new BFSpot(bobBF1[curTree].randomIndex(), BFSpot.TYPE_FAKE, BFSpot.TYPE_FAKE));
                         }
                         else{ // Put the fake value in first (so it's on the left side of the table)
-                            spots.add(new BFSpot(bobBF1[0].randomIndex(), BFSpot.TYPE_FAKE, BFSpot.TYPE_FAKE));
+                            spots.add(new BFSpot(bobBF1[curTree].randomIndex(), BFSpot.TYPE_FAKE, BFSpot.TYPE_FAKE));
 
                             spots.add(reals.get(curRealIndex));
                             curRealIndex++;
@@ -323,7 +343,7 @@ public class Protocol {
                     }
 
                     Log.d(TAG, "Finished making selection vector: " + selection.toString());
-                    NearPriLib.dump("Vector of spots: ", spots, "; ");
+                    NPLib.dump("Vector of spots: ", spots, "; ");
 
                     //dumpBFBits();
 
@@ -332,7 +352,7 @@ public class Protocol {
                     bob = new BasePrimeOTR(p, q, g, selection.toIntArray(), md, N);
 
                     curState = 201;
-                    String subSetVector = NearPriLib.prettyArray(NearPriLib.bfSpotsToIntArray(spots), ',');
+                    String subSetVector = NPLib.prettyArray(NPLib.bfSpotsToIntArray(spots), ',');
                     return subSetVector.getBytes();
                 }
             }
@@ -347,7 +367,7 @@ public class Protocol {
 
                 String[] subSetVector = data.split(",");
 
-                NearPriLib.dump("subSetVector: ", subSetVector, ",");
+                NPLib.dump("subSetVector: ", subSetVector, ",");
 
                 //dumpBFBits();
                 dumpBFFPRs();
@@ -355,20 +375,20 @@ public class Protocol {
                 String[] subSet = new String[subSetVector.length];
 
                 for(int i = 0; i < subSetVector.length; i++){
-                    if(aliceBF[0].getBit(Integer.valueOf(subSetVector[i]))){
+                    if(aliceBF[curTree].getBit(Integer.valueOf(subSetVector[i]))){
                         subSet[i] = "1";
                     } else {
                         subSet[i] = "0";
                     }
                 }
 
-                for(int i = 0; i < aliceBF[0].size(); i++){
-                    if(aliceBF[0].getBit(i)) {
+                for(int i = 0; i < aliceBF[curTree].size(); i++){
+                    if(aliceBF[curTree].getBit(i)) {
                         Log.d(TAG, "AliceBF = 1 at: " + i);
                     }
                 }
 
-                NearPriLib.dump("Subset values: ", subSet, ",");
+                NPLib.dump("Subset values: ", subSet, ",");
                 toSend = new byte[subSet.length/2][2][1];
                 int j = 0;
                 for(int i = 0; i < toSend.length; i++){
@@ -377,15 +397,15 @@ public class Protocol {
                     j = j + 2;
                 }
 
-                Log.d(TAG, "toSend: " + NearPriLib.prettyArray(toSend, ',', ';', '|'));
+                Log.d(TAG, "toSend: " + NPLib.prettyArray(toSend, ',', ';', '|'));
 
                 DSAParams par = alicePub.getParams();
                 alice = new BasePrimeOTS(par.getP(), par.getG(), par.getG(), aliceMd, toSend.length, N, toSend);
                 BigInteger[] cs = alice.getCs();
                 Log.d(TAG, "Created " + cs.length + " cs");
-                //NearPriLib.dump("CS: ", cs, ",");
+                //NPLib.dump("CS: ", cs, ",");
 
-                String csStr = NearPriLib.prettyArray(cs, ',');
+                String csStr = NPLib.prettyArray(cs, ',');
 
                 curState = 102;
                 return csStr.getBytes();
@@ -406,7 +426,7 @@ public class Protocol {
                 }
 
                 BigInteger[] pk0s = bob.preparePK0(bobCS);
-                String pk0sStr = NearPriLib.prettyArray(pk0s, ',');
+                String pk0sStr = NPLib.prettyArray(pk0s, ',');
                 Log.d(TAG, "Send: " + pk0s.length + " pk0s, length in bytes: " + pk0sStr.getBytes().length);
 
                 curState = 202;
@@ -427,13 +447,13 @@ public class Protocol {
                     pk0s[i] = new BigInteger(args[i]);
                 }
 
-                String pk0sStr = NearPriLib.prettyArray(pk0s, ',');
+                String pk0sStr = NPLib.prettyArray(pk0s, ',');
                 Log.d(TAG, "Got: " + pk0s.length + " pk0s, length in bytes: " + pk0sStr.getBytes().length);
 
                 byte[][][] encrypted = new byte[toSend.length][2][1];
-                //Log.d(TAG, "Encrypted Bytes (should be blank): " + NearPriLib.prettyArray(encrypted, ',', ';', '|'));
+                //Log.d(TAG, "Encrypted Bytes (should be blank): " + NPLib.prettyArray(encrypted, ',', ';', '|'));
                 alice.onReceivePK0s(pk0s, encrypted);
-                Log.d(TAG, "Encrypted Bytes (should have selection data): " + NearPriLib.prettyArray(encrypted, ',', ';', '|'));
+                Log.d(TAG, "Encrypted Bytes (should have selection data): " + NPLib.prettyArray(encrypted, ',', ';', '|'));
 
 
                 // Flatten encryption into a string
@@ -447,7 +467,14 @@ public class Protocol {
                 sb.deleteCharAt(sb.length()-1); // Delete last ";"
                 Log.d(TAG, "Encryption: " + sb.toString());
 
-                curState = 103;
+                if(curTree == 0) {
+                    resetState();
+                    curTree = 1;
+                } else if (curTree == 1){
+                    curState = 103;
+                }
+
+                // Send the encryption data
                 return sb.toString().getBytes();
             }
         });
@@ -459,7 +486,7 @@ public class Protocol {
                 data = data.trim();
                 String[] rows = data.split(";");
                 byte[][][] encrypted = new byte[rows.length][2][1];
-                for(int i = 0; i < encrypted.length; i++){
+                for (int i = 0; i < encrypted.length; i++) {
                     String p1 = rows[i].split(",")[0];
                     String p2 = rows[i].split(",")[1];
                     encrypted[i][0][0] = Byte.valueOf(p1);
@@ -469,18 +496,51 @@ public class Protocol {
                 byte[][] result = bob.onReceiveEncByte(encrypted, bobCS);
                 byte[][][] allresult = bob.tryDecAll(encrypted, bobCS);
 
-                Log.d(TAG, "result: " + NearPriLib.prettyArray(result, ',', ';'));
-                Log.d(TAG, "All Result: " + NearPriLib.prettyArray(allresult, ',', ';', '|'));
+                Log.d(TAG, "result: " + NPLib.prettyArray(result, ',', ';'));
+                Log.d(TAG, "All Result: " + NPLib.prettyArray(allresult, ',', ';', '|'));
 
                 // Check
                 // Really bad and hacky solution!  Alice can just guarantee she sends k 1's and k 0's
                 // I should be checking that spots x, y, and z are one and so on.
-                if(count(result, new Byte("1")) >= k && count(result, new Byte("0")) >= k){
-                    Log.d(TAG, "SUCCESS!");
+                boolean success = count(result, new Byte("1")) >= k && count(result, new Byte("0")) >= k;
+
+                byte[] ans;
+                if (curTree == 0 && success) {
+                    Log.d(TAG, "Latitude SUCCESS!!!");
+                    curTree = 1;
+                    ans = "ack-a".getBytes();
+                } else if (curTree == 1 && success) {
+                    Log.d(TAG, "Longitude SUCCESS");
+
+                    // Get location and send it back (I should encrypt this)
+                    NPLocationListener npll = NPLocationListener.getInstance(ctx);
+                    NPLocation npl = npll.getLocationCopy();
+
+                    ans = npl.toPrettyString().getBytes();
+                } else{
+                    ans = invalid("Alice is not near me!");
                 }
 
-                curState = 0;
-                reset();
+                resetState();
+                return ans;
+            }
+        });
+
+        protoCall.put(103, new ProtocolMethod() {
+            @Override
+            public byte[] execute(byte[] input) {
+                String data = new String(input, Charset.forName("UTF-8"));
+                data = data.trim();
+                //Log.d(TAG, "PK0's: " + data);
+
+                Message msg = h.obtainMessage();
+                Bundle b = new Bundle();
+                b.putString("location", data);
+                msg.setData(b);
+                h.sendMessage(msg);
+
+                resetState();
+                curTree = 0;
                 return null;
             }
         });
@@ -489,7 +549,7 @@ public class Protocol {
 
 
     private byte[] invalid(String data){
-        Log.d(TAG, "Protocol broken.  Most recent message data as String: " + data);
+        Log.d(TAG, "Protocol broken.  Data / Message: " + data);
         return null;
     }
 

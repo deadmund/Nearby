@@ -2,10 +2,9 @@ package net.yishanhe.mobilesc.ot;
 
 import android.util.Log;
 
-import net.ednovak.nearby.NearPriLib;
+import net.ednovak.nearby.NPLib;
 
 import org.spongycastle.jce.ECNamedCurveTable;
-import org.spongycastle.jce.spec.ECNamedCurveParameterSpec;
 import org.spongycastle.jce.spec.ECParameterSpec;
 import org.spongycastle.math.ec.ECCurve;
 import org.spongycastle.math.ec.ECPoint;
@@ -100,7 +99,7 @@ public class BaseOTS {
 
         }
 
-        long runTime = NearPriLib.getTimeSince(start);
+        long runTime = NPLib.getTimeSince(start);
         Log.d(TAG, "Finished creating BaseOTS in " + runTime + "ms");
     }
 

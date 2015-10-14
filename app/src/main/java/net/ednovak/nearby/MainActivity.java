@@ -6,6 +6,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
@@ -14,36 +17,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import net.yishanhe.mobilesc.ot.BaseOTR;
-import net.yishanhe.mobilesc.ot.BaseOTS;
-import net.yishanhe.mobilesc.ot.Util;
-import net.yishanhe.mobilesc.rsaOT.BasePrimeOTR;
-
-import org.spongycastle.jce.ECNamedCurveTable;
-import org.spongycastle.jce.spec.ECParameterSpec;
-import org.spongycastle.math.ec.ECPoint;
-
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.math.BigInteger;
 import java.net.InetAddress;
-import java.net.Socket;
-import java.nio.charset.Charset;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import java.util.logging.LogRecord;
 
 public class MainActivity extends Activity {
     private final static String TAG = MainActivity.class.getName();
 
 	private LocationManager lManager;
     private Context ctx;
-    protected NearPriSocket s;
-
+    protected NPSocket s;
+    private NPHandler h;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -51,12 +35,13 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         ctx = getApplicationContext();
+        h = new NPHandler(ctx);
         
 
         // Location listener stuff
         lManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
-        NearPriLocationListener myListener = NearPriLocationListener.getInstance(ctx);
+        NPLocationListener myListener = NPLocationListener.getInstance(ctx);
         // Get location updates from both GPS and NETWORK_PROVIDER (which is WiFi and cell signal)
         lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, Integer.MAX_VALUE, myListener);
         lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, Integer.MAX_VALUE, myListener);
@@ -120,12 +105,13 @@ public class MainActivity extends Activity {
         Thread t = new Thread(new Runnable(){
             @Override
             public void run(){
-                Protocol p = Protocol.getInstance(ctx);
-                p.reset();
+                Protocol p = Protocol.getInstance(ctx, h);
+                p.resetState();
+                p.resetTree();
                 try {
-                    InetAddress addr = NearPriSocket.getAddressFromHost(NearPriSocket.SERVER_HOST);
-                    int port = NearPriSocket.SERVER_PORT;
-                    s = new NearPriSocket(addr, port);
+                    InetAddress addr = NPSocket.getAddressFromHost(NPSocket.SERVER_HOST);
+                    int port = NPSocket.SERVER_PORT;
+                    s = new NPSocket(addr, port);
                     Log.d(TAG, "Connected, yay!");
 
                     Thread t2 = new Thread(new ServerHandler());
@@ -143,10 +129,14 @@ public class MainActivity extends Activity {
     public void query(View view) {
         // Get Location
 
-        NearPriLocationListener ll = NearPriLocationListener.getInstance(ctx);
+        NPLocationListener ll = NPLocationListener.getInstance(ctx);
         String tmp = "lon: " + ll.getLocationCopy().getLongitude() + "  lat: " + ll.getLocationCopy().getLatitude();
         Toast.makeText(ctx, tmp, Toast.LENGTH_SHORT).show();
         //Log.d(TAG, tmp);
+
+
+        // Start profiling step
+        h.start = System.currentTimeMillis();
 
         // Start a query with Bob!  I'm not alice
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -173,7 +163,7 @@ public class MainActivity extends Activity {
                     if (newData == null) {
                         break;
                     }
-                    Protocol p = Protocol.getInstance(ctx);
+                    Protocol p = Protocol.getInstance(ctx, h);
                     byte[] ans = p.handleMsg(newData, ctx);
                     if (ans == null) {
                         break;
@@ -193,4 +183,7 @@ public class MainActivity extends Activity {
 
     private void testCode() {
     }
+
+
+
 }
